@@ -1,7 +1,9 @@
 <div align="center">
 <h1>Chinwag</h1>
 <p>A chat applictaion where users can message in real-time.</p>
+
 ![tech_stack](https://user-images.githubusercontent.com/59027997/134377330-4dbb7747-e9cb-4f36-8047-738ce6703a27.png)
+
 </div>
 <div>
 <h2>Features</h2>
