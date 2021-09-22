@@ -121,24 +121,16 @@ export const MessageList: React.FC<MessageListProps> = ({
         </div>
       </div>
 
-      <div 
-      className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-4">
-        <div
-
-          className="flex flex-col h-full overflow-x-auto mb-4"
-        >
-          <div
-          ref={scrollRef}
-          
-          className="flex flex-col h-full">
+      <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-4">
+        <div className="flex flex-col h-full overflow-x-auto mb-4">
+          <div ref={scrollRef} className="flex flex-col h-full">
             <div className="grid grid-cols-12 gap-y-2">
               {messagesData?.map((message: Message) => (
                 <>
                   {message.senderId ===
                   (userState.user.id as unknown as number) ? (
                     <div
-          ref={scrollRef}
-
+                      ref={scrollRef}
                       key={message.id}
                       className="col-start-1 col-end-8 p-3 rounded-lg"
                     >
@@ -157,7 +149,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                     </div>
                   ) : (
                     <div
-          ref={scrollRef}
+                      ref={scrollRef}
                       key={message.id}
                       className="col-start-6 col-end-13 p-3 rounded-lg"
                     >
