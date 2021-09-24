@@ -4,46 +4,58 @@ import { Message } from "../interfaces/Message";
 export default function useWebsocket({
   url,
   onConnected,
+  userId,
 }: {
   url: string;
   onConnected: any;
+  userId: number;
 }) {
-  const [messages, setMessages] = useState<[] | Message[] | undefined>(undefined);
+  const [messages, setMessages] = useState<[] | Message[] | undefined>(
+    undefined
+  );
   const [reconnecting, setReconnecting] = useState(false);
   const socket = useRef<any>(null);
+  const [activeConnection, setActiveConnection] = useState(false);
 
   useEffect(() => {
+    console.log(userId);
     // console.log("running socket hook");
-    socket.current = new WebSocket(url);
+    if (activeConnection === false) {
+      console.log(activeConnection);
+      socket.current = new WebSocket(url);
 
-    socket.current.onopen = () => {
-      // console.log("connected");
-      onConnected(socket.current);
-    };
+      socket.current.onopen = () => {
+        // console.log("connected");
+        onConnected(socket.current);
+      };
 
-    socket.current.onclose = () => {
-      console.log("closed");
-      if (socket.current) {
-        if (reconnecting) return;
-        setReconnecting(true);
-        setTimeout(() => setReconnecting(false), 2000);
-      }
-    };
-
-    socket.current.onmessage = (e: any) => {
-      const data = JSON.parse(e.data);
-      setMessages((prev: Message[] | undefined | []) => {
-        if(prev) {
-      console.log("message received ", data);
-          return [...prev, data]
+      socket.current.onclose = () => {
+        console.log("closed");
+        if (socket.current) {
+          if (reconnecting) return;
+          setReconnecting(true);
+          setTimeout(() => setReconnecting(false), 2000);
         }
-      });
-    };
+      };
 
-    return () => {
-      socket.current.close();
-      socket.current = null;
-    };
+      socket.current.onmessage = (e: any) => {
+        const data = JSON.parse(e.data);
+        setMessages((prev: Message[] | undefined | []) => {
+          if (prev) {
+            // console.log("message received ", data);
+            return [...prev, data];
+          }
+        });
+      };
+
+      setActiveConnection(true);
+      console.log(activeConnection);
+
+      return () => {
+        socket.current.close();
+        socket.current = null;
+      };
+    }
   }, [reconnecting, url]);
 
   function readyState() {

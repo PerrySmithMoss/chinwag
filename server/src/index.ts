@@ -9,7 +9,21 @@ import messageRouter from "../routes/messageRoutes";
 
 const wss = new WebSocket.Server({ port: 7071 });
 // const clients = new Map();
-const clients: any[] = [];
+let clients: any[] = [];
+let webSockets: any = {};
+
+const addUser = (userId: number, socketId: number) => {
+  !clients.some((user) => user.userId === userId) &&
+    clients.push({ userId, socketId });
+};
+
+const removeUser = (socketId: number) => {
+  clients = clients.filter((user) => user.socketId !== socketId);
+};
+
+const getUser = (userId: number) => {
+  return clients.find((user) => user.userId === userId);
+};
 
 const PORT = process.env.PORT || 5000;
 const prisma = new PrismaClient();
@@ -46,20 +60,25 @@ const main = async () => {
   //   );
 
   wss.on("connection", (ws) => {
-    console.log("A client just connected...");
-    const id = uuidv4();
+    // console.log("A client just connected...");
+    const userID = uuidv4();
     const color = Math.floor(Math.random() * 3600);
-    const metadata = { id, color };
+    const metadata = { userID, color };
+
+    webSockets[userID] = ws;
+    console.log(
+      "connected: " + userID + " in " + Object.getOwnPropertyNames(webSockets)
+    );
 
     // clients.set(ws, metadata);
 
     ws.on("message", async (message: any, isBinary: boolean) => {
       try {
         const data = JSON.parse(message);
-        console.log("data: ", data);
+        // console.log("data: ", data);
         switch (data.type) {
           case "connect": {
-            console.log("Connecting " + data.userId);
+            // console.log("Connecting " + data.userId);
             clients.push({
               ws,
               ...data,
@@ -69,8 +88,9 @@ const main = async () => {
           }
 
           case "message": {
-            // console.log("clients: ", clients);
             const { senderId, receiverId, message } = data;
+
+            console.log("received from " + userID + ": " + message);
 
             const newMessage = await prisma.message.create({
               data: {
@@ -84,9 +104,26 @@ const main = async () => {
               },
             });
 
+            let toUserWebSocket = webSockets[data];
+
+            // if (toUserWebSocket) {
+            //   console.log("sent to " + data[0] + ": " + JSON.stringify(data));
+            //   data[0] = userID;
+            //   toUserWebSocket.send(JSON.stringify(newMessage));
+            // }
+
             wss.clients.forEach(function each(client) {
-              if (client !== ws && client.readyState === WebSocket.OPEN) {
-                // client.send(data, { binary: isBinary });
+              // if (client !== ws && client.readyState === WebSocket.OPEN) {
+              //   // client.send(data, { binary: isBinary });
+              //   client.send(
+              //     JSON.stringify({
+              //       type: "message",
+              //       ...newMessage,
+              //     })
+              //   );
+              // }
+
+              if (client.readyState === WebSocket.OPEN) {
                 client.send(
                   JSON.stringify({
                     type: "message",
@@ -137,7 +174,8 @@ const main = async () => {
     });
 
     ws.on("close", () => {
-      console.log("A client disconnected...");
+      delete webSockets[userID];
+      console.log("A client disconnected...", userID);
       // clients.delete(ws);
       //   const client = clients.find((c) => c.userId === ws.userId);
       //   if (!client) return;
