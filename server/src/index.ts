@@ -8,22 +8,18 @@ import userRouter from "../routes/userRoutes";
 import messageRouter from "../routes/messageRoutes";
 
 const wss = new WebSocket.Server({ port: 7071 });
-// const clients = new Map();
-let clients: any[] = [];
 let webSockets: any = {};
 
-const addUser = (userId: number, socketId: number) => {
-  !clients.some((user) => user.userId === userId) &&
-    clients.push({ userId, socketId });
-};
-
-const removeUser = (socketId: number) => {
-  clients = clients.filter((user) => user.socketId !== socketId);
-};
-
-const getUser = (userId: number) => {
-  return clients.find((user) => user.userId === userId);
-};
+function sendMessageTo(senderID: any, receiverID: any, data: any) {
+  if (
+    webSockets[senderID] &&
+    webSockets[receiverID] &&
+    webSockets[receiverID].readyState === WebSocket.OPEN &&
+    webSockets[senderID].readyState === WebSocket.OPEN
+  )
+    webSockets[senderID].send(data);
+    webSockets[receiverID].send(data);
+}
 
 const PORT = process.env.PORT || 5000;
 const prisma = new PrismaClient();
@@ -61,28 +57,27 @@ const main = async () => {
 
   wss.on("connection", (ws) => {
     // console.log("A client just connected...");
-    const userID = uuidv4();
-    const color = Math.floor(Math.random() * 3600);
-    const metadata = { userID, color };
-
-    webSockets[userID] = ws;
-    console.log(
-      "connected: " + userID + " in " + Object.getOwnPropertyNames(webSockets)
-    );
-
-    // clients.set(ws, metadata);
 
     ws.on("message", async (message: any, isBinary: boolean) => {
       try {
         const data = JSON.parse(message);
-        // console.log("data: ", data);
+        const userID = data.userId;
+        console.log("data: ", data);
         switch (data.type) {
           case "connect": {
-            // console.log("Connecting " + data.userId);
-            clients.push({
-              ws,
-              ...data,
-            });
+            console.log("Connecting " + data.userId);
+            // clients.push({
+            //   ws,
+            //   ...data,
+            // });
+
+            webSockets[userID] = ws;
+            console.log(
+              "connected: " +
+                userID +
+                " in " +
+                Object.getOwnPropertyNames(webSockets)
+            );
 
             break;
           }
@@ -90,7 +85,7 @@ const main = async () => {
           case "message": {
             const { senderId, receiverId, message } = data;
 
-            console.log("received from " + userID + ": " + message);
+            console.log("received from " + senderId + ": " + message);
 
             const newMessage = await prisma.message.create({
               data: {
@@ -104,83 +99,39 @@ const main = async () => {
               },
             });
 
-            let toUserWebSocket = webSockets[data];
+            // Send message to a specific user
+            sendMessageTo(
+              senderId,
+              receiverId,
+              JSON.stringify({
+                type: "message",
+                ...newMessage,
+              })
+            );
 
-            // if (toUserWebSocket) {
-            //   console.log("sent to " + data[0] + ": " + JSON.stringify(data));
-            //   data[0] = userID;
-            //   toUserWebSocket.send(JSON.stringify(newMessage));
-            // }
-
-            wss.clients.forEach(function each(client) {
-              // if (client !== ws && client.readyState === WebSocket.OPEN) {
-              //   // client.send(data, { binary: isBinary });
-              //   client.send(
-              //     JSON.stringify({
-              //       type: "message",
-              //       ...newMessage,
-              //     })
-              //   );
-              // }
-
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    type: "message",
-                    ...newMessage,
-                  })
-                );
-              }
-            });
-
-            // clients
-            //   .filter((c) => {
-            //     return (
-            //       c.userId === data.receiverId || c.userId === data.senderId
-            //     );
-            //   })
-            //   .forEach((client) =>
-            //     client.socket.send(
+            // Stream message to all users on WebSocket
+            //   if (client.readyState === WebSocket.OPEN) {
+            //     client.send(
             //       JSON.stringify({
             //         type: "message",
-            //         ...data,
+            //         ...newMessage,
             //       })
-            //     )
-            //   );
+            //     );
+            //   }
+            // });
+
             break;
           }
         }
+
+        ws.on("close", () => {
+          console.log("A client disconnected...");
+          delete webSockets[userID];
+          console.log("WebSockets: " + Object.getOwnPropertyNames(webSockets));
+        });
       } catch (err) {
         console.log(err);
       }
-
-      // wss.clients.forEach((client) => {
-      //   if (client !== ws && client.readyState === WebSocket.OPEN) {
-      //     client.send(messageAsString);
-      //   }
-      // });
-      // const data = JSON.parse(messageAsString);
-      // console.dir("Received message from client - ", data);
-      // const message = JSON.parse(messageAsString);
-      // const metadata = clients.get(ws);
-
-      // message.sender = metadata.id;
-      // message.color = metadata.color;
-      // const outbound = JSON.stringify(message);
-
-      // [...clients.keys()].forEach((client) => {
-      //   client.send(outbound);
-      // });
-    });
-
-    ws.on("close", () => {
-      delete webSockets[userID];
-      console.log("A client disconnected...", userID);
-      // clients.delete(ws);
-      //   const client = clients.find((c) => c.userId === ws.userId);
-      //   if (!client) return;
-      //   console.log('Closing: ' + client.userId);
-      //   clients.splice(clients.indexOf(client), 1);
     });
   });
 
@@ -226,9 +177,10 @@ const main = async () => {
   );
 };
 
-main().catch((err) => {
-  console.log(err);
-});
-// .finally(async () => {
-//   await prisma.$disconnect();
-// });
+main()
+  .catch((err) => {
+    console.log(err);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

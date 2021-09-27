@@ -24,8 +24,8 @@ const Chat: NextPage = () => {
   const [selectedUserId, setSelectedUserId] = useState<undefined | number>(
     undefined
   );
-  const [newMessage, setNewMessage] = useState("");
-  const [showEmojis, setShowEmojis] = useState(false);
+  const [newMessage, setNewMessage] = useState<string>("");
+  const [showEmojis, setShowEmojis] = useState<boolean>(false);
   const [cursorPosition, setCursorPosition] = useState();
   const scrollRef = useRef<any>();
   const emojiRef = useRef<any>();
@@ -73,7 +73,6 @@ const Chat: NextPage = () => {
   const { socket, reconnecting, messages, setMessages } = useWebsocket({
     url: "ws://127.0.0.1:7071",
     onConnected,
-    userId: userState.user.id as unknown as number,
   });
 
   function onConnected(socket: any) {

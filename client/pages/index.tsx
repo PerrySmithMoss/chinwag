@@ -8,10 +8,15 @@ import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
 import { UserContext } from "../contexts/user-context";
 
+interface ILoginForm {
+  email: string,
+  password: string
+}
+
 const Home: NextPage = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [formValues, setFormValues] = useState({
+  const [formValues, setFormValues] = useState<ILoginForm>({
     email: "",
     password: "",
   });

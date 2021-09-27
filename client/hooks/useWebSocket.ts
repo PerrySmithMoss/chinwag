@@ -3,12 +3,10 @@ import { Message } from "../interfaces/Message";
 
 export default function useWebsocket({
   url,
-  onConnected,
-  userId,
+  onConnected
 }: {
   url: string;
   onConnected: any;
-  userId: number;
 }) {
   const [messages, setMessages] = useState<[] | Message[] | undefined>(
     undefined
@@ -18,10 +16,9 @@ export default function useWebsocket({
   const [activeConnection, setActiveConnection] = useState(false);
 
   useEffect(() => {
-    console.log(userId);
+    // console.log(userId);
     // console.log("running socket hook");
     if (activeConnection === false) {
-      console.log(activeConnection);
       socket.current = new WebSocket(url);
 
       socket.current.onopen = () => {
@@ -49,7 +46,6 @@ export default function useWebsocket({
       };
 
       setActiveConnection(true);
-      console.log(activeConnection);
 
       return () => {
         socket.current.close();
