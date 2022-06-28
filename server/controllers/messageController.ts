@@ -11,28 +11,9 @@ export const getMessagesForSpecificUser = async (
   try {
     const userID = parseInt(req.params.userID);
 
-    // Fetch all messages sent to user BUT only return 1 message between 2 users.
-    // By doing this it will only return 1 message between two users, thus not returning
-    // every message between two users.
-    // const messages = await prisma.$queryRaw`SELECT
-    //   m.*,     
-    //   s.firstName AS sender_firstName, 
-    //   s.lastName AS sender_lastName,
-    //   s.username AS sender_username,
-    //   r.firstName AS receiver_firstName, 
-    //   r.lastName AS receiver_lastName,
-    //   r.username AS receiver_username
-    //   FROM Message m
-    //   INNER JOIN User s ON s.id = m.senderId
-    //   INNER JOIN User r ON r.id = m.receiverId
-    //   JOIN (SELECT CASE WHEN senderId = ${userID}
-    //   THEN receiverId ELSE senderId END AS other, MAX(createdAt) AS latest
-    //   FROM Message
-    //   WHERE senderId = ${userID} OR receiverId = ${userID}
-    //   GROUP BY other) m
-    //   ON (m.senderId = ${userID} AND m.receiverId = m.other OR m.receiverId = ${userID}
-    //   AND m.senderId = m.other) AND m.createdAt = m.latest`;
-
+    // Return one message per conversation
+    // Will only return one message for each conversation 
+    // Order by the last message sent
       const messages = await prisma.$queryRaw`SELECT
       m.*,     
       s.firstName AS sender_firstName, 
@@ -51,18 +32,6 @@ export const getMessagesForSpecificUser = async (
       GROUP BY other) m
       ON (m.senderId = ${userID} AND m.receiverId = m.other OR m.receiverId = ${userID}
       AND m.senderId = m.other) AND m.createdAt = m.latest`;
-   
-      // const messages = await prisma.$queryRaw`SELECT
-    // m.*,
-    // s.firstName AS sender_firstName, 
-    // s.lastName AS sender_lastName,
-    // s.username AS sender_username,
-    // r.firstName AS receiver_firstName, 
-    // r.lastName AS receiver_lastName,
-    // r.username AS receiver_username
-    // FROM Message m
-    // INNER JOIN User s ON s.id = m.senderId
-    // INNER JOIN User r ON r.id = m.receiverId`;
 
     // const messages = await prisma.message.findMany({
     //   where: {
@@ -93,11 +62,10 @@ export const getMessagesForSpecificUser = async (
 
     // const messageIds = toIds.concat(fromIds);
 
-    // console.log(messageIds);
-
     // const filteredMessages = messages.filter(
     //   (message, index) => !toIds.includes(message.senderId, index + 1)
     // );
+
     // const filteredMessages = messages.filter(
     //   (message, index, self) => index === self.findIndex((t: Message) => (
     //      t.senderId === message.senderId
