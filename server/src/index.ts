@@ -157,21 +157,6 @@ const main = async () => {
     // res.send(recentUsers);
   });
 
-  //   const apolloServer = new ApolloServer({
-  //     schema: await buildSchema({
-  //       resolvers: [HelloResolver, PostResolver, UserResolver],
-  //     }),
-  //     context: ({ req, res }) => ({ prisma, req, res, redisClient }),
-  //     // subscriptions: {
-  //     //   path: "/subscriptions",
-  //     //   onConnect: () => console.log("✅  Client connected for subscriptions"),
-  //     //   onDisconnect: () => console.log("❌  Client disconnected from subscriptions")
-  //     // },
-  //     // uploads: false,
-  //   });
-
-  //   apolloServer.applyMiddleware({ app, cors: false });
-
   app.listen(PORT, () =>
     console.log(`🚀  Server running on http://localhost:${PORT}`)
   );
