@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { Hydrate, QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { UserContextProvider } from "../contexts/user-context";
+import { AppContextProvider } from "../contexts/global.context";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
@@ -12,9 +13,11 @@ function MyApp({ Component, pageProps }: AppProps) {
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
       <Hydrate state={pageProps.dehydratedState}>
-        <UserContextProvider>
-          <Component {...pageProps} />
-        </UserContextProvider>
+        <AppContextProvider>
+          <UserContextProvider>
+            <Component {...pageProps} />
+          </UserContextProvider>
+        </AppContextProvider>
       </Hydrate>
     </QueryClientProvider>
   );

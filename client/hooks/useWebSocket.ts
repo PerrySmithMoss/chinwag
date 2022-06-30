@@ -16,8 +16,6 @@ export default function useWebsocket({
   const [activeConnection, setActiveConnection] = useState(false);
 
   useEffect(() => {
-    // console.log(userId);
-    // console.log("running socket hook");
     if (activeConnection === false) {
       socket.current = new WebSocket(url);
 
@@ -39,7 +37,6 @@ export default function useWebsocket({
         const data = JSON.parse(e.data);
         setMessages((prev: Message[] | undefined | []) => {
           if (prev) {
-            // console.log("message received ", data);
             return [...prev, data];
           }
         });

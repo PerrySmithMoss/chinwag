@@ -209,11 +209,11 @@ export const Chat: React.FC<ChatProps> = ({}) => {
                       {message.receiverId ===
                       (userState.user.id as unknown as number) ? (
                         <div>
-                          {message.sender_firstName} {" "} {message.sender_lastName}
+                          {message.sender_firstName} {message.sender_lastName}
                         </div>
                       ) : (
                         <div>
-                          {message.receiver_firstName} {" "}
+                          {message.receiver_firstName}{" "}
                           {message.receiver_lastName}
                         </div>
                       )}
@@ -317,47 +317,53 @@ export const Chat: React.FC<ChatProps> = ({}) => {
                 <div className="flex flex-col h-full overflow-x-auto my-4">
                   <div className="flex flex-col h-full">
                     <div className="grid grid-cols-12 gap-y-2">
-                      {messages?.map((message: Message) => (
-                        <>
-                          {message.senderId ===
-                          (userState.user.id as unknown as number) ? (
+                      {messages?.map((message: Message) =>
+                        message.senderId ===
+                        (userState.user.id as unknown as number) ? (
+                          <div
+                            ref={scrollRef}
+                            key={message.id}
+                            className="col-start-1 col-end-8 p-3 rounded-lg"
+                          >
                             <div
-                              ref={scrollRef}
                               key={message.id}
-                              className="col-start-1 col-end-8 p-3 rounded-lg"
+                              className="flex flex-row items-center"
                             >
-                              <div
-                                key={message.id}
-                                className="flex flex-row items-center"
-                              >
-                                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
-                                  {message.sender.firstName.charAt(0).toUpperCase()}
-                                  {message.sender.lastName.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                                  <div>{message.message}</div>
-                                </div>
+                              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
+                                {message.sender.firstName
+                                  .charAt(0)
+                                  .toUpperCase()}
+                                {message.sender.lastName
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                              <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
+                                <div>{message.message}</div>
                               </div>
                             </div>
-                          ) : (
-                            <div
-                              ref={scrollRef}
-                              key={message.id}
-                              className="col-start-6 col-end-13 p-3 rounded-lg"
-                            >
-                              <div className="flex items-center justify-start flex-row-reverse">
-                                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
-                                  {message.receiver.firstName.charAt(0).toUpperCase()}
-                                  {message.receiver.lastName.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                                  <div>{message.message}</div>
-                                </div>
+                          </div>
+                        ) : (
+                          <div
+                            ref={scrollRef}
+                            key={message.id}
+                            className="col-start-6 col-end-13 p-3 rounded-lg"
+                          >
+                            <div className="flex items-center justify-start flex-row-reverse">
+                              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
+                                {message.receiver.firstName
+                                  .charAt(0)
+                                  .toUpperCase()}
+                                {message.receiver.lastName
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                              <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
+                                <div>{message.message}</div>
                               </div>
                             </div>
-                          )}
-                        </>
-                      ))}
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>

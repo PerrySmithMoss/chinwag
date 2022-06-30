@@ -1,34 +1,72 @@
 import express, { Request, Response, Application } from "express";
 import { PrismaClient } from "@prisma/client";
-import WebSocket from "ws";
 import cors from "cors";
-import uuidv4 from "../utils/generateSocketID";
+import { createServer } from "http";
+import { Server, Socket } from "socket.io";
 import authRouter from "../routes/authRoutes";
 import userRouter from "../routes/userRoutes";
 import messageRouter from "../routes/messageRoutes";
-
-const wss = new WebSocket.Server({ port: 7071 });
-let webSockets: any = {};
-
-function sendMessageTo(senderID: any, receiverID: any, data: any) {
-  if (
-    webSockets[senderID] &&
-    webSockets[receiverID] &&
-    webSockets[receiverID].readyState === WebSocket.OPEN &&
-    webSockets[senderID].readyState === WebSocket.OPEN
-  )
-    webSockets[senderID].send(data);
-    webSockets[receiverID].send(data);
-}
+import { allUsers } from "../controllers/userController";
 
 const PORT = process.env.PORT || 5000;
 const prisma = new PrismaClient();
 
 const main = async () => {
   const app: Application = express();
-
   app.use(express.json());
   app.use(cors());
+
+  const server = createServer(app);
+
+  const io = new Server(server, {
+    cors: {
+      origin: "http://localhost:3000",
+      methods: ["GET", "POST"],
+    },
+  });
+
+  // Returns a message thread between two users
+  async function getLastMessagesFromUser(
+    userId: number,
+    currentUserId: number
+  ) {
+    let roomMessages = await prisma.message.findMany({
+      where: {
+        OR: [
+          {
+            senderId: currentUserId,
+            receiverId: userId,
+          },
+          {
+            senderId: userId,
+            receiverId: currentUserId,
+          },
+        ],
+      },
+      include: {
+        sender: true,
+        receiver: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return roomMessages;
+  }
+
+  function sortRoomMessagesByDate(messages: any) {
+    return messages.sort(function (a: any, b: any) {
+      let date1 = a._id.split("/");
+      let date2 = b._id.split("/");
+
+      date1 = date1[2] + date1[0] + date1[1];
+      date2 = date2[2] + date2[0] + date2[1];
+
+      return date1 < date2 ? -1 : 1;
+    });
+  }
+
   //   app.use(
   //     cors({
   //       origin: process.env.CORS_ORIGIN as string,
@@ -55,98 +93,71 @@ const main = async () => {
   //     })
   //   );
 
-  wss.on("connection", (ws) => {
-    // console.log("A client just connected...");
+  io.on("connection", (socket: Socket) => {
+    // socket.on("new-user", async () => {
+    //   const members = await prisma.user.findMany();
+    //   io.emit("new-user", members);
+    // });
 
-    ws.on("message", async (message: any, isBinary: boolean) => {
-      try {
-        const data = JSON.parse(message);
-        const userID = data.userId;
-        console.log("data: ", data);
-        switch (data.type) {
-          case "connect": {
-            console.log("Connecting " + data.userId);
-            // clients.push({
-            //   ws,
-            //   ...data,
-            // });
+    socket.on("join-room", async (newRoom, previousRoom, currentUserId) => {
+      socket.join(newRoom);
+      socket.leave(previousRoom);
 
-            webSockets[userID] = ws;
-            console.log(
-              "connected: " +
-                userID +
-                " in " +
-                Object.getOwnPropertyNames(webSockets)
-            );
+      let roomMessages = await getLastMessagesFromUser(
+        previousRoom,
+        currentUserId
+      );
+      // roomMessages = sortRoomMessagesByDate(roomMessages);
 
-            break;
-          }
-
-          case "message": {
-            const { senderId, receiverId, message } = data;
-
-            console.log("received from " + senderId + ": " + message);
-
-            const newMessage = await prisma.message.create({
-              data: {
-                message,
-                senderId,
-                receiverId,
-              },
-              include: {
-                receiver: true,
-                sender: true,
-              },
-            });
-
-            // Send message to a specific user
-            sendMessageTo(
-              senderId,
-              receiverId,
-              JSON.stringify({
-                type: "message",
-                ...newMessage,
-              })
-            );
-
-            // Stream message to all users on WebSocket
-            //   if (client.readyState === WebSocket.OPEN) {
-            //     client.send(
-            //       JSON.stringify({
-            //         type: "message",
-            //         ...newMessage,
-            //       })
-            //     );
-            //   }
-            // });
-
-            break;
-          }
-        }
-
-        ws.on("close", () => {
-          console.log("A client disconnected...");
-          delete webSockets[userID];
-          console.log("WebSockets: " + Object.getOwnPropertyNames(webSockets));
-        });
-      } catch (err) {
-        console.log(err);
-      }
+      socket.emit("room-messages", roomMessages);
     });
+
+    socket.on("message-room", async (room, message, senderId, receiverId) => {
+      const newMessage = await prisma.message.create({
+        data: {
+          message,
+          senderId,
+          receiverId,
+        },
+        include: {
+          receiver: true,
+          sender: true,
+        },
+      });
+
+      let roomMessages = await getLastMessagesFromUser(receiverId, senderId);
+      // roomMessages = sortRoomMessagesByDate(roomMessages);
+
+      // sending message to room
+      io.to(room).emit("room-messages", roomMessages);
+
+      // socket.broadcast.emit("notifications", receiverId);
+    });
+
+    // app.delete('/logout', async(req, res)=> {
+    //   try {
+    //     const {_id, newMessages} = req.body;
+    //     const user = await User.findById(_id);
+    //     user.status = "offline";
+    //     user.newMessages = newMessages;
+    //     await user.save();
+    //     const members = await User.find();
+    //     socket.broadcast.emit('new-user', members);
+    //     res.status(200).send();
+    //   } catch (e) {
+    //     console.log(e);
+    //     res.status(400).send()
+    //   }
+    // })
   });
 
   /*/ Routes /*/
-
-  // Authentication
   app.use("/api/auth", authRouter);
 
-  // Users
   app.use("/api/users", userRouter);
 
-  // Messages
   app.use("/api/messages", messageRouter);
 
-  // Root
   app.get("/", async (req, res) => {
     // const recentUsers = await prisma.user.findMany({
     //   include: {
@@ -157,7 +168,7 @@ const main = async () => {
     // res.send(recentUsers);
   });
 
-  app.listen(PORT, () =>
+  server.listen(PORT, () =>
     console.log(`🚀  Server running on http://localhost:${PORT}`)
   );
 };
