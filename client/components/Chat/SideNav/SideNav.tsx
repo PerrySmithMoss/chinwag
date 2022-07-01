@@ -1,15 +1,11 @@
-import { useQuery, useQueryClient } from "react-query";
+import { useQuery} from "react-query";
 import { useContext, useEffect, useRef, useState } from "react";
 import { User } from "../../../interfaces/User";
-import Picker from "emoji-picker-react";
-import { UserContext } from "../../../contexts/user-context";
-import { fetchAllFriends } from "../../../apiCalls/fetchAllFriends";
-import { fetchAllMessagesWithUser } from "../../../apiCalls/fetchAllMessagesWithUser";
-import { MessageList } from "../../Messsage/MessageList";
-import { Message } from "../../../interfaces/Message";
-import { fetchUserDetails } from "../../../apiCalls/fetchUserDetails";
-import { getAllUserMessages } from "../../../apiCalls/fetchAllMessagesForSpecificUser";
-import { useAppContext } from "../../../contexts/global.context";
+import { UserContext } from "../../../context/user-context";
+import { fetchAllFriends } from "../../../api/user";
+import { fetchUserDetails } from "../../../api/user";
+import { getAllUserMessages } from "../../../api/message";
+import { useAppContext } from "../../../context/global.context";
 
 interface SideNavProps {}
 
@@ -17,18 +13,10 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
   const { userState, userDispatch } = useContext(UserContext);
   const {
     socket,
-    messages,
-    setMessages,
-    members,
-    setMembers,
     selectedUserId,
     setSelectedUserId,
     setRoomName
   } = useAppContext();
-  const [newMessage, setNewMessage] = useState<string>("");
-  const [showEmojis, setShowEmojis] = useState<boolean>(false);
-  const [cursorPosition, setCursorPosition] = useState();
-  const emojiRef = useRef<any>();
 
   const {
     isLoading: isFriendsLoading,
@@ -68,19 +56,6 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
 
   const handleOpenMessageModal = () => {};
 
-  const handleSendMessage = async () => {
-    // mutateAsync();
-    await socket.send(
-      JSON.stringify({
-        type: "message",
-        senderId: userState.user.id,
-        receiverId: selectedUserId,
-        message: newMessage,
-      })
-    );
-    setNewMessage("");
-  };
-
   //   socket.off("notifications").on("notifications", (room) => {
   //     if (currentRoom != room) dispatch(addNotifications(room));
   // });
@@ -108,6 +83,7 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
   function handlePrivateMemberMsg(member: any) {
     setSelectedUserId(member);
     const roomId = orderIds(userState.user.id, member);
+    console.log("roomId: ", roomId)
     joinRoom(roomId, member);
   }
 
@@ -230,8 +206,8 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
                 className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
               >
                 <div className="flex text-sm items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                  {friend.firstName.charAt(0)}
-                  {friend.lastName.charAt(0)}
+                  {friend.firstName.charAt(0).toUpperCase()}
+                  {friend.lastName.charAt(0).toUpperCase()}
                 </div>
                 <div className="ml-2 text-sm font-semibold">
                   {friend.firstName} {friend.lastName}

@@ -6,7 +6,7 @@ import { useContext, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
 import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
-import { UserContext } from "../contexts/user-context";
+import { UserContext } from "../context/user-context";
 
 interface ILoginForm {
   email: string,

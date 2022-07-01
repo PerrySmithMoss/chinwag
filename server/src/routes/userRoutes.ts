@@ -7,21 +7,21 @@ import {
   updateUser,
 } from "../controllers/userController";
 
-const authRouter = Router();
+const userRouter = Router();
 
 // Return all users
-authRouter.get("/", allUsers);
+userRouter.get("/", allUsers);
 
 // Return all users
-authRouter.get("/friends/:id", getUserFriends);
+userRouter.get("/friends/:id", getUserFriends);
 
 // Return a specifc user
-authRouter.get("/:id", getUser);
+userRouter.get("/:id", getUser);
 
 // Update user details
-authRouter.patch("/:id", updateUser);
+userRouter.patch("/:id", updateUser);
 
 // Delete a specifc user
-authRouter.delete("/:id", deleteUser);
+userRouter.delete("/:id", deleteUser);
 
-export default authRouter;
+export default userRouter;

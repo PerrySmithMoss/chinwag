@@ -1,6 +1,6 @@
 import { User } from "../interfaces/User";
 
-export const postUser = async (formValues: {
+export const login = async (formValues: {
   email: string;
   password: string;
 }): Promise<User> => {

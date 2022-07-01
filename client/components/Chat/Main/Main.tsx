@@ -1,11 +1,11 @@
-import { useQuery, useQueryClient } from "react-query";
+import { useQuery } from "react-query";
 import { useContext, useEffect, useRef, useState } from "react";
 import Picker from "emoji-picker-react";
-import { UserContext } from "../../../contexts/user-context";
-import { fetchAllMessagesWithUser } from "../../../apiCalls/fetchAllMessagesWithUser";
+import { UserContext } from "../../../context/user-context";
+import { fetchAllMessagesWithUser } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
-import { fetchUserDetails } from "../../../apiCalls/fetchUserDetails";
-import { useAppContext } from "../../../contexts/global.context";
+import { fetchUserDetails } from "../../../api/user";
+import { useAppContext } from "../../../context/global.context";
 
 interface MainProps {}
 
@@ -61,6 +61,7 @@ export const Main: React.FC<MainProps> = ({}) => {
   };
 
   const handleSendMessage = async () => {
+    console.log("Sending message to room ", roomName)
     // mutateAsync();
     socket.emit(
       "message-room",
@@ -112,9 +113,15 @@ export const Main: React.FC<MainProps> = ({}) => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [allMessagesWithSpecificUserData, messages]);
 
-  socket.off("room-messages").on("room-messages", (roomMessages: any) => {
-    setMessages(roomMessages);
-  });
+  // socket.off("room-messages").on("room-messages", (roomMessages: any) => {
+  //   setMessages(roomMessages);
+  // });
+
+  useEffect(() => {
+    socket.on("room-messages", (roomMessages: any) => {
+      setMessages(roomMessages);
+    });
+  }, [socket])
 
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
