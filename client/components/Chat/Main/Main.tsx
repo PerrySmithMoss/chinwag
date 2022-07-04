@@ -1,24 +1,26 @@
 import { useQuery } from "react-query";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Picker from "emoji-picker-react";
 import { UserContext } from "../../../context/user-context";
 import { fetchAllMessagesWithUser } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
 import { fetchUserDetails } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
+import { useSocket } from "../../../context/socket.context";
 
 interface MainProps {}
 
 export const Main: React.FC<MainProps> = ({}) => {
   const { userState, userDispatch } = useContext(UserContext);
   const {
-    socket,
+    // socket,
     setMessages,
     messages,
     selectedUserId,
     setSelectedUserId,
     roomName,
   } = useAppContext();
+  const socket = useSocket();
   const [newMessage, setNewMessage] = useState<string>("");
   const [showEmojis, setShowEmojis] = useState<boolean>(false);
   const [cursorPosition, setCursorPosition] = useState();
@@ -61,14 +63,19 @@ export const Main: React.FC<MainProps> = ({}) => {
   };
 
   const handleSendMessage = async () => {
-    console.log("Sending message to room ", roomName)
+    console.log("Sending message to room ", roomName);
     // mutateAsync();
-    socket.emit(
-      "message-room",
-      roomName,
-      newMessage,
-      userState.user.id,
-      selectedUserId
+    // socket!.emit(
+    //   "message-room",
+    //   roomName,
+    //   newMessage,
+    //   userState.user.id,
+    //   selectedUserId
+    // );
+    sendMessage(
+      userState.user.id as unknown as number,
+      selectedUserId as number,
+      newMessage
     );
     setNewMessage("");
   };
@@ -91,21 +98,73 @@ export const Main: React.FC<MainProps> = ({}) => {
         console.log("Please enter a message");
       } else {
         // console.log("Yo")
-        handleSendMessage();
+        // handleSendMessage();
+        sendMessage(
+          userState.user.id as unknown as number,
+          selectedUserId as number,
+          newMessage
+        );
       }
     }
   };
+
+  const addMessageToConversation = useCallback(
+    (senderId: number, receiverId: number, message: string) => {
+      setMessages((prevMessages: any) => {
+        let madeChange = false;
+        const newMessage = { senderId, message };
+        const newConversations = prevMessages.map((message: any) => {
+          if (arrayEquality(message.receiverId, receiverId)) {
+            madeChange = true;
+            return {
+              ...message,
+              messages: [...message.message, newMessage],
+            };
+          }
+
+          return message;
+        });
+
+        if (madeChange) {
+          return newConversations;
+        } else {
+          return [
+            ...prevMessages,
+            { senderId, receiverId, messages: [newMessage] },
+          ];
+        }
+      });
+    },
+    [setMessages]
+  );
+
+  function arrayEquality(a: any, b: any) {
+    if (a.length !== b.length) return false;
+
+    a.sort();
+    b.sort();
+
+    return a.every((element: any, index: number) => {
+      return element === b[index];
+    });
+  }
+
+  function sendMessage(senderId: number, receiverId: number, message: string) {
+    socket.emit("send-message", { senderId, receiverId, message });
+
+    addMessageToConversation(senderId, receiverId, message);
+  }
 
   useEffect(() => {
     // console.log(selectedUserId)
     if (selectedUserId) {
       // refetch();
       refetchUserDetails();
-      // fetchAllMessagesWithUser(
-      //   selectedUserId,
-      //   userState.user.id as unknown as number
-      // ).then((json) => setMessages(json));
-      // console.log("Messages: ", messages);
+      fetchAllMessagesWithUser(
+        selectedUserId,
+        userState.user.id as unknown as number
+      ).then((json) => setMessages(json));
+      console.log("Messages: ", messages);
     }
   }, [selectedUserId]);
 
@@ -117,15 +176,25 @@ export const Main: React.FC<MainProps> = ({}) => {
   //   setMessages(roomMessages);
   // });
 
+  // useEffect(() => {
+  //   socket.on("room-messages", (roomMessages: any) => {
+  //     setMessages(roomMessages);
+  //   });
+  // }, [socket])
+
   useEffect(() => {
-    socket.on("room-messages", (roomMessages: any) => {
-      setMessages(roomMessages);
-    });
-  }, [socket])
+    if (socket === null) return;
+
+    socket.on("receive-message", addMessageToConversation);
+
+    return () => socket.off("receive-message");
+  }, [socket, addMessageToConversation]);
 
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
   // }, [cursorPosition]);
+
+  console.log(messages);
   return (
     <>
       {selectedUserId !== undefined ? (

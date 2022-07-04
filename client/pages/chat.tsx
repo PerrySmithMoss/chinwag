@@ -1,10 +1,15 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { Chat } from "../components/Containers/Chat/Chat";
+import { SocketProvider } from "../context/socket.context";
+import useLocalStorage from "../hooks/useLocalStorage";
 
 const ChatPage: NextPage = () => {
+  const [id, setId] = useLocalStorage('id')
+
   return (
-    <div className="">
+    <SocketProvider id={id}>
+    <div>
       <Head>
         <title>Chinwag | Chat</title>
         <meta
@@ -16,6 +21,7 @@ const ChatPage: NextPage = () => {
 
       <Chat />
     </div>
+    </SocketProvider>
   );
 };
 

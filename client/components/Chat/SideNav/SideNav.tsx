@@ -6,18 +6,19 @@ import { fetchAllFriends } from "../../../api/user";
 import { fetchUserDetails } from "../../../api/user";
 import { getAllUserMessages } from "../../../api/message";
 import { useAppContext } from "../../../context/global.context";
+import { useSocket } from "../../../context/socket.context";
 
 interface SideNavProps {}
 
 export const SideNav: React.FC<SideNavProps> = ({}) => {
   const { userState, userDispatch } = useContext(UserContext);
   const {
-    socket,
+    // socket,
     selectedUserId,
     setSelectedUserId,
     setRoomName
   } = useAppContext();
-
+  const socket = useSocket()
   const {
     isLoading: isFriendsLoading,
     isError: isFriendsError,

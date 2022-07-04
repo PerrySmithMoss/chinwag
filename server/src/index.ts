@@ -74,45 +74,64 @@ const main = async () => {
   //     })
   //   );
 
-  io.on("connection", (socket: Socket) => {
+  // io.on("connection", (socket: Socket) => {
 
-    socket.on("join-room", async (newRoom, receiverId, senderId) => {
+  //   socket.on("join-room", async (newRoom, receiverId, senderId) => {
 
-      console.log(`Room ${newRoom}`);
-      console.log(`User ${senderId} wants to chat with - ${receiverId}`);
+  //     console.log(`Room ${newRoom}`);
+  //     console.log(`User ${senderId} wants to chat with - ${receiverId}`);
 
-      socket.join(newRoom);
-      socket.leave(receiverId);
+  //     socket.join(newRoom);
+  //     socket.leave(receiverId);
 
-      const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
+  //     const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
 
-      socket.emit("room-messages", roomMessages);
-    });
+  //     socket.emit("room-messages", roomMessages);
+  //   });
 
-    socket.on("message-room", async (room, message, senderId, receiverId) => {
+  //   socket.on("message-room", async (room, message, senderId, receiverId) => {
 
-      console.log(`New message in ${room}`);
-      console.log(`User ${senderId} sent a message to - ${receiverId}`);
-      
-      await prisma.message.create({
-        data: {
+  //     console.log(`New message in ${room}`);
+  //     console.log(`User ${senderId} sent a message to - ${receiverId}`);
+
+  //     await prisma.message.create({
+  //       data: {
+  //         message,
+  //         senderId,
+  //         receiverId,
+  //       },
+  //       include: {
+  //         receiver: true,
+  //         sender: true,
+  //       },
+  //     });
+
+  //     const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
+
+  //     // sending message to room
+  //     io.to(room).emit("room-messages", roomMessages);
+  //     // socket.broadcast.to(room).emit("room-messages", roomMessages);
+
+  //     // socket.broadcast.emit("notifications", receiverId);
+  //   });
+  // });
+
+  io.on("connection", (socket) => {
+    const id = socket.handshake.query.id;
+    if (id) {
+      socket.join(id);
+    }
+
+    socket.on("send-message", ({ senderId, receiverId, message }) => {
+      recipients.forEach((recipient: any) => {
+        const newRecipients = recipients.filter((r: any) => r !== recipient);
+        newRecipients.push(id);
+        socket.broadcast.to(recipient).emit("receive-message", {
+          recipients: newRecipients,
           message,
-          senderId,
-          receiverId,
-        },
-        include: {
-          receiver: true,
-          sender: true,
-        },
+          sender: id
+        });
       });
-
-      const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
-
-      // sending message to room
-      io.to(room).emit("room-messages", roomMessages);
-      // socket.broadcast.to(room).emit("room-messages", roomMessages);
-
-      // socket.broadcast.emit("notifications", receiverId);
     });
   });
 
