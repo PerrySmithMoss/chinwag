@@ -7,6 +7,7 @@ import { Message } from "../../../interfaces/Message";
 import { fetchUserDetails } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
+import { orderIds } from "../../../utils/orderIds";
 
 interface MainProps {}
 
@@ -97,6 +98,7 @@ export const Main: React.FC<MainProps> = ({}) => {
       if (newMessage === "") {
         console.log("Please enter a message");
       } else {
+        console.log("Sending message to room ", roomName);
         // console.log("Yo")
         // handleSendMessage();
         sendMessage(
@@ -104,39 +106,40 @@ export const Main: React.FC<MainProps> = ({}) => {
           selectedUserId as number,
           newMessage
         );
+        setNewMessage("");
       }
     }
   };
 
-  const addMessageToConversation = useCallback(
-    (senderId: number, receiverId: number, message: string) => {
-      setMessages((prevMessages: any) => {
-        let madeChange = false;
-        const newMessage = { senderId, message };
-        const newConversations = prevMessages.map((message: any) => {
-          if (arrayEquality(message.receiverId, receiverId)) {
-            madeChange = true;
-            return {
-              ...message,
-              messages: [...message.message, newMessage],
-            };
-          }
+  // const addMessageToConversation = useCallback(
+  //   (senderId: number, receiverId: number, message: string) => {
+  //     setMessages((prevMessages: any) => {
+  //       let madeChange = false;
+  //       const newMessage = { senderId, message };
+  //       const newConversations = prevMessages.map((message: any) => {
+  //         if (arrayEquality(message.receiverId, receiverId)) {
+  //           madeChange = true;
+  //           return {
+  //             ...message,
+  //             messages: [...message.message, newMessage],
+  //           };
+  //         }
 
-          return message;
-        });
+  //         return message;
+  //       });
 
-        if (madeChange) {
-          return newConversations;
-        } else {
-          return [
-            ...prevMessages,
-            { senderId, receiverId, messages: [newMessage] },
-          ];
-        }
-      });
-    },
-    [setMessages]
-  );
+  //       if (madeChange) {
+  //         return newConversations;
+  //       } else {
+  //         return [
+  //           ...prevMessages,
+  //           { senderId, receiverId, messages: [newMessage] },
+  //         ];
+  //       }
+  //     });
+  //   },
+  //   [setMessages]
+  // );
 
   function arrayEquality(a: any, b: any) {
     if (a.length !== b.length) return false;
@@ -150,9 +153,9 @@ export const Main: React.FC<MainProps> = ({}) => {
   }
 
   function sendMessage(senderId: number, receiverId: number, message: string) {
-    socket.emit("send-message", { senderId, receiverId, message });
+    socket.emit("send-message", roomName, senderId, receiverId, message);
 
-    addMessageToConversation(senderId, receiverId, message);
+    // addMessageToConversation(senderId, receiverId, message);
   }
 
   useEffect(() => {
@@ -172,29 +175,25 @@ export const Main: React.FC<MainProps> = ({}) => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [allMessagesWithSpecificUserData, messages]);
 
-  // socket.off("room-messages").on("room-messages", (roomMessages: any) => {
-  //   setMessages(roomMessages);
-  // });
-
-  // useEffect(() => {
-  //   socket.on("room-messages", (roomMessages: any) => {
-  //     setMessages(roomMessages);
-  //   });
-  // }, [socket])
-
   useEffect(() => {
     if (socket === null) return;
 
-    socket.on("receive-message", addMessageToConversation);
+    socket.on("receive-message", (newMessage: any) => {
+      const { receiverId, senderId } = newMessage;
+
+      // Only overwrite the messages state if the receiver has a chat open with the user sending the message
+      if (orderIds(receiverId, senderId) === roomName) {
+        setMessages((prevMessages: any) => [...prevMessages, newMessage]);
+      }
+    });
 
     return () => socket.off("receive-message");
-  }, [socket, addMessageToConversation]);
+  }, [socket, roomName]);
 
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
   // }, [cursorPosition]);
 
-  console.log(messages);
   return (
     <>
       {selectedUserId !== undefined ? (

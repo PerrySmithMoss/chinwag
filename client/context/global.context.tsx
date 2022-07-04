@@ -1,11 +1,7 @@
-import { io } from "socket.io-client";
 import { createContext, useContext, useState } from "react";
-
-// export const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string);
 
 // @TODO: Need to type the props
 type GlobalUIProps = {
-  // socket: any | undefined;
   messages: any;
   setMessages: React.Dispatch<React.SetStateAction<any>>;
   members: any;
@@ -17,7 +13,6 @@ type GlobalUIProps = {
 };
 
 const AppContext = createContext<GlobalUIProps>({
-  // socket: undefined,
   messages: [],
   setMessages: () => {},
   members: [],
@@ -40,7 +35,6 @@ export const AppContextProvider = ({
   return (
     <AppContext.Provider
       value={{
-        // socket: socket,
         messages,
         setMessages,
         members,

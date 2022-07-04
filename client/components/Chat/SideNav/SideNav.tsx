@@ -7,13 +7,13 @@ import { fetchUserDetails } from "../../../api/user";
 import { getAllUserMessages } from "../../../api/message";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
+import { orderIds } from "../../../utils/orderIds";
 
 interface SideNavProps {}
 
 export const SideNav: React.FC<SideNavProps> = ({}) => {
   const { userState, userDispatch } = useContext(UserContext);
   const {
-    // socket,
     selectedUserId,
     setSelectedUserId,
     setRoomName
@@ -58,23 +58,14 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
   const handleOpenMessageModal = () => {};
 
   //   socket.off("notifications").on("notifications", (room) => {
-  //     if (currentRoom != room) dispatch(addNotifications(room));
+  //     if (currentRoom !== room) dispatch(addNotifications(room));
   // });
 
-  function orderIds(id1: any, id2: any) {
-    if (id1 > id2) {
-      return id1 + "-" + id2;
-    } else {
-      return id2 + "-" + id1;
-    }
-  }
-
   function joinRoom(room: any, selectedUserId: number) {
-    // setSelectedUserId(room);
     if (!userState.user.id) {
       return alert("Please login");
     }
-    setRoomName(room)
+ 
     socket.emit("join-room", room, selectedUserId, userState.user.id);
 
     // dispatch for notifications
@@ -83,8 +74,9 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
 
   function handlePrivateMemberMsg(member: any) {
     setSelectedUserId(member);
-    const roomId = orderIds(userState.user.id, member);
+    const roomId = orderIds(userState.user.id as unknown as number, member);
     console.log("roomId: ", roomId)
+    setRoomName(roomId)
     joinRoom(roomId, member);
   }
 
@@ -96,21 +88,10 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
   }, []);
 
   useEffect(() => {
-    // console.log(selectedUserId)
     if (selectedUserId) {
-      // refetch();
       refetchUserDetails();
-      // fetchAllMessagesWithUser(
-      //   selectedUserId,
-      //   userState.user.id as unknown as number
-      // ).then((json) => setMessages(json));
-      // console.log("Messages: ", messages);
     }
   }, [selectedUserId]);
-
-  //   socket.off("new-user").on("new-user", (payload: any) => {
-  //     setMembers(payload);
-  // });
 
   if (!userState.user.id) {
     return <></>;

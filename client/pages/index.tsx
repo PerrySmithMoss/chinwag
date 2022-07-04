@@ -7,7 +7,6 @@ import { useMutation, useQueryClient } from "react-query";
 import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
 import { UserContext } from "../context/user-context";
-import useLocalStorage from "../hooks/useLocalStorage";
 
 interface ILoginForm {
   email: string,
@@ -17,7 +16,6 @@ interface ILoginForm {
 const Home: NextPage = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [id, setId] = useLocalStorage('id')
   const [formValues, setFormValues] = useState<ILoginForm>({
     email: "",
     password: "",
@@ -43,7 +41,6 @@ const Home: NextPage = () => {
         },
       });
       const json = await res.json();
-      setId(json.id)
       return json;
     } catch (err: any) {
       console.log("Login error: ", err);

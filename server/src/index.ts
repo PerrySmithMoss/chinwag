@@ -22,32 +22,46 @@ const io = new Server(server, {
   },
 });
 
-// Returns a message thread between two users
-async function getLastMessagesFromUser(userId: number, currentUserId: number) {
-  let roomMessages = await prisma.message.findMany({
-    where: {
-      OR: [
-        {
-          senderId: currentUserId,
-          receiverId: userId,
-        },
-        {
-          senderId: userId,
-          receiverId: currentUserId,
-        },
-      ],
-    },
-    include: {
-      sender: true,
-      receiver: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
+io.on("connection", (socket: Socket) => {
+  // console.log(`User connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    // console.log(`User ${socket.id} disconnected.`);
+    socket.disconnect();
   });
 
-  return roomMessages;
-}
+  socket.on("join-room", async (newRoom, receiverId, senderId) => {
+    // console.log(`Room ${newRoom}`);
+    // console.log(`User ${senderId} started chat with User ${receiverId}`);
+
+    socket.join(newRoom);
+    // socket.leave(receiverId);
+
+    const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
+
+    socket.emit("room-messages", roomMessages);
+  });
+
+  socket.on("send-message", async (room, senderId, receiverId, message) => {
+    // console.log(`New message in ${room}`);
+    // console.log(`User ${senderId} messaged User ${receiverId}`);
+    const newMessage = await prisma.message.create({
+      data: {
+        message,
+        senderId,
+        receiverId,
+      },
+      include: {
+        receiver: true,
+        sender: true,
+      },
+    });
+
+    // const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
+
+    io.to(room).emit("receive-message", newMessage);
+  });
+});
 
 const main = async () => {
   app.use(express.json());
@@ -74,67 +88,6 @@ const main = async () => {
   //     })
   //   );
 
-  // io.on("connection", (socket: Socket) => {
-
-  //   socket.on("join-room", async (newRoom, receiverId, senderId) => {
-
-  //     console.log(`Room ${newRoom}`);
-  //     console.log(`User ${senderId} wants to chat with - ${receiverId}`);
-
-  //     socket.join(newRoom);
-  //     socket.leave(receiverId);
-
-  //     const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
-
-  //     socket.emit("room-messages", roomMessages);
-  //   });
-
-  //   socket.on("message-room", async (room, message, senderId, receiverId) => {
-
-  //     console.log(`New message in ${room}`);
-  //     console.log(`User ${senderId} sent a message to - ${receiverId}`);
-
-  //     await prisma.message.create({
-  //       data: {
-  //         message,
-  //         senderId,
-  //         receiverId,
-  //       },
-  //       include: {
-  //         receiver: true,
-  //         sender: true,
-  //       },
-  //     });
-
-  //     const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
-
-  //     // sending message to room
-  //     io.to(room).emit("room-messages", roomMessages);
-  //     // socket.broadcast.to(room).emit("room-messages", roomMessages);
-
-  //     // socket.broadcast.emit("notifications", receiverId);
-  //   });
-  // });
-
-  io.on("connection", (socket) => {
-    const id = socket.handshake.query.id;
-    if (id) {
-      socket.join(id);
-    }
-
-    socket.on("send-message", ({ senderId, receiverId, message }) => {
-      recipients.forEach((recipient: any) => {
-        const newRecipients = recipients.filter((r: any) => r !== recipient);
-        newRecipients.push(id);
-        socket.broadcast.to(recipient).emit("receive-message", {
-          recipients: newRecipients,
-          message,
-          sender: id
-        });
-      });
-    });
-  });
-
   server.listen(PORT, () =>
     console.log(`🚀  Server running on http://localhost:${PORT}`)
   );
@@ -147,3 +100,30 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+// Returns a message thread between two users
+async function getLastMessagesFromUser(userId: number, currentUserId: number) {
+  let roomMessages = await prisma.message.findMany({
+    where: {
+      OR: [
+        {
+          senderId: currentUserId,
+          receiverId: userId,
+        },
+        {
+          senderId: userId,
+          receiverId: currentUserId,
+        },
+      ],
+    },
+    include: {
+      sender: true,
+      receiver: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  return roomMessages;
+}

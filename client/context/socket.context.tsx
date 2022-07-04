@@ -7,21 +7,18 @@ export function useSocket() {
   return useContext(SocketContext);
 }
 
-export function SocketProvider({id,children}: {
-  id: string;
+export function SocketProvider({children}: {
   children: React.ReactNode;
 }) {
   const [socket, setSocket] = useState<any>();
 
   useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string, {
-      query: { id },
-    });
+    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string);
 
     setSocket(newSocket);
 
     return () => newSocket.close() as any;
-  }, [id]);
+  }, []);
 
   return (
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
