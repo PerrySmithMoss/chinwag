@@ -8,8 +8,8 @@ interface ChatProps {}
 export const Chat: React.FC<ChatProps> = ({}) => {
   const { userState, userDispatch } = useContext(UserContext);
 
-  if (!userState.user) {
-    return <>You need to login!</>;
+  if (!userState.user.id) {
+    return <div>You need to login!</div>;
   }
   return (
     <main>

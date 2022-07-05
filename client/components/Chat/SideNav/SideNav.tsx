@@ -1,4 +1,4 @@
-import { useQuery} from "react-query";
+import { useQuery } from "react-query";
 import { useContext, useEffect, useRef, useState } from "react";
 import { User } from "../../../interfaces/User";
 import { UserContext } from "../../../context/user-context";
@@ -13,12 +13,8 @@ interface SideNavProps {}
 
 export const SideNav: React.FC<SideNavProps> = ({}) => {
   const { userState, userDispatch } = useContext(UserContext);
-  const {
-    selectedUserId,
-    setSelectedUserId,
-    setRoomName
-  } = useAppContext();
-  const socket = useSocket()
+  const { selectedUserId, setSelectedUserId, setRoomName } = useAppContext();
+  const { socket } = useSocket();
   const {
     isLoading: isFriendsLoading,
     isError: isFriendsError,
@@ -65,7 +61,7 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
     if (!userState.user.id) {
       return alert("Please login");
     }
- 
+
     socket.emit("join-room", room, selectedUserId, userState.user.id);
 
     // dispatch for notifications
@@ -75,8 +71,8 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
   function handlePrivateMemberMsg(member: any) {
     setSelectedUserId(member);
     const roomId = orderIds(userState.user.id as unknown as number, member);
-    console.log("roomId: ", roomId)
-    setRoomName(roomId)
+    console.log("roomId: ", roomId);
+    setRoomName(roomId);
     joinRoom(roomId, member);
   }
 
@@ -93,9 +89,6 @@ export const SideNav: React.FC<SideNavProps> = ({}) => {
     }
   }, [selectedUserId]);
 
-  if (!userState.user.id) {
-    return <></>;
-  }
   return (
     <aside className="flex flex-col py-8 pl-6 pr-2 w-64 bg-white flex-shrink-0">
       <div className="flex flex-row items-center justify-between h-12 w-full">

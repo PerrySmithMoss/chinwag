@@ -1,15 +1,18 @@
 import React, { useContext, useEffect, useState, createContext } from "react";
 import io from "socket.io-client";
 
-const SocketContext = createContext<any>(null);
+type SocketProps = {
+  socket: any;
+  setSocket: React.Dispatch<React.SetStateAction<any>>;
+};
 
-export function useSocket() {
-  return useContext(SocketContext);
-}
+const SocketContext = createContext<SocketProps>({
+  socket: undefined,
+  setSocket: () => {},
+});
 
-export function SocketProvider({children}: {
-  children: React.ReactNode;
-}) {
+
+export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<any>();
 
   useEffect(() => {
@@ -21,6 +24,12 @@ export function SocketProvider({children}: {
   }, []);
 
   return (
-    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
+    <SocketContext.Provider value={{ socket, setSocket }}>
+      {children}
+    </SocketContext.Provider>
   );
+}
+
+export function useSocket() {
+  return useContext(SocketContext);
 }
