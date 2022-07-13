@@ -7,7 +7,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
 }
 
 model Post {
@@ -17,7 +18,7 @@ model Post {
   title     String   @db.VarChar(255)
   content   String?
   published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  Int
 }
 
@@ -25,7 +26,7 @@ model Profile {
   id     Int     @id @default(autoincrement())
   bio    String?
   avatar String? @default("http://localhost:5000/images/default-avatar.jpg")
-  user   User    @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int     @unique
 }
 
@@ -49,8 +50,8 @@ model Message {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   message    String
-  sender     User     @relation("Sender", fields: [senderId], references: [id])
-  receiver   User     @relation("Reciever", fields: [receiverId], references: [id])
+  sender     User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("Reciever", fields: [receiverId], references: [id], onDelete: Cascade)
   senderId   Int
   receiverId Int
 }

@@ -31,9 +31,10 @@ const Home: NextPage = () => {
     mutateAsync();
     router.push("/chat");
   };
+
   const postUser = async (): Promise<User> => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/login`, {
         method: "POST",
         body: JSON.stringify(formValues),
         headers: {

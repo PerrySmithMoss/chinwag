@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { getChatMessagesBetweenTwoUsers, getMessagesForSpecificUser } from "../controllers/messageController";
+import { getAllMessagesBetweenTwoUsersHandler, getUserConversationsHandler } from "../controllers/messageController";
 
 const messageRouter = Router();
 
 // Return all messages for a specifc userID
-messageRouter.get("/:userID", getMessagesForSpecificUser);
+messageRouter.get("/:userID", getUserConversationsHandler);
 
 // Return all messages between two users
-messageRouter.get("/:senderId/:receiverId", getChatMessagesBetweenTwoUsers);
+messageRouter.get("/:senderId/:receiverId", getAllMessagesBetweenTwoUsersHandler);
 
 export default messageRouter;
