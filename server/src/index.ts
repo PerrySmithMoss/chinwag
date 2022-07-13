@@ -6,7 +6,7 @@ import { Server, Socket } from "socket.io";
 import router from "./routes";
 import {
   createMessage,
-  getLastMessagesFromUser,
+  getMessagesBetweenTwoUsers,
 } from "./services/message.service";
 import { config } from "../config/config";
 
@@ -37,7 +37,7 @@ const main = async () => {
     socket.on("join-room", async (newRoom, receiverId, senderId) => {
       socket.join(newRoom);
 
-      const roomMessages = await getLastMessagesFromUser(receiverId, senderId);
+      const roomMessages = await getMessagesBetweenTwoUsers(receiverId, senderId);
 
       socket.emit("room-messages", roomMessages);
     });

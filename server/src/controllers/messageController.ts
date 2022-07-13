@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import {
   getMessagesBetweenTwoUsers,
-  getUserMessages,
+  getUsersMessages,
 } from "../services/message.service";
 
 // Returns all conversations for a specifc user
@@ -12,7 +12,7 @@ export const getUserConversationsHandler = async (
   try {
     const userID = parseInt(req.params.userID);
 
-    const messages = await getUserMessages(userID);
+    const messages = await getUsersMessages(userID);
 
     res.status(200).json(messages);
   } catch (err) {
