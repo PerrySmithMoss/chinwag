@@ -4,7 +4,7 @@ import { Cookies } from "../types/types";
 
 import { verifyJwt } from "../utils/token";
 
-export function authMiddleware(
+export function isAuthenticated(
   req: Request,
   res: Response,
   next: NextFunction
@@ -26,7 +26,7 @@ export function authMiddleware(
     return next(new Error("Not Signed in"));
   }
 
-  res.locals.token = token;
+  res.locals.user = token;
 
   next();
 }

@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../lib/prisma";
 
 // Saves a message between 2 users in database
 export async function createMessage(
@@ -52,7 +50,6 @@ export async function getMessagesBetweenTwoUsers(
 
   return roomMessages;
 }
-
 
 export async function getUsersMessages(userId: number) {
   // Return one message per conversation

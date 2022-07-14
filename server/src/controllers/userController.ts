@@ -1,5 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-import argon2 from "argon2";
+import prisma from "../lib/prisma";
 import { Request, Response } from "express";
 import {
   createUser,
@@ -9,10 +8,9 @@ import {
   getAllUsers,
   getAllUsersExceptSpecifiedUser,
   updateUserWithSpecifiedData,
+  validatePassword,
 } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
-
-const prisma = new PrismaClient();
 
 export const createUserHandler = async (req: Request, res: Response) => {
   const body = req.body;
@@ -37,7 +35,7 @@ export const createUserHandler = async (req: Request, res: Response) => {
 export const loginUserHandler = async (req: Request, res: Response) => {
   const body = req.body;
   try {
-    const user = await findUserByEmail(body.password);
+    const user = await findUserByEmail(body.email);
 
     if (!user) {
       res
@@ -46,9 +44,9 @@ export const loginUserHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    const validUser = await argon2.verify(user.password, body.password);
+    const isValidUser = await validatePassword(user.password, body.password);
 
-    if (!validUser) {
+    if (!isValidUser) {
       res
         .status(400)
         .json({ message: "The email or password provided is incorrect." });
@@ -208,6 +206,14 @@ export const deleteUserHandler = async (req: Request, res: Response) => {
     res.status(201).json({ message: "User has been successfully deleted." });
   } catch (err) {
     console.log(err);
+    res.status(500).json(err);
+  }
+};
+
+export const getCurrentUserHandler = async (req: Request, res: Response) => {
+  try {
+    return res.send(res.locals.user);
+  } catch (err) {
     res.status(500).json(err);
   }
 };

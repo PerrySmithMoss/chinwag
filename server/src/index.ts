@@ -9,11 +9,11 @@ import {
   getMessagesBetweenTwoUsers,
 } from "./services/message.service";
 import { config } from "../config/config";
+import prisma from "./lib/prisma"
+import { isAuthenticated } from "./middleware/isAuthenticated";
 
 const app: Application = express();
 const server = createServer(app);
-
-const prisma = new PrismaClient();
 
 const io = new Server(server, {
   cors: {
@@ -24,6 +24,7 @@ const io = new Server(server, {
 
 const main = async () => {
   app.use(express.json());
+  app.use(isAuthenticated)
   app.use(cors());
   app.use(router);
 

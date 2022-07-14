@@ -7,7 +7,9 @@ import {
   createUserHandler,
   updateUserHandler,
   loginUserHandler,
+  getCurrentUserHandler,
 } from "../controllers/userController";
+import { requireUser } from "../middleware/requireUser";
 
 const userRouter = Router();
 
@@ -19,6 +21,9 @@ userRouter.post("/login", loginUserHandler);
 
 // Return all users
 userRouter.get("/", allUsersHandler);
+
+// Return logged in user
+userRouter.get("/me", requireUser, getCurrentUserHandler);
 
 // Return all users
 userRouter.get("/friends/:id", getUserFriendsHandler);

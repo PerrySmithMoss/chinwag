@@ -1,5 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../lib/prisma";
 import { hash } from "argon2";
+import argon2 from "argon2";
 
 type User = {
   email: string;
@@ -8,8 +9,6 @@ type User = {
   lastName: string;
   username: string;
 };
-
-const prisma = new PrismaClient();
 
 export async function createUser(userInput: User) {
   const hashedPassword = await hash(userInput.password);
@@ -53,21 +52,28 @@ export async function findUserById(userId: number, includeRelations: boolean) {
   if (includeRelations === true) {
     return await prisma.user.findFirst({
       where: { id: userId },
-      select: {
-        id: true,
-        createdAt: true,
-        firstName: true,
-        lastName: true,
-        username: true,
-        posts: true,
-        profile: true,
-      },
+      // select: {
+      //   id: true,
+      //   createdAt: true,
+      //   firstName: true,
+      //   lastName: true,
+      //   username: true,
+      //   posts: true,
+      //   profile: true,
+      // },
     });
   } else {
     return await prisma.user.findFirst({
       where: { id: userId },
     });
   }
+}
+
+export async function validatePassword(
+  userPassword: string,
+  userInput: string
+) {
+  return await argon2.verify(userPassword, userInput);
 }
 
 export async function getAllUsersExceptSpecifiedUser(userId: number) {
@@ -119,7 +125,7 @@ export async function deleteUser(userId: number, async: boolean) {
       },
     });
   } else {
-   return prisma.user.delete({
+    return prisma.user.delete({
       where: {
         id: userId,
       },
