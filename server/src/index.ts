@@ -9,8 +9,9 @@ import {
   getMessagesBetweenTwoUsers,
 } from "./services/message.service";
 import { config } from "../config/config";
-import prisma from "./lib/prisma"
+import prisma from "./lib/prisma";
 import { isAuthenticated } from "./middleware/isAuthenticated";
+import cookieParser from "cookie-parser";
 
 const app: Application = express();
 const server = createServer(app);
@@ -23,9 +24,15 @@ const io = new Server(server, {
 });
 
 const main = async () => {
+  app.use(
+    cors({
+      origin: config.serverURL,
+      credentials: true,
+    })
+  );
+  app.use(cookieParser());
   app.use(express.json());
-  app.use(isAuthenticated)
-  app.use(cors());
+  app.use(isAuthenticated);
   app.use(router);
 
   // app.use(express.static("public"));
@@ -38,7 +45,10 @@ const main = async () => {
     socket.on("join-room", async (newRoom, receiverId, senderId) => {
       socket.join(newRoom);
 
-      const roomMessages = await getMessagesBetweenTwoUsers(receiverId, senderId);
+      const roomMessages = await getMessagesBetweenTwoUsers(
+        receiverId,
+        senderId
+      );
 
       socket.emit("room-messages", roomMessages);
     });

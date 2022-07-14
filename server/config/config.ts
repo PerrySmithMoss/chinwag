@@ -7,7 +7,7 @@ export const config = {
 
   serverPort: process.env.SERVER_PORT,
   serverDomain: process.env.SERVER_DOMAIN,
-  clientURL: process.env.CORS_ORIGIN,
+  clientURL: process.env.CLIENT_URL,
   serverURL: process.env.SERVER_URL,
 
   databaseURL: process.env.DATABASE_URL!,

@@ -1,6 +1,16 @@
 import jwt from "jsonwebtoken";
 import { config } from "../../config/config";
 
+type Session = {
+  session: number;
+};
+
+export type VerifiedJWT = {
+  valid: boolean;
+  expired: boolean;
+  decoded: Session | null;
+};
+
 export function signJwt(
   object: Object,
   keyName: "accessTokenPrivateKey" | "refreshTokenPrivateKey",
@@ -22,7 +32,7 @@ export function signJwt(
 export function verifyJwt<T>(
   token: string,
   keyName: "accessTokenPublicKey" | "refreshTokenPublicKey"
-): T | null {
+): VerifiedJWT {
   const publicKey = Buffer.from(
     keyName === "accessTokenPublicKey"
       ? (config.accessTokenPublicKey as string)
@@ -31,9 +41,18 @@ export function verifyJwt<T>(
   ).toString("ascii");
 
   try {
-    const decoded = jwt.verify(token, publicKey) as T;
-    return decoded;
-  } catch (e) {
-    return null;
+    const decoded = jwt.verify(token, publicKey) as Session;
+    return {
+      valid: true,
+      expired: false,
+      decoded,
+    };
+  } catch (e: any) {
+    console.error(e);
+    return {
+      valid: false,
+      expired: e.message === "jwt expired",
+      decoded: null,
+    };
   }
 }

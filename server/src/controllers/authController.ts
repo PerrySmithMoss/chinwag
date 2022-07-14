@@ -1,9 +1,6 @@
 import prisma from "../lib/prisma";
 import { Request, Response } from "express";
-import {
-  signAccessToken,
-  signRefreshToken,
-} from "../services/auth.service";
+import { signAccessToken, signRefreshToken } from "../services/auth.service";
 import {
   findUserByEmail,
   findUserById,
@@ -11,7 +8,6 @@ import {
 } from "../services/user.service";
 import { verifyJwt } from "../utils/token";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
-import { User } from "@prisma/client";
 
 export async function createSessionHandler(req: Request, res: Response) {
   const message = "Invalid email or password";
@@ -42,6 +38,25 @@ export async function createSessionHandler(req: Request, res: Response) {
   // sign a refresh token
   const refreshToken = await signRefreshToken(userWithFieldsRemoved.id);
 
+  // Set tokens as cookies
+  res.cookie("accessToken", accessToken, {
+    maxAge: 900000, // 15 mins
+    httpOnly: true,
+    domain: "localhost",
+    path: "/",
+    sameSite: "strict",
+    secure: false,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    maxAge: 3.154e10, // 1 year
+    httpOnly: true,
+    domain: "localhost",
+    path: "/",
+    sameSite: "strict",
+    secure: false,
+  });
+
   // send the tokens
   return res.status(200).send({
     accessToken,
@@ -56,12 +71,12 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
     return res.status(401).send("No refresh token available");
   }
 
-  const decoded = verifyJwt<{ session: number }>(
+  const {decoded} = verifyJwt(
     refreshToken,
     "refreshTokenPublicKey"
   );
 
-  if (!decoded) {
+  if (!decoded || decoded === null) {
     return res.status(401).send("Could not refresh access token");
   }
 
@@ -80,5 +95,4 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
   const accessToken = signAccessToken(userWithFieldsRemoved);
 
   return res.send({ accessToken });
-  // return res.send(user);
 }
