@@ -28,15 +28,17 @@ const Home: NextPage = () => {
     });
   };
   const handleRegisterUser = async () => {
-    mutateAsync();
+    // mutateAsync();
+    await postUser()
     router.push("/chat");
   };
 
   const postUser = async (): Promise<User> => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/create`, {
         method: "POST",
         body: JSON.stringify(formValues),
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -49,13 +51,13 @@ const Home: NextPage = () => {
     }
   };
 
-  const { mutateAsync, data } = useMutation("loginUser", postUser, {
-    onSuccess: (data) => {
-      // console.log("Logged in user: ", data)
-      queryClient.setQueryData(["user"], data);
-      userDispatch({ type: "SET_USER", payload: data });
-    },
-  });
+  // const { mutateAsync, data } = useMutation("loginUser", postUser, {
+  //   onSuccess: (data) => {
+  //     // console.log("Logged in user: ", data)
+  //     queryClient.setQueryData(["user"], data);
+  //     userDispatch({ type: "SET_USER", payload: data });
+  //   },
+  // });
 
   return (
     <div>

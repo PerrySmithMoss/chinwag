@@ -8,6 +8,7 @@ import {
 } from "../services/user.service";
 import { verifyJwt } from "../utils/token";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
+import { config } from "../../config/config";
 
 export async function createSessionHandler(req: Request, res: Response) {
   const message = "Invalid email or password";
@@ -42,7 +43,7 @@ export async function createSessionHandler(req: Request, res: Response) {
   res.cookie("accessToken", accessToken, {
     maxAge: 900000, // 15 mins
     httpOnly: true,
-    domain: "localhost",
+    domain: config.serverDomain,
     path: "/",
     sameSite: "strict",
     secure: false,
@@ -51,7 +52,7 @@ export async function createSessionHandler(req: Request, res: Response) {
   res.cookie("refreshToken", refreshToken, {
     maxAge: 3.154e10, // 1 year
     httpOnly: true,
-    domain: "localhost",
+    domain: config.serverDomain,
     path: "/",
     sameSite: "strict",
     secure: false,
@@ -71,10 +72,7 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
     return res.status(401).send("No refresh token available");
   }
 
-  const {decoded} = verifyJwt(
-    refreshToken,
-    "refreshTokenPublicKey"
-  );
+  const { decoded } = verifyJwt(refreshToken, "refreshTokenPublicKey");
 
   if (!decoded || decoded === null) {
     return res.status(401).send("Could not refresh access token");
@@ -96,3 +94,29 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
 
   return res.send({ accessToken });
 }
+
+export const deleteUserSessionHandler = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      domain: config.serverDomain,
+      path: "/",
+      sameSite: "strict",
+      secure: false,
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      domain: config.serverDomain,
+      path: "/",
+      sameSite: "strict",
+      secure: false,
+    });
+
+    res.removeHeader("x-access-token");
+
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};

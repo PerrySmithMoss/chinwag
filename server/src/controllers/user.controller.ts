@@ -11,6 +11,7 @@ import {
   validatePassword,
 } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
+import { config } from "../../config/config";
 
 export const createUserHandler = async (req: Request, res: Response) => {
   const body = req.body;
@@ -78,25 +79,37 @@ export const allUsersHandler = async (req: Request, res: Response) => {
 };
 
 export const getUserHandler = async (req: Request, res: Response) => {
-  const body = req.body;
+  const params = req.params;
   try {
-    const userId = parseInt(body.id);
+    const userId = parseInt(params.id);
 
     const user = await findUserById(userId, true);
 
-    res.status(200).json(user);
+    if (!user) {
+      res
+        .status(400)
+        .json({ message: "The email or password provided is incorrect." });
+      return;
+    }
+
+    const userWithFieldsRemoved = removeFieldsFromObject(user, [
+      "password",
+      "email",
+    ]);
+
+    res.status(200).json(userWithFieldsRemoved);
   } catch (err) {
     res.status(500).json(err);
   }
 };
 
 export const getUserFriendsHandler = async (req: Request, res: Response) => {
-  const body = req.body;
+  const params = req.params;
   try {
-    const userId = parseInt(body.id);
+    const userId = parseInt(params.id);
 
-    const user = await getAllUsersExceptSpecifiedUser(userId);
-    res.status(200).json(user);
+    const users = await getAllUsersExceptSpecifiedUser(userId);
+    res.status(200).json(users);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -119,7 +132,12 @@ export const updateUserHandler = async (req: Request, res: Response) => {
 
     const updatedUser = await updateUserWithSpecifiedData(userId, body);
 
-    res.status(201).json({ updatedUser });
+    const userWithFieldsRemoved = removeFieldsFromObject(updatedUser, [
+      "password",
+      "email",
+    ]);
+
+    res.status(201).json(userWithFieldsRemoved );
   } catch (err) {
     res.status(500).json(err);
   }
@@ -203,7 +221,7 @@ export const deleteUserHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    res.status(201).json({ message: "User has been successfully deleted." });
+    res.status(201).json({ message: `User ${userId} has successfully been deleted.` });
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
@@ -217,3 +235,4 @@ export const getCurrentUserHandler = async (req: Request, res: Response) => {
     res.status(500).json(err);
   }
 };
+

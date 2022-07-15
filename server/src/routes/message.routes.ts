@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllMessagesBetweenTwoUsersHandler, getUserConversationsHandler } from "../controllers/messageController";
+import { getAllMessagesBetweenTwoUsersHandler, getUserConversationsHandler } from "../controllers/message.controller";
 
 const messageRouter = Router();
 

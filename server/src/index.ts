@@ -1,5 +1,4 @@
 import express, { Application } from "express";
-import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
@@ -26,7 +25,7 @@ const io = new Server(server, {
 const main = async () => {
   app.use(
     cors({
-      origin: config.serverURL,
+      origin: config.clientURL,
       credentials: true,
     })
   );

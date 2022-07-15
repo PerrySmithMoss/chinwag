@@ -6,9 +6,8 @@ import {
   getUserFriendsHandler,
   createUserHandler,
   updateUserHandler,
-  loginUserHandler,
   getCurrentUserHandler,
-} from "../controllers/userController";
+} from "../controllers/user.controller";
 import { requireUser } from "../middleware/requireUser";
 
 const userRouter = Router();
@@ -16,16 +15,13 @@ const userRouter = Router();
 // Register new user
 userRouter.post("/register", createUserHandler);
 
-// Log a user in
-userRouter.post("/login", loginUserHandler);
-
 // Return all users
 userRouter.get("/", allUsersHandler);
 
 // Return logged in user
 userRouter.get("/me", requireUser, getCurrentUserHandler);
 
-// Return all users
+// Return a users contacts
 userRouter.get("/friends/:id", getUserFriendsHandler);
 
 // Return a specifc user

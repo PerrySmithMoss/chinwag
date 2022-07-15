@@ -1,10 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import { config } from "../../config/config";
 import { signAccessToken } from "../services/auth.service";
 import { findUserById } from "../services/user.service";
-
-import { Cookies } from "../types/types";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
-
 import { verifyJwt } from "../utils/token";
 
 export async function isAuthenticated(
@@ -16,7 +14,7 @@ export async function isAuthenticated(
     (req.headers.authorization || "").replace(/^Bearer\s/, "") ||
     req.cookies.accessToken;
 
-  const refreshToken = req.cookies.refreshToken || req.header("x-refresh");
+  const refreshToken = req.header("x-refresh") || req.cookies.refreshToken;
 
   if (!accessToken) {
     return next();
@@ -24,16 +22,18 @@ export async function isAuthenticated(
 
   const { decoded, expired } = verifyJwt(accessToken, "accessTokenPublicKey");
 
+  // Valid access token
   if (decoded) {
     res.locals.user = decoded;
     return next();
-  } else if (!decoded|| decoded === null) {
+  } else if (!decoded || decoded === null) {
     res.status(401);
     return next(new Error("Not Signed in"));
   }
 
+  // Expired access token but valid refresh token
   if (expired && refreshToken) {
-    const user = await findUserById(decoded['session'], true);
+    const user = await findUserById(decoded["session"], true);
 
     if (!user) {
       return res.status(401).send("Could not refresh access token");
@@ -53,7 +53,7 @@ export async function isAuthenticated(
       res.cookie("accessToken", newAccessToken, {
         maxAge: 900000, // 15 mins
         httpOnly: true,
-        domain: "localhost",
+        domain: config.serverDomain,
         path: "/",
         sameSite: "strict",
         secure: false,
