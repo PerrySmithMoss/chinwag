@@ -3,21 +3,41 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 import { UserContext } from "../../../context/user-context";
-import { fetchAllMessagesWithUser, getAllUserMessages } from "../../../api/message";
+import {
+  fetchAllMessagesWithUser,
+  getAllUserMessages,
+} from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
 import { fetchUserDetails } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
 import { io } from "socket.io-client";
+import useDebounce from "../../../hooks/useDebounce";
+import { User } from "../../../interfaces/User";
+import fetcher from "../../../utils/fetcher";
 
 interface MainProps {}
 
 export const Main: React.FC<MainProps> = ({}) => {
   const { socket, setSocket } = useSocket();
   const { userState, userDispatch } = useContext(UserContext);
-  const { setMessages, messages, selectedUserId, setSelectedUserId, roomName } =
-    useAppContext();
+  const {
+    setMessages,
+    messages,
+    selectedUserId,
+    setSelectedUserId,
+    roomName,
+    createNewMessage,
+  } = useAppContext();
+
+  const [recipientInput, setRecipientInput] = useState<string>("");
+  const debouncedSearchTerm = useDebounce(recipientInput, 1500);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isRecipientSearchResultsOpen, setIsRecipientSearchResultsOpen] =
+    useState<boolean>(false);
+  // const [recipientSearchResults, setRecipientSearchResult] = useState<User[]>([]);
+
   const [newMessage, setNewMessage] = useState<string>("");
   const [showEmojis, setShowEmojis] = useState<boolean>(false);
   const [cursorPosition, setCursorPosition] = useState();
@@ -63,7 +83,20 @@ export const Main: React.FC<MainProps> = ({}) => {
     { refetchOnWindowFocus: false, enabled: false }
   );
 
-  const handleOpenMessageModal = () => {};
+  const {
+    data: recipientSearchResults,
+    refetch: refetchRecipientSearchResults,
+  } = useQuery(
+    ["me"],
+    () =>
+      fetcher(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/search/${debouncedSearchTerm}`
+      ),
+    {
+      enabled: false,
+      refetchOnWindowFocus: false,
+    }
+  );
 
   const handleShowEmojis = () => {
     emojiRef.current.focus();
@@ -110,6 +143,12 @@ export const Main: React.FC<MainProps> = ({}) => {
     socket.emit("send-message", roomName, senderId, receiverId, message);
   }
 
+  const handleChangeRecipientInput = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRecipientInput(e.target.value);
+  };
+
   useEffect(() => {
     // console.log(selectedUserId)
     if (selectedUserId) {
@@ -139,8 +178,8 @@ export const Main: React.FC<MainProps> = ({}) => {
 
     if (socket !== undefined) {
       socket.on("receive-message", (newMessage: any) => {
-        // Re-fetch the user's messages in sidebar when a message has been sent or received 
-        refetchMessages()
+        // Re-fetch the user's messages in sidebar when a message has been sent or received
+        refetchMessages();
 
         const { receiverId, senderId } = newMessage;
 
@@ -154,13 +193,45 @@ export const Main: React.FC<MainProps> = ({}) => {
     }
   }, [socket, roomName]);
 
+  useEffect(() => {
+    if (debouncedSearchTerm.length === 0) {
+      // setFilteredProducts([]);
+      setIsSearching(false);
+      // setIsProductSearchResultsOpen(false);
+
+      return;
+    }
+
+    setIsSearching(true);
+    setIsRecipientSearchResultsOpen(true);
+
+    async function searchForUserByEmail() {
+      const bearer = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`;
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/Integration/searchItem?searchText=${debouncedSearchTerm}`,
+        {
+          headers: {
+            Authorization: bearer,
+          },
+        }
+      );
+
+      const recipientsJSON = await res.json();
+
+      refetchRecipientSearchResults();
+
+      setIsSearching(false);
+    }
+    searchForUserByEmail();
+  }, [debouncedSearchTerm]);
+
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
   // }, [cursorPosition]);
 
   return (
     <>
-      {selectedUserId !== undefined ? (
+      {selectedUserId !== undefined && createNewMessage === false ? (
         <div className="flex flex-col flex-auto h-full pl-6">
           <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-3">
             <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
@@ -332,6 +403,119 @@ export const Main: React.FC<MainProps> = ({}) => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      ) : createNewMessage === true ? (
+        <div className="flex flex-col flex-auto h-full pl-6">
+          <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-3">
+            <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
+              <div className="flex justify-between ml-3 pt-2 pb-4 rounded-lg">
+                <div className="flex flex-row items-center">
+                  <div>To:</div>
+                  <div>
+                    <input
+                      onChange={(e) => handleChangeRecipientInput(e)}
+                      className="ml-2"
+                      type="text"
+                      name="recipientInput"
+                      placeholder="Enter user's email"
+                      id="recipientInput"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col h-full overflow-x-auto mb-4">
+              {/* <div className="flex flex-col h-full">
+              <div className="grid grid-cols-12 gap-y-2">
+
+              </div>
+            </div> */}
+            </div>
+            {/* <div className="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
+            <div>
+              <button className="flex items-center justify-center text-gray-400 hover:text-gray-600">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <div className="flex-grow ml-4">
+              <div className="relative w-full">
+                <input
+                  ref={emojiRef}
+                  name="newMessage"
+                  value={newMessage}
+                  onKeyPress={handleKeyPress}
+                  onChange={(event) => {
+                    setNewMessage(event.target.value);
+                  }}
+                  type="text"
+                  className="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
+                />
+
+                <button
+                  onClick={handleShowEmojis}
+                  className="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600"
+                >
+                  {showEmojis ? (
+                    <div className="overflow-y-auto absolute bottom-14">
+                      <Picker onEmojiClick={onEmojiClick} />
+                    </div>
+                  ) : null}
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="ml-4">
+              <button
+                onClick={handleSendMessage}
+                className="flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white px-4 py-1 flex-shrink-0"
+              >
+                <span>Send</span>
+                <span className="ml-2">
+                  <svg
+                    className="w-4 h-4 transform rotate-45 -mt-px"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    ></path>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div> */}
           </div>
         </div>
       ) : (

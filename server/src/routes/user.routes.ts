@@ -7,6 +7,7 @@ import {
   createUserHandler,
   updateUserHandler,
   getCurrentUserHandler,
+  searchUsersHandler,
 } from "../controllers/user.controller";
 import { requireUser } from "../middleware/requireUser";
 
@@ -32,5 +33,8 @@ userRouter.patch("/:id", updateUserHandler);
 
 // Delete a specifc user
 userRouter.delete("/:id", deleteUserHandler);
+
+// Search for a user
+userRouter.get("/search/:username", searchUsersHandler);
 
 export default userRouter;

@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma";
 import { hash } from "argon2";
 import argon2 from "argon2";
+import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 
 type User = {
   email: string;
@@ -50,7 +51,7 @@ export async function getAllUsers() {
 
 export async function findUserById(userId: number, includeRelations: boolean) {
   if (includeRelations === true) {
-    return await prisma.user.findFirst({
+    return await prisma.user.findUnique({
       where: { id: userId },
       // select: {
       //   id: true,
@@ -66,6 +67,33 @@ export async function findUserById(userId: number, includeRelations: boolean) {
     return await prisma.user.findFirst({
       where: { id: userId },
     });
+  }
+}
+
+export async function findUserByUsername(
+  username: string,
+  includeRelations: boolean
+) {
+  if (includeRelations === true) {
+    const res = await prisma.user.findMany({
+      where: { username },
+    });
+
+    const removeUnwantedFieldsFromEachUser = res.map((user) => {
+      return removeFieldsFromObject(user, ["password", "email"]);
+    });
+
+    return removeUnwantedFieldsFromEachUser;
+  } else {
+    const res = await prisma.user.findMany({
+      where: { username },
+    });
+
+    const removeUnwantedFieldsFromEachUser = res.map((user) => {
+      removeFieldsFromObject(user, ["password", "email"]);
+    });
+
+    return removeUnwantedFieldsFromEachUser;
   }
 }
 

@@ -5,6 +5,7 @@ import {
   deleteUser,
   findUserByEmail,
   findUserById,
+  findUserByUsername,
   getAllUsers,
   getAllUsersExceptSpecifiedUser,
   updateUserWithSpecifiedData,
@@ -137,7 +138,7 @@ export const updateUserHandler = async (req: Request, res: Response) => {
       "email",
     ]);
 
-    res.status(201).json(userWithFieldsRemoved );
+    res.status(201).json(userWithFieldsRemoved);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -221,7 +222,9 @@ export const deleteUserHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    res.status(201).json({ message: `User ${userId} has successfully been deleted.` });
+    res
+      .status(201)
+      .json({ message: `User ${userId} has successfully been deleted.` });
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
@@ -236,3 +239,21 @@ export const getCurrentUserHandler = async (_req: Request, res: Response) => {
   }
 };
 
+export const searchUsersHandler = async (req: Request, res: Response) => {
+  try {
+    const username = req.params.username;
+
+    const users = await findUserByUsername(username, true);
+
+    if (!users) {
+      res.status(400).json({
+        message: "There is no user which matches the specified username.",
+      });
+      return;
+    }
+
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};

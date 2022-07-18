@@ -17,7 +17,7 @@ interface SideNavProps {
 export const SideNav: React.FC<SideNavProps> = ({user}) => {
   const router = useRouter();
   const { userState, userDispatch } = useContext(UserContext);
-  const { selectedUserId, setSelectedUserId, setRoomName } = useAppContext();
+  const { selectedUserId, setSelectedUserId, setRoomName, setCreateNewMessage } = useAppContext();
   const { socket } = useSocket();
   const {
     isLoading: isFriendsLoading,
@@ -56,7 +56,21 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
     { refetchOnWindowFocus: false, enabled: false }
   );
 
-  const handleOpenMessageModal = () => {};
+  const handleCreateNewMessage = () => {
+    // Set newMessage global state to true
+    setCreateNewMessage(true)
+    // Open new main component with black details 
+
+    // User types in the friend they would like to message 
+    // OR
+    // User types in the username they would like to message
+    // THEN
+    // User clicks the user they would like to message
+    // Request is sent to the server to fetch the selectedUserId details and message thread (if they have one already)
+    // selectedUserId global state is then updated to the user Id they selected to message
+    // User can now send message
+    // User 
+  };
 
   //   socket.off("notifications").on("notifications", (room) => {
   //     if (currentRoom !== room) dispatch(addNotifications(room));
@@ -111,13 +125,13 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
   }, [selectedUserId]);
 
   return (
-    <aside className="flex flex-col py-8 pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
+    <aside className="flex flex-col py-3 pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
       <div className="flex flex-col justify-between flex-1">
         <div>
           <div className="flex flex-row items-center justify-between h-12 w-full">
             <div className="ml-2 font-bold text-2xl">QuickChat</div>
             <div
-              onClick={handleOpenMessageModal}
+              onClick={handleCreateNewMessage}
               className="flex items-center justify-center rounded-2xl text-indigo-700 bg-indigo-100 h-8 w-8"
             >
               <svg height="27px" viewBox="0 0 24 24" className="fill-current">

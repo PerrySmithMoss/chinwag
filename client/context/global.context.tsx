@@ -8,6 +8,8 @@ type GlobalUIProps = {
   setMembers: React.Dispatch<React.SetStateAction<any>>;
   selectedUserId: number | undefined;
   setSelectedUserId: React.Dispatch<React.SetStateAction<number | undefined>>;
+  createNewMessage: boolean;
+  setCreateNewMessage: React.Dispatch<React.SetStateAction<boolean>>;
   roomName: string | undefined;
   setRoomName: React.Dispatch<React.SetStateAction<string | undefined>>;
 };
@@ -19,6 +21,8 @@ const AppContext = createContext<GlobalUIProps>({
   setMembers: () => {},
   selectedUserId: undefined,
   setSelectedUserId: () => {},
+  createNewMessage: false,
+  setCreateNewMessage: () => {},
   roomName: undefined,
   setRoomName: () => {},
 });
@@ -31,6 +35,7 @@ export const AppContextProvider = ({
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(
     undefined
   );
+  const [createNewMessage, setCreateNewMessage] = useState<boolean>(false);
   const [roomName, setRoomName] = useState<string | undefined>(undefined);
   return (
     <AppContext.Provider
@@ -41,6 +46,8 @@ export const AppContextProvider = ({
         setMembers,
         selectedUserId,
         setSelectedUserId,
+        createNewMessage,
+        setCreateNewMessage,
         roomName,
         setRoomName,
       }}
