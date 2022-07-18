@@ -49,6 +49,7 @@ export function verifyJwt<T>(
     };
   } catch (e: any) {
     console.error(e);
+    console.log("Verify JWT error message: ", e.message);
     return {
       valid: false,
       expired: e.message === "jwt expired",

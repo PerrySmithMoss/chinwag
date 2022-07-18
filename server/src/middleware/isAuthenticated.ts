@@ -10,59 +10,71 @@ export async function isAuthenticated(
   res: Response,
   next: NextFunction
 ) {
-  const accessToken =
-    (req.headers.authorization || "").replace(/^Bearer\s/, "") ||
-    req.cookies.accessToken;
+  const { accessToken, refreshToken } = req.cookies;
 
-  const refreshToken = req.header("x-refresh") || req.cookies.refreshToken;
+  if (accessToken) {
+    // Valid access token
+    const { decoded } = verifyJwt(accessToken, "accessTokenPublicKey");
 
-  if (!accessToken) {
-    return next();
-  }
+    if (decoded) {
+      res.locals.user = decoded;
 
-  const { decoded, expired } = verifyJwt(accessToken, "accessTokenPublicKey");
+      return next();
+    } else if (!decoded || decoded === null) {
+      res.status(401);
+      return next(new Error("Not Signed in"));
+    }
+  } else if (!accessToken) {
+    // Access token has expired
+    const { decoded: refresh } = refreshToken
+      ? verifyJwt(refreshToken, "refreshTokenPublicKey")
+      : { decoded: null };
 
-  // Valid access token
-  if (decoded) {
-    res.locals.user = decoded;
-    return next();
-  } else if (!decoded || decoded === null) {
-    res.status(401);
-    return next(new Error("Not Signed in"));
-  }
-
-  // Expired access token but valid refresh token
-  if (expired && refreshToken) {
-    const user = await findUserById(decoded["session"], true);
-
-    if (!user) {
-      return res.status(401).send("Could not refresh access token");
+    if (!refresh) {
+      // Refresh token has expired
+      // User will need to log in/sign up
+      return next();
     }
 
-    // Remove email and password fields before sending user back
-    const userWithFieldsRemoved = removeFieldsFromObject(user, [
-      "password",
-      "email",
-    ]);
+    // Valid refresh token
+    if (refreshToken) {
+      const user = await findUserById(refresh["session"], true);
 
-    const newAccessToken = signAccessToken(userWithFieldsRemoved);
+      if (!user) {
+        return res
+          .status(401)
+          .send("Could not find user with specified user Id.");
+      }
 
-    if (newAccessToken) {
-      res.setHeader("x-access-token", newAccessToken);
+      // Remove email and password fields before sending user back
+      const userWithFieldsRemoved = removeFieldsFromObject(user, [
+        "password",
+        "email",
+      ]);
 
-      res.cookie("accessToken", newAccessToken, {
-        maxAge: 900000, // 15 mins
-        httpOnly: true,
-        domain: config.serverDomain,
-        path: "/",
-        sameSite: "strict",
-        secure: false,
-      });
+      const newAccessToken = signAccessToken(userWithFieldsRemoved);
+
+      if (newAccessToken) {
+        // Set cookie & header with new access token
+        res.setHeader("x-access-token", newAccessToken);
+
+        res.cookie("accessToken", newAccessToken, {
+          maxAge: 900000, // 15 mins
+          httpOnly: true,
+          domain: config.serverDomain,
+          path: "/",
+          sameSite: "strict",
+          secure: false,
+        });
+      }
+
+      const result = verifyJwt(newAccessToken, "accessTokenPublicKey");
+
+      res.locals.user = result.decoded;
+
+      return next();
     }
 
-    const result = verifyJwt(newAccessToken, "accessTokenPublicKey");
-
-    res.locals.user = result.decoded;
     return next();
   }
 

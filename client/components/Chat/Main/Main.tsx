@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 import { UserContext } from "../../../context/user-context";
-import { fetchAllMessagesWithUser } from "../../../api/message";
+import { fetchAllMessagesWithUser, getAllUserMessages } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
 import { fetchUserDetails } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
@@ -33,6 +33,18 @@ export const Main: React.FC<MainProps> = ({}) => {
   } = useQuery(
     ["userDetails", selectedUserId],
     () => fetchUserDetails(selectedUserId as number),
+    { refetchOnWindowFocus: false, enabled: false }
+  );
+
+  const {
+    isLoading: isUserMessagesLoading,
+    isError: isUserMessagesError,
+    data: userMessages,
+    refetch: refetchMessages,
+    error: userMessagesError,
+  } = useQuery(
+    ["allUserMessages", userState.user.id as unknown as number],
+    () => getAllUserMessages(userState.user.id as unknown as number),
     { refetchOnWindowFocus: false, enabled: false }
   );
 
@@ -67,6 +79,7 @@ export const Main: React.FC<MainProps> = ({}) => {
       selectedUserId as number,
       newMessage
     );
+    refetchMessages();
     setNewMessage("");
   };
 

@@ -1,7 +1,7 @@
-import prisma from "../lib/prisma";
 import { Request, Response } from "express";
 import { signAccessToken, signRefreshToken } from "../services/auth.service";
 import {
+  createUser,
   findUserByEmail,
   findUserById,
   validatePassword,
@@ -10,6 +10,55 @@ import { verifyJwt } from "../utils/token";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../../config/config";
 
+// Register user
+export async function registerSessionHandler(req: Request, res: Response) {
+  // Create user in db
+  const createdUser = await createUser(req.body);
+
+  if (!createdUser) {
+    res.status(400).json({ error: "Could not create user with specified fields." });
+    return;
+  }
+
+  // Remove email and password fields before sending user back
+  const userWithFieldsRemoved = removeFieldsFromObject(createdUser, [
+    "password",
+    "email",
+  ]);
+
+  // sign a access token
+  const accessToken = signAccessToken(userWithFieldsRemoved);
+
+  // sign a refresh token
+  const refreshToken = await signRefreshToken(userWithFieldsRemoved.id);
+
+  // Set tokens as cookies
+  res.cookie("accessToken", accessToken, {
+    maxAge: 900000, // 15 mins
+    httpOnly: true,
+    domain: config.serverDomain,
+    path: "/",
+    sameSite: "strict",
+    secure: false,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    maxAge: 3.154e10, // 1 year
+    httpOnly: true,
+    domain: config.serverDomain,
+    path: "/",
+    sameSite: "strict",
+    secure: false,
+  });
+
+  // send the tokens
+  return res.status(200).send({
+    accessToken,
+    refreshToken,
+  });
+}
+
+// Login user
 export async function createSessionHandler(req: Request, res: Response) {
   const message = "Invalid email or password";
   const { email, password } = req.body;

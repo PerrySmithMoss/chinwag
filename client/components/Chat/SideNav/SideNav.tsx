@@ -10,9 +10,11 @@ import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
 import { useRouter } from "next/router";
 
-interface SideNavProps {}
+interface SideNavProps {
+  user: User | null;
+}
 
-export const SideNav: React.FC<SideNavProps> = ({}) => {
+export const SideNav: React.FC<SideNavProps> = ({user}) => {
   const router = useRouter();
   const { userState, userDispatch } = useContext(UserContext);
   const { selectedUserId, setSelectedUserId, setRoomName } = useAppContext();
