@@ -15,3 +15,12 @@ export const fetchAllFriends = async (userId: number): Promise<User[]> => {
 
   return json;
 };
+
+export const fetchUsersByUsername = async (
+  username: string
+): Promise<User[]> => {
+  const res = await fetch(`http://localhost:5000/api/users/search/${username}`);
+  const json: User[] = await res.json();
+
+  return json;
+};

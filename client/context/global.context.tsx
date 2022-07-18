@@ -10,6 +10,10 @@ type GlobalUIProps = {
   setSelectedUserId: React.Dispatch<React.SetStateAction<number | undefined>>;
   createNewMessage: boolean;
   setCreateNewMessage: React.Dispatch<React.SetStateAction<boolean>>;
+  isRecipientSearchResultsOpen: boolean;
+  setIsRecipientSearchResultsOpen: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
   roomName: string | undefined;
   setRoomName: React.Dispatch<React.SetStateAction<string | undefined>>;
 };
@@ -23,6 +27,8 @@ const AppContext = createContext<GlobalUIProps>({
   setSelectedUserId: () => {},
   createNewMessage: false,
   setCreateNewMessage: () => {},
+  isRecipientSearchResultsOpen: false,
+  setIsRecipientSearchResultsOpen: () => {},
   roomName: undefined,
   setRoomName: () => {},
 });
@@ -36,6 +42,8 @@ export const AppContextProvider = ({
     undefined
   );
   const [createNewMessage, setCreateNewMessage] = useState<boolean>(false);
+  const [isRecipientSearchResultsOpen, setIsRecipientSearchResultsOpen] =
+    useState<boolean>(false);
   const [roomName, setRoomName] = useState<string | undefined>(undefined);
   return (
     <AppContext.Provider
@@ -48,6 +56,8 @@ export const AppContextProvider = ({
         setSelectedUserId,
         createNewMessage,
         setCreateNewMessage,
+        isRecipientSearchResultsOpen,
+        setIsRecipientSearchResultsOpen,
         roomName,
         setRoomName,
       }}

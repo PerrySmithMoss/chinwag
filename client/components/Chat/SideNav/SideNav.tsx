@@ -17,7 +17,7 @@ interface SideNavProps {
 export const SideNav: React.FC<SideNavProps> = ({user}) => {
   const router = useRouter();
   const { userState, userDispatch } = useContext(UserContext);
-  const { selectedUserId, setSelectedUserId, setRoomName, setCreateNewMessage } = useAppContext();
+  const { selectedUserId, setSelectedUserId, setRoomName, setCreateNewMessage, setIsRecipientSearchResultsOpen } = useAppContext();
   const { socket } = useSocket();
   const {
     isLoading: isFriendsLoading,
@@ -59,6 +59,7 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
   const handleCreateNewMessage = () => {
     // Set newMessage global state to true
     setCreateNewMessage(true)
+    setIsRecipientSearchResultsOpen(true)
     // Open new main component with black details 
 
     // User types in the friend they would like to message 
@@ -132,7 +133,7 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
             <div className="ml-2 font-bold text-2xl">QuickChat</div>
             <div
               onClick={handleCreateNewMessage}
-              className="flex items-center justify-center rounded-2xl text-indigo-700 bg-indigo-100 h-8 w-8"
+              className="cursor-pointer flex items-center justify-center rounded-2xl text-indigo-700 bg-indigo-100 h-8 w-8"
             >
               <svg height="27px" viewBox="0 0 24 24" className="fill-current">
                 <path d="M6.3 12.3l10-10a1 1 0 0 1 1.4 0l4 4a1 1 0 0 1 0 1.4l-10 10a1 1 0 0 1-.7.3H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 .3-.7zM8 16h2.59l9-9L17 4.41l-9 9V16zm10-2a1 1 0 0 1 2 0v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6a1 1 0 0 1 0 2H4v14h14v-6z" />

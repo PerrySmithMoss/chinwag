@@ -76,7 +76,7 @@ export async function findUserByUsername(
 ) {
   if (includeRelations === true) {
     const res = await prisma.user.findMany({
-      where: { username },
+      where: { username: { contains: username } },
     });
 
     const removeUnwantedFieldsFromEachUser = res.map((user) => {

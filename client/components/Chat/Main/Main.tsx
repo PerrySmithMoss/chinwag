@@ -8,14 +8,13 @@ import {
   getAllUserMessages,
 } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
-import { fetchUserDetails } from "../../../api/user";
+import { fetchUserDetails, fetchUsersByUsername } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
 import { io } from "socket.io-client";
 import useDebounce from "../../../hooks/useDebounce";
-import { User } from "../../../interfaces/User";
-import fetcher from "../../../utils/fetcher";
+import ClipLoader from "react-spinners/ClipLoader";
 
 interface MainProps {}
 
@@ -29,14 +28,12 @@ export const Main: React.FC<MainProps> = ({}) => {
     setSelectedUserId,
     roomName,
     createNewMessage,
+    isRecipientSearchResultsOpen,
   } = useAppContext();
 
   const [recipientInput, setRecipientInput] = useState<string>("");
   const debouncedSearchTerm = useDebounce(recipientInput, 1500);
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [isRecipientSearchResultsOpen, setIsRecipientSearchResultsOpen] =
-    useState<boolean>(false);
-  // const [recipientSearchResults, setRecipientSearchResult] = useState<User[]>([]);
 
   const [newMessage, setNewMessage] = useState<string>("");
   const [showEmojis, setShowEmojis] = useState<boolean>(false);
@@ -87,11 +84,12 @@ export const Main: React.FC<MainProps> = ({}) => {
     data: recipientSearchResults,
     refetch: refetchRecipientSearchResults,
   } = useQuery(
-    ["me"],
+    ["recipientSearchResults"],
     () =>
-      fetcher(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/search/${debouncedSearchTerm}`
-      ),
+      // fetcher(
+      //   `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/search/${debouncedSearchTerm}`
+      // ),
+      fetchUsersByUsername(debouncedSearchTerm),
     {
       enabled: false,
       refetchOnWindowFocus: false,
@@ -201,29 +199,28 @@ export const Main: React.FC<MainProps> = ({}) => {
 
       return;
     }
+    console.log("Running useeffect for debounced search term");
 
     setIsSearching(true);
-    setIsRecipientSearchResultsOpen(true);
 
     async function searchForUserByEmail() {
-      const bearer = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`;
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/Integration/searchItem?searchText=${debouncedSearchTerm}`,
-        {
-          headers: {
-            Authorization: bearer,
-          },
-        }
-      );
-
-      const recipientsJSON = await res.json();
-
       refetchRecipientSearchResults();
 
       setIsSearching(false);
     }
     searchForUserByEmail();
   }, [debouncedSearchTerm]);
+
+  useEffect(() =>{
+    if (recipientInput.length === 0) {
+      // setFilteredProducts([]);
+      setIsSearching(false);
+      // setIsProductSearchResultsOpen(false);
+
+      return;
+    }
+    setIsSearching(true)
+  }, [recipientInput])
 
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
@@ -405,22 +402,45 @@ export const Main: React.FC<MainProps> = ({}) => {
             </div>
           </div>
         </div>
-      ) : createNewMessage === true ? (
+      ) : createNewMessage ? (
         <div className="flex flex-col flex-auto h-full pl-6">
           <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-3">
             <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
               <div className="flex justify-between ml-3 pt-2 pb-4 rounded-lg">
                 <div className="flex flex-row items-center">
                   <div>To:</div>
-                  <div>
+                  <div className=" relative">
                     <input
                       onChange={(e) => handleChangeRecipientInput(e)}
-                      className="ml-2"
+                      className="ml-2 w-96"
                       type="text"
                       name="recipientInput"
                       placeholder="Enter user's email"
                       id="recipientInput"
                     />
+                    {isRecipientSearchResultsOpen && (
+                      <div
+                        id="tooltip-bottom"
+                        role="tooltip"
+                        className="tooltip top-9 left-1 w-full h-96 bg-white absolute z-10  border inline-block  shadow-md py-2 px-3 text-sm rounded-lg"
+                      >
+                        {isSearching ? (
+                          <div className="flex justify-center flex-col items-center h-full">
+                            <ClipLoader color={"#9B9B9B"} size={50} />
+                          </div>
+                        ) :  debouncedSearchTerm.length > 0 && recipientSearchResults &&
+                          recipientSearchResults.length > 0 &&
+                          Array.isArray(recipientSearchResults) ? (
+                          <ul>
+                            {recipientSearchResults.map((recipient) => (
+                              <li key={recipient.id}>
+                                {recipient.firstName} {recipient.lastName}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
