@@ -81,7 +81,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
   //   },
   // });
 
-  if (data?.username) {
+  if (data?.id) {
     return (
       <div>
         <Head>
@@ -100,7 +100,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
     return (
       <div>
         <Head>
-          <title>Chinwag</title>
+          <title>Log in | Chinwag</title>
           <meta
             name="description"
             content="Text, Phone, Video with anyone, anywhere."

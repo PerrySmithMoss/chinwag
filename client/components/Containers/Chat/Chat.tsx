@@ -25,9 +25,7 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
     }
   );
 
-  console.log("User: ", data)
-
-  if (!data) {
+  if (!data?.id) {
     return <div>You need to login!</div>;
   }
   return (

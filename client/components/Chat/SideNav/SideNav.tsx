@@ -28,7 +28,7 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
   } = useQuery(
     ["userFriends", userState.user.id as unknown as number],
     () => fetchAllFriends(userState.user.id as unknown as number),
-    { refetchOnWindowFocus: false, enabled: false }
+    { refetchOnWindowFocus: false }
   );
 
   const {
@@ -40,8 +40,9 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
   } = useQuery(
     ["allUserMessages", userState.user.id as unknown as number],
     () => getAllUserMessages(userState.user.id as unknown as number),
-    { refetchOnWindowFocus: false, enabled: false }
+    { refetchOnWindowFocus: false }
   );
+
 
   const {
     isLoading: isuserDetailsLoading,
@@ -75,7 +76,7 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
   function handlePrivateMemberMsg(member: any) {
     setSelectedUserId(member);
     const roomId = orderIds(userState.user.id as unknown as number, member);
-    console.log("roomId: ", roomId);
+
     setRoomName(roomId);
     joinRoom(roomId, member);
   }
@@ -99,13 +100,13 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
   useEffect(() => {
     if (userState.user.id) {
       refetchFriends();
-      refetchMessages();
     }
   }, []);
 
   useEffect(() => {
     if (selectedUserId) {
       refetchUserDetails();
+      refetchMessages();
     }
   }, [selectedUserId]);
 

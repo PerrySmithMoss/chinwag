@@ -39,7 +39,6 @@ export const Main: React.FC<MainProps> = ({}) => {
   const {
     isLoading: isUserMessagesLoading,
     isError: isUserMessagesError,
-    data: userMessages,
     refetch: refetchMessages,
     error: userMessagesError,
   } = useQuery(
@@ -52,7 +51,7 @@ export const Main: React.FC<MainProps> = ({}) => {
     isLoading: isAllMessagesWithSpecificUserLoading,
     isError: isAllMessagesWithSpecificUserError,
     data: allMessagesWithSpecificUserData,
-    refetch,
+    refetch: refetchAllMessagesWithSpecificUser,
     error: allMessagesWithSpecificUserError,
   } = useQuery(
     ["userMessages", selectedUserId, userState.user.id],
@@ -72,14 +71,11 @@ export const Main: React.FC<MainProps> = ({}) => {
   };
 
   const handleSendMessage = async () => {
-    // console.log("Sending message to room ", roomName);
-    // mutateAsync();
     sendMessage(
       userState.user.id as unknown as number,
       selectedUserId as number,
       newMessage
     );
-    refetchMessages();
     setNewMessage("");
   };
 
@@ -100,9 +96,6 @@ export const Main: React.FC<MainProps> = ({}) => {
       if (newMessage === "") {
         console.log("Please enter a message");
       } else {
-        // console.log("Sending message to room ", roomName);
-        // console.log("Yo")
-        // handleSendMessage();
         sendMessage(
           userState.user.id as unknown as number,
           selectedUserId as number,
@@ -146,6 +139,9 @@ export const Main: React.FC<MainProps> = ({}) => {
 
     if (socket !== undefined) {
       socket.on("receive-message", (newMessage: any) => {
+        // Re-fetch the user's messages in sidebar when a message has been sent or received 
+        refetchMessages()
+
         const { receiverId, senderId } = newMessage;
 
         // Only overwrite the messages state if the receiver has a chat open with the user sending the message
