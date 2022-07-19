@@ -14,10 +14,16 @@ interface SideNavProps {
   user: User | null;
 }
 
-export const SideNav: React.FC<SideNavProps> = ({user}) => {
+export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const router = useRouter();
   const { userState, userDispatch } = useContext(UserContext);
-  const { selectedUserId, setSelectedUserId, setRoomName, setCreateNewMessage, setIsRecipientSearchResultsOpen } = useAppContext();
+  const {
+    selectedUserId,
+    setSelectedUserId,
+    setRoomName,
+    setCreateNewMessage,
+    setIsRecipientSearchResultsOpen,
+  } = useAppContext();
   const { socket } = useSocket();
   const {
     isLoading: isFriendsLoading,
@@ -43,7 +49,6 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
     { refetchOnWindowFocus: false }
   );
 
-
   const {
     isLoading: isuserDetailsLoading,
     isError: isuserDetailsError,
@@ -58,11 +63,11 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
 
   const handleCreateNewMessage = () => {
     // Set newMessage global state to true
-    setCreateNewMessage(true)
-    setIsRecipientSearchResultsOpen(true)
-    // Open new main component with black details 
+    setCreateNewMessage(true);
+    setIsRecipientSearchResultsOpen(true);
+    // Open new main component with black details
 
-    // User types in the friend they would like to message 
+    // User types in the friend they would like to message
     // OR
     // User types in the username they would like to message
     // THEN
@@ -70,7 +75,7 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
     // Request is sent to the server to fetch the selectedUserId details and message thread (if they have one already)
     // selectedUserId global state is then updated to the user Id they selected to message
     // User can now send message
-    // User 
+    // User
   };
 
   //   socket.off("notifications").on("notifications", (room) => {
@@ -88,29 +93,31 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
     // dispatch(resetNotifications(room));
   }
 
-  function handlePrivateMemberMsg(member: any) {
-    setSelectedUserId(member);
-    const roomId = orderIds(userState.user.id as unknown as number, member);
+  function handlePrivateMemberMsg(memberId: any) {
+    setSelectedUserId(memberId);
+    const roomId = orderIds(userState.user.id as unknown as number, memberId);
 
     setRoomName(roomId);
-    joinRoom(roomId, member);
+    joinRoom(roomId, memberId);
   }
 
   const handleLogoutUser = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/`, {
-        method: "DELETE",
-        credentials: "include"
-      });
-      if(res.status === 204) {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      if (res.status === 204) {
         router.push("/");
       }
-
     } catch (err: any) {
       console.log("Login error: ", err);
       throw Error(err);
     }
-  }
+  };
 
   useEffect(() => {
     if (userState.user.id) {
@@ -171,11 +178,13 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
             <div className="flex flex-col space-y-1 mt-4 -mx-2 h- overflow-y-auto">
               {userMessages?.map((message) => (
                 <button
+                  onClick={() => handlePrivateMemberMsg(message.receiverId)}
                   key={message.id}
                   className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                 >
                   <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                    H
+                    {message.receiver_firstName.charAt(0).toUpperCase()}
+                    {message.receiver_lastName.charAt(0).toUpperCase()}
                   </div>
                   <div className="ml-2 text-sm font-semibold">
                     {message.receiverId ===
@@ -216,7 +225,6 @@ export const SideNav: React.FC<SideNavProps> = ({user}) => {
               friends?.map((friend: User) => (
                 <div key={friend.id} className="flex flex-col space-y-1 -mx-2">
                   <button
-                    // onClick={() => setSelectedUserId(friend.id)}
                     onClick={() => handlePrivateMemberMsg(friend.id)}
                     className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                   >

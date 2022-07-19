@@ -34,7 +34,7 @@ const main = async () => {
   app.use(isAuthenticated);
   app.use(router);
 
-  // app.use(express.static("public"));
+  app.use(express.static("public"));
 
   io.on("connection", (socket: Socket) => {
     socket.on("disconnect", () => {

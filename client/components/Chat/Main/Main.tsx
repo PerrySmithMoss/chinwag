@@ -1,5 +1,7 @@
 import { useQuery } from "react-query";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import styles from "./Main.module.css";
 import dynamic from "next/dynamic";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 import { UserContext } from "../../../context/user-context";
@@ -27,8 +29,11 @@ export const Main: React.FC<MainProps> = ({}) => {
     selectedUserId,
     setSelectedUserId,
     roomName,
+    setRoomName,
     createNewMessage,
+    setCreateNewMessage,
     isRecipientSearchResultsOpen,
+    setIsRecipientSearchResultsOpen,
   } = useAppContext();
 
   const [recipientInput, setRecipientInput] = useState<string>("");
@@ -110,6 +115,17 @@ export const Main: React.FC<MainProps> = ({}) => {
     setNewMessage("");
   };
 
+  function joinRoom(room: any, selectedUserId: number) {
+    if (!userState.user.id) {
+      return alert("Please login");
+    }
+
+    socket.emit("join-room", room, selectedUserId, userState.user.id);
+
+    // dispatch for notifications
+    // dispatch(resetNotifications(room));
+  }
+
   const onEmojiClick = (event: any, { emoji }: any) => {
     emojiRef.current.focus();
     const start = newMessage.substring(0, emojiRef.current.selectionStart);
@@ -145,6 +161,17 @@ export const Main: React.FC<MainProps> = ({}) => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRecipientInput(e.target.value);
+  };
+
+  const handleCreateNewConversationWithUser = (userId: number) => {
+    setSelectedUserId(userId);
+
+    const roomId = orderIds(userState.user.id as unknown as number, userId);
+    setRoomName(roomId);
+    joinRoom(roomId, userId);
+
+    setCreateNewMessage(false);
+    setIsRecipientSearchResultsOpen(false);
   };
 
   useEffect(() => {
@@ -211,7 +238,7 @@ export const Main: React.FC<MainProps> = ({}) => {
     searchForUserByEmail();
   }, [debouncedSearchTerm]);
 
-  useEffect(() =>{
+  useEffect(() => {
     if (recipientInput.length === 0) {
       // setFilteredProducts([]);
       setIsSearching(false);
@@ -219,8 +246,8 @@ export const Main: React.FC<MainProps> = ({}) => {
 
       return;
     }
-    setIsSearching(true)
-  }, [recipientInput])
+    setIsSearching(true);
+  }, [recipientInput]);
 
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
@@ -422,19 +449,43 @@ export const Main: React.FC<MainProps> = ({}) => {
                       <div
                         id="tooltip-bottom"
                         role="tooltip"
-                        className="tooltip top-9 left-1 w-full h-96 bg-white absolute z-10  border inline-block  shadow-md py-2 px-3 text-sm rounded-lg"
+                        className="tooltip top-9 left-1 w-full h-96 bg-white absolute z-10 overflow-y-auto  border inline-block  shadow-md py-2 px-3 text-sm rounded-lg"
                       >
                         {isSearching ? (
                           <div className="flex justify-center flex-col items-center h-full">
                             <ClipLoader color={"#9B9B9B"} size={50} />
                           </div>
-                        ) :  debouncedSearchTerm.length > 0 && recipientSearchResults &&
+                        ) : debouncedSearchTerm.length > 0 &&
+                          recipientSearchResults &&
                           recipientSearchResults.length > 0 &&
                           Array.isArray(recipientSearchResults) ? (
                           <ul>
                             {recipientSearchResults.map((recipient) => (
                               <li key={recipient.id}>
-                                {recipient.firstName} {recipient.lastName}
+                                <div
+                                  onClick={() =>
+                                    handleCreateNewConversationWithUser(
+                                      recipient.id
+                                    )
+                                  }
+                                  className="flex items-center space-x-1 cursor-pointer hover:bg-gray-200 rounded-md"
+                                >
+                                  <div className="p-2  max-w-full">
+                                    <div className="relative w-9 h-9 overflow-hidden rounded-full">
+                                      <Image
+                                        src={recipient.profile.avatar}
+                                        className=""
+                                        height={36}
+                                        width={36}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <p className="whitespace-nowrap  text-sMd text-black overflow-ellipsis">
+                                      {recipient.firstName} {recipient.lastName}
+                                    </p>
+                                  </div>
+                                </div>
                               </li>
                             ))}
                           </ul>

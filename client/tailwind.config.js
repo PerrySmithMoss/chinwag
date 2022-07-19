@@ -5,6 +5,9 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
+      fontSize: {
+        'sMd': '15px',
+    },
       colors: {
         "dark-background": "#1b1b23",
         "dark-background-accent": "#2b2b37",
