@@ -1,16 +1,17 @@
 import { useQuery } from "react-query";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import styles from "./Main.module.css";
+
 import dynamic from "next/dynamic";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
+
 import { UserContext } from "../../../context/user-context";
 import {
   fetchAllMessagesWithUser,
   getAllUserMessages,
 } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
-import { fetchUserDetails, fetchUsersByUsername } from "../../../api/user";
+import { fetchUserDetails, fetchUsersByEmail } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
@@ -88,16 +89,15 @@ export const Main: React.FC<MainProps> = ({}) => {
   const {
     data: recipientSearchResults,
     refetch: refetchRecipientSearchResults,
+    isError: recipientSearchResultsError,
+    isFetching: isRecipientSearchResultsFetching,
   } = useQuery(
     ["recipientSearchResults"],
-    () =>
-      // fetcher(
-      //   `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/search/${debouncedSearchTerm}`
-      // ),
-      fetchUsersByUsername(debouncedSearchTerm),
+    () => fetchUsersByEmail(recipientInput),
     {
       enabled: false,
       refetchOnWindowFocus: false,
+      retry: 0,
     }
   );
 
@@ -158,10 +158,22 @@ export const Main: React.FC<MainProps> = ({}) => {
   }
 
   const handleChangeRecipientInput = (
-    e: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRecipientInput(e.target.value);
+    setRecipientInput(event.target.value);
   };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      searchForUserByEmail();
+    }
+  };
+
+  // const handleSearchForUser = (event: React.MouseEvent<HTMLButtonElement>) => {
+  //   event.preventDefault();
+
+  //   searchForUserByEmail();
+  // };
 
   const handleCreateNewConversationWithUser = (userId: number) => {
     setSelectedUserId(userId);
@@ -218,23 +230,20 @@ export const Main: React.FC<MainProps> = ({}) => {
     }
   }, [socket, roomName]);
 
+  async function searchForUserByEmail() {
+    await refetchRecipientSearchResults();
+
+    setIsSearching(false);
+  }
+
   useEffect(() => {
     if (debouncedSearchTerm.length === 0) {
-      // setFilteredProducts([]);
       setIsSearching(false);
-      // setIsProductSearchResultsOpen(false);
-
       return;
     }
-    console.log("Running useeffect for debounced search term");
 
     setIsSearching(true);
 
-    async function searchForUserByEmail() {
-      refetchRecipientSearchResults();
-
-      setIsSearching(false);
-    }
     searchForUserByEmail();
   }, [debouncedSearchTerm]);
 
@@ -246,6 +255,7 @@ export const Main: React.FC<MainProps> = ({}) => {
 
       return;
     }
+
     setIsSearching(true);
   }, [recipientInput]);
 
@@ -436,59 +446,178 @@ export const Main: React.FC<MainProps> = ({}) => {
               <div className="flex justify-between ml-3 pt-2 pb-4 rounded-lg">
                 <div className="flex flex-row items-center">
                   <div>To:</div>
-                  <div className=" relative">
-                    <input
-                      onChange={(e) => handleChangeRecipientInput(e)}
-                      className="ml-2 w-96"
-                      type="text"
-                      name="recipientInput"
-                      placeholder="Enter user's email"
-                      id="recipientInput"
-                    />
+                  <div className=" relative flex items-center space-x-2">
+                    <div className="relative">
+                      <input
+                        onKeyDown={handleKeyDown}
+                        onChange={(e) => handleChangeRecipientInput(e)}
+                        className="ml-2 w-96 p-1"
+                        type="text"
+                        name="recipientInput"
+                        placeholder="Enter the user's full email"
+                        id="recipientInput"
+                      />
+                      <div className="flex absolute inset-y-0 right-2 items-center pl-3 pointer-events-none">
+                        {recipientInput.length > 0 &&
+                        recipientSearchResultsError === false &&
+                        isRecipientSearchResultsFetching === false &&
+                        recipientSearchResults &&
+                        Object.keys(recipientSearchResults).length > 0 ? (
+                          // if input is > 0
+                          // if isError !== false
+                          // if isFetching !== true
+                          // if recipientSearchResults
+                          // recipientSearchResults.length > 0
+                          // User found
+                          // Show green
+                          <svg
+                            className="w-6 h-6"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 22 22"
+                          >
+                            <defs>
+                              <linearGradient
+                                gradientUnits="userSpaceOnUse"
+                                y2="-2.623"
+                                x2="0"
+                                y1="986.67"
+                                id="0"
+                              >
+                                <stop stop-color="#ffce3b" />
+                                <stop offset="1" stop-color="#ffd762" />
+                              </linearGradient>
+                              <linearGradient
+                                y2="-2.623"
+                                x2="0"
+                                y1="986.67"
+                                gradientUnits="userSpaceOnUse"
+                              >
+                                <stop stop-color="#ffce3b" />
+                                <stop offset="1" stop-color="#fef4ab" />
+                              </linearGradient>
+                            </defs>
+                            <g
+                              transform="matrix(1.99997 0 0 1.99997-10.994-2071.68)"
+                              fill="#da4453"
+                            >
+                              <rect
+                                y="1037.36"
+                                x="7"
+                                height="8"
+                                width="8"
+                                fill="#32c671"
+                                rx="4"
+                              />
+                              <path
+                                d="m123.86 12.966l-11.08-11.08c-1.52-1.521-3.368-2.281-5.54-2.281-2.173 0-4.02.76-5.541 2.281l-53.45 53.53-23.953-24.04c-1.521-1.521-3.368-2.281-5.54-2.281-2.173 0-4.02.76-5.541 2.281l-11.08 11.08c-1.521 1.521-2.281 3.368-2.281 5.541 0 2.172.76 4.02 2.281 5.54l29.493 29.493 11.08 11.08c1.52 1.521 3.367 2.281 5.54 2.281 2.172 0 4.02-.761 5.54-2.281l11.08-11.08 58.986-58.986c1.52-1.521 2.281-3.368 2.281-5.541.0001-2.172-.761-4.02-2.281-5.54"
+                                fill="#fff"
+                                transform="matrix(.0436 0 0 .0436 8.177 1039.72)"
+                                stroke="none"
+                                stroke-width="9.512"
+                              />
+                            </g>
+                          </svg>
+                        ) : recipientInput.length > 0 &&
+                          recipientSearchResultsError &&
+                          isRecipientSearchResultsFetching === false ? (
+                          // if input is > 0
+                          // if isError
+                          // if !fetching 
+                          // User not found 
+                          // Show red
+                          <svg
+                            className="w-6 h-6"
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlnsXlink="http://www.w3.org/1999/xlink"
+                            viewBox="0 0 22 22"
+                          >
+                            <defs>
+                              <linearGradient
+                                gradientUnits="userSpaceOnUse"
+                                y2="-2.623"
+                                x2="0"
+                                y1="986.67"
+                              >
+                                <stop stop-color="#ffce3b" />
+                                <stop offset="1" stop-color="#ffd762" />
+                              </linearGradient>
+                              <linearGradient
+                                id="0"
+                                gradientUnits="userSpaceOnUse"
+                                y1="986.67"
+                                x2="0"
+                                y2="-2.623"
+                              >
+                                <stop stop-color="#ffce3b" />
+                                <stop offset="1" stop-color="#fef4ab" />
+                              </linearGradient>
+                              <linearGradient
+                                gradientUnits="userSpaceOnUse"
+                                x2="1"
+                                x1="0"
+                                xlinkHref="#0"
+                              />
+                            </defs>
+                            <g transform="matrix(2 0 0 2-11-2071.72)">
+                              <path
+                                transform="translate(7 1037.36)"
+                                d="m4 0c-2.216 0-4 1.784-4 4 0 2.216 1.784 4 4 4 2.216 0 4-1.784 4-4 0-2.216-1.784-4-4-4"
+                                fill="#da4453"
+                              />
+                              <path
+                                d="m11.906 1041.46l.99-.99c.063-.062.094-.139.094-.229 0-.09-.031-.166-.094-.229l-.458-.458c-.063-.062-.139-.094-.229-.094-.09 0-.166.031-.229.094l-.99.99-.99-.99c-.063-.062-.139-.094-.229-.094-.09 0-.166.031-.229.094l-.458.458c-.063.063-.094.139-.094.229 0 .09.031.166.094.229l.99.99-.99.99c-.063.062-.094.139-.094.229 0 .09.031.166.094.229l.458.458c.063.063.139.094.229.094.09 0 .166-.031.229-.094l.99-.99.99.99c.063.063.139.094.229.094.09 0 .166-.031.229-.094l.458-.458c.063-.062.094-.139.094-.229 0-.09-.031-.166-.094-.229l-.99-.99"
+                                fill="#fff"
+                              />
+                            </g>
+                          </svg>
+                        ) : null}
+                      </div>
+                    </div>
                     {isRecipientSearchResultsOpen && (
                       <div
                         id="tooltip-bottom"
                         role="tooltip"
-                        className="tooltip top-9 left-1 w-full h-96 bg-white absolute z-10 overflow-y-auto  border inline-block  shadow-md py-2 px-3 text-sm rounded-lg"
+                        className="tooltip top-9 left-0 w-96 h-96 bg-white absolute z-10 overflow-y-auto  border inline-block  shadow-md py-2 px-3 text-sm rounded-lg"
                       >
                         {isSearching ? (
                           <div className="flex justify-center flex-col items-center h-full">
                             <ClipLoader color={"#9B9B9B"} size={50} />
                           </div>
                         ) : debouncedSearchTerm.length > 0 &&
+                          recipientSearchResultsError === false &&
                           recipientSearchResults &&
-                          recipientSearchResults.length > 0 &&
-                          Array.isArray(recipientSearchResults) ? (
-                          <ul>
-                            {recipientSearchResults.map((recipient) => (
-                              <li key={recipient.id}>
-                                <div
-                                  onClick={() =>
-                                    handleCreateNewConversationWithUser(
-                                      recipient.id
-                                    )
-                                  }
-                                  className="flex items-center space-x-1 cursor-pointer hover:bg-gray-200 rounded-md"
-                                >
-                                  <div className="p-2  max-w-full">
-                                    <div className="relative w-9 h-9 overflow-hidden rounded-full">
-                                      <Image
-                                        src={recipient.profile.avatar}
-                                        className=""
-                                        height={36}
-                                        width={36}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <p className="whitespace-nowrap  text-sMd text-black overflow-ellipsis">
-                                      {recipient.firstName} {recipient.lastName}
-                                    </p>
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
+                          Object.keys(recipientSearchResults).length > 0 ? (
+                          <div
+                            onClick={() =>
+                              handleCreateNewConversationWithUser(
+                                recipientSearchResults.id
+                              )
+                            }
+                            className="flex items-center space-x-1 cursor-pointer hover:bg-gray-200 rounded-md"
+                          >
+                            <div className="p-2  max-w-full">
+                              <div className="relative w-9 h-9 overflow-hidden rounded-full">
+                                <Image
+                                  src={recipientSearchResults.profile.avatar}
+                                  className=""
+                                  height={36}
+                                  width={36}
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <p className="whitespace-nowrap  text-sMd text-black overflow-ellipsis">
+                                {recipientSearchResults.firstName}{" "}
+                                {recipientSearchResults.lastName}
+                              </p>
+                            </div>
+                          </div>
+                        ) : debouncedSearchTerm.length > 0 ? (
+                          <div>
+                            No user was found with the specified email. Be sure
+                            to double check if the email you have entered is
+                            correct.
+                          </div>
                         ) : null}
                       </div>
                     )}
@@ -496,97 +625,7 @@ export const Main: React.FC<MainProps> = ({}) => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col h-full overflow-x-auto mb-4">
-              {/* <div className="flex flex-col h-full">
-              <div className="grid grid-cols-12 gap-y-2">
-
-              </div>
-            </div> */}
-            </div>
-            {/* <div className="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
-            <div>
-              <button className="flex items-center justify-center text-gray-400 hover:text-gray-600">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-            <div className="flex-grow ml-4">
-              <div className="relative w-full">
-                <input
-                  ref={emojiRef}
-                  name="newMessage"
-                  value={newMessage}
-                  onKeyPress={handleKeyPress}
-                  onChange={(event) => {
-                    setNewMessage(event.target.value);
-                  }}
-                  type="text"
-                  className="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
-                />
-
-                <button
-                  onClick={handleShowEmojis}
-                  className="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600"
-                >
-                  {showEmojis ? (
-                    <div className="overflow-y-auto absolute bottom-14">
-                      <Picker onEmojiClick={onEmojiClick} />
-                    </div>
-                  ) : null}
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className="ml-4">
-              <button
-                onClick={handleSendMessage}
-                className="flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white px-4 py-1 flex-shrink-0"
-              >
-                <span>Send</span>
-                <span className="ml-2">
-                  <svg
-                    className="w-4 h-4 transform rotate-45 -mt-px"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                    ></path>
-                  </svg>
-                </span>
-              </button>
-            </div>
-          </div> */}
+            <div className="flex flex-col h-full overflow-x-auto mb-4"></div>
           </div>
         </div>
       ) : (

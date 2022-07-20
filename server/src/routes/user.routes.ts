@@ -7,9 +7,10 @@ import {
   createUserHandler,
   updateUserHandler,
   getCurrentUserHandler,
-  searchUsersHandler,
+  searchForUserByUsernameHandler,
   uploadUserAvatarHandler,
   getCurrentLoggedInUserHandler,
+  searchForUserByEmailHandler,
 } from "../controllers/user.controller";
 import { requireUser } from "../middleware/requireUser";
 
@@ -39,8 +40,11 @@ userRouter.patch("/:id", updateUserHandler);
 // Delete a specifc user
 userRouter.delete("/:id", deleteUserHandler);
 
-// Search for a user
-userRouter.get("/search/:username", searchUsersHandler);
+// Search for a user by username
+userRouter.get("/search/username/:username", searchForUserByUsernameHandler);
+
+// Search for a user by email
+userRouter.get("/search/email/:email", searchForUserByEmailHandler);
 
 // Upload a user avatar
 userRouter.post("/avatar/:id", requireUser, uploadUserAvatarHandler);

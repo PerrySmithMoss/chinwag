@@ -63,7 +63,7 @@ export async function createSessionHandler(req: Request, res: Response) {
   const message = "Invalid email or password";
   const { email, password } = req.body;
 
-  const user = await findUserByEmail(email);
+  const user = await findUserByEmail(email, true);
 
   if (!user) {
     res.status(400).json({ message: message });

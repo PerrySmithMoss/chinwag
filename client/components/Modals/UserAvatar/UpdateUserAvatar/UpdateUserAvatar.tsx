@@ -286,7 +286,8 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   Upload now
                 </button>
                 <button
-                  onClick={() => showToastSuccess()}
+                  // onClick={() => showToastSuccess()}
+                  onClick={() => onClose()}
                   id="cancel"
                   className="ml-3 rounded-sm px-3 py-1 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
                 >

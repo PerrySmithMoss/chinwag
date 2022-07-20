@@ -39,7 +39,7 @@ export const createUserHandler = async (req: Request, res: Response) => {
 export const loginUserHandler = async (req: Request, res: Response) => {
   const body = req.body;
   try {
-    const user = await findUserByEmail(body.email);
+    const user = await findUserByEmail(body.email, true);
 
     if (!user) {
       res
@@ -268,7 +268,10 @@ export const getCurrentLoggedInUserHandler = async (
   }
 };
 
-export const searchUsersHandler = async (req: Request, res: Response) => {
+export const searchForUserByUsernameHandler = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const username = req.params.username;
 
@@ -282,6 +285,38 @@ export const searchUsersHandler = async (req: Request, res: Response) => {
     }
 
     res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+export const searchForUserByEmailHandler = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const email = req.params.email;
+
+    const user = await findUserByEmail(email, true);
+
+    if (!user) {
+      // res.status(400).json({
+      //   error: "There is no user with the specified email.",
+      // });
+      res.sendStatus(400)
+      return;
+    }
+
+    // Remove email and password fields before sending user back
+    const userWithFieldsRemoved = removeFieldsFromObject(user, [
+      "password",
+      "email",
+      "posts",
+      "createdAt",
+      "updatedAt"
+    ]);
+
+    res.status(200).json(userWithFieldsRemoved);
   } catch (err) {
     res.status(500).json(err);
   }

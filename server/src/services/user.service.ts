@@ -28,11 +28,20 @@ export async function createUser(userInput: User) {
   });
 }
 
-export async function findUserByEmail(email: string) {
-  return await prisma.user.findUnique({
-    where: { email: email },
-    include: { posts: true, profile: true },
-  });
+export async function findUserByEmail(
+  email: string,
+  includeRelations: boolean
+) {
+  if (includeRelations === true) {
+    return await prisma.user.findUnique({
+      where: { email: email },
+      include: { posts: true, profile: true },
+    });
+  } else {
+    return await prisma.user.findUnique({
+      where: { email: email },
+    });
+  }
 }
 
 export async function getAllUsers() {

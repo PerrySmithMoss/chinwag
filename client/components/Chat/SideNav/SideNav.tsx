@@ -74,8 +74,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     // Set newMessage global state to true
     setCreateNewMessage(true);
     setIsRecipientSearchResultsOpen(true);
-    // Open new main component with black details
-
+    // Open new main component with blank details
     // User types in the friend they would like to message
     // OR
     // User types in the username they would like to message
@@ -240,51 +239,54 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
             </div>
           </div>
           <div className="flex flex-col mt-8">
-            <div className="flex flex-row items-center justify-between text-xs">
+            <div className="mb-3 flex flex-row items-center justify-between text-xs">
               <span className="font-bold">Messages</span>
               <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
                 {userMessages?.length}
               </span>
             </div>
-            <div className="flex flex-col space-y-1 mt-4 -mx-2 h- overflow-y-auto">
+            <div className="max-h-64 overflow-y-auto overflow-x-hidden">
               {userMessages?.map((message) => (
-                <button
-                  onClick={() => handlePrivateMemberMsg(message.receiverId)}
-                  key={message.id}
-                  className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
-                >
-                  <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                    {message.receiver_firstName.charAt(0).toUpperCase()}
-                    {message.receiver_lastName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="ml-2 text-sm font-semibold">
-                    {message.receiverId ===
-                    (userState.user.id as unknown as number) ? (
-                      <div>
-                        {message.sender_firstName} {message.sender_lastName}
-                      </div>
-                    ) : (
-                      <div>
-                        {message.receiver_firstName} {message.receiver_lastName}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-row items-center justify-between text-xs mt-6">
-              <span className="font-bold">Archivied</span>
-              <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
-                7
-              </span>
-            </div>
-            <div className="flex flex-col space-y-1 mt-4 -mx-2">
-              <button className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2">
-                <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                  H
+                <div key={message.id} className="flex flex-col space-y-1 -mx-2">
+                  <button
+                    onClick={() => handlePrivateMemberMsg(message.receiverId)}
+                    className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+                  >
+                    <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
+                      {message.receiver_firstName.charAt(0).toUpperCase()}
+                      {message.receiver_lastName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="ml-2 text-sm font-semibold">
+                      {message.receiverId ===
+                      (userState.user.id as unknown as number) ? (
+                        <div>
+                          {message.sender_firstName} {message.sender_lastName}
+                        </div>
+                      ) : (
+                        <div>
+                          {message.receiver_firstName}{" "}
+                          {message.receiver_lastName}
+                        </div>
+                      )}
+                    </div>
+                  </button>
                 </div>
-                <div className="ml-2 text-sm font-semibold">Henry Boyd</div>
-              </button>
+              ))}
+              {/* {[...Array(10)].map((e, i) => (
+                <div key={i} className="flex flex-col space-y-1 -mx-2">
+                  <button
+                    //  onClick={() => handlePrivateMemberMsg(message.receiverId)}
+                    className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+                  >
+                    <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
+                      TE
+                    </div>
+                    <div className="ml-2 text-sm font-semibold">
+                      <div>Test Example</div>
+                    </div>
+                  </button>
+                </div>
+              ))} */}
             </div>
             <div className="mb-3 flex flex-row items-center justify-between text-xs mt-6">
               <span className="font-bold">Friends</span>
@@ -292,27 +294,47 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                 {friends?.length}
               </span>
             </div>
-            {friends &&
-              friends?.map((friend: User) => (
-                <div key={friend.id} className="flex flex-col space-y-1 -mx-2">
-                  <button
-                    onClick={() => handlePrivateMemberMsg(friend.id)}
-                    className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+            <div className="max-h-64 overflow-y-auto overflow-x-hidden">
+              {friends &&
+                friends?.map((friend: User) => (
+                  <div
+                    key={friend.id}
+                    className="flex flex-col space-y-1 -mx-2"
                   >
-                    <div className="flex text-sm items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                      {friend.firstName.charAt(0).toUpperCase()}
-                      {friend.lastName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-2 text-sm font-semibold">
-                      {friend.firstName} {friend.lastName}
-                    </div>
-                  </button>
-                </div>
-              ))}
+                    <button
+                      onClick={() => handlePrivateMemberMsg(friend.id)}
+                      className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+                    >
+                      <div className="flex text-sm items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
+                        {friend.firstName.charAt(0).toUpperCase()}
+                        {friend.lastName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="ml-2 text-sm font-semibold">
+                        {friend.firstName} {friend.lastName}
+                      </div>
+                    </button>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
         <div className="mt-auto">
-          <button onClick={() => handleLogoutUser()}>Logout</button>
+          {/* <button className="" onClick={() => handleLogoutUser()}>
+            Logout
+          </button> */}
+          <button
+            onClick={() => handleLogoutUser()}
+            className="bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
+          >
+            {/* <svg
+              className="w-4 h-4 mr-2"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+            >
+              <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+            </svg> */}
+            <span>Logout</span>
+          </button>
         </div>
       </div>
     </aside>
