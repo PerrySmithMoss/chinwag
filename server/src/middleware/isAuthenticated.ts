@@ -11,7 +11,6 @@ export async function isAuthenticated(
   next: NextFunction
 ) {
   const { accessToken, refreshToken } = req.cookies;
-
   if (accessToken) {
     // Valid access token
     const { decoded } = verifyJwt(accessToken, "accessTokenPublicKey");
@@ -35,7 +34,6 @@ export async function isAuthenticated(
       // User will need to log in/sign up
       return next();
     }
-
     // Valid refresh token
     if (refreshToken) {
       const user = await findUserById(refresh["session"], true);
@@ -50,6 +48,7 @@ export async function isAuthenticated(
       const userWithFieldsRemoved = removeFieldsFromObject(user, [
         "password",
         "email",
+        "posts"
       ]);
 
       const newAccessToken = signAccessToken(userWithFieldsRemoved);

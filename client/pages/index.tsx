@@ -20,9 +20,10 @@ type UserData = {
 };
 
 const Home: NextPage<UserData | null> = ({ user }) => {
+  const { userState, userDispatch } = useContext(UserContext);
   const { data } = useQuery(
     ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`),
+    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
       initialData: user,
       onSuccess: (data: User) => {
@@ -32,13 +33,11 @@ const Home: NextPage<UserData | null> = ({ user }) => {
     }
   );
 
-  const queryClient = useQueryClient();
   const [formValues, setFormValues] = useState<ILoginForm>({
     email: "",
     password: "",
   });
 
-  const { userState, userDispatch } = useContext(UserContext);
   const onFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormValues({
       ...formValues,

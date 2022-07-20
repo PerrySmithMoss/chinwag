@@ -76,17 +76,23 @@ export async function createSessionHandler(req: Request, res: Response) {
     res.status(400).json({ message: message });
   }
 
+  console.log("Full user: ", user)
+
   // Remove email and password fields before sending user back
   const userWithFieldsRemoved = removeFieldsFromObject(user, [
     "password",
     "email",
+    "posts"
   ]);
+
+  console.log("userWithFieldsRemoved: ", userWithFieldsRemoved)
+
 
   // sign a access token
   const accessToken = signAccessToken(userWithFieldsRemoved);
 
   // sign a refresh token
-  const refreshToken = await signRefreshToken(userWithFieldsRemoved.id);
+  const refreshToken = await signRefreshToken(user.id);
 
   // Set tokens as cookies
   res.cookie("accessToken", accessToken, {

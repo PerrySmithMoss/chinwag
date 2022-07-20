@@ -8,11 +8,13 @@ import {
   findUserByUsername,
   getAllUsers,
   getAllUsersExceptSpecifiedUser,
+  updateUsersAvatar,
   updateUserWithSpecifiedData,
   validatePassword,
 } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../../config/config";
+import * as Cloudinary from "cloudinary";
 
 export const createUserHandler = async (req: Request, res: Response) => {
   const body = req.body;
@@ -239,6 +241,33 @@ export const getCurrentUserHandler = async (_req: Request, res: Response) => {
   }
 };
 
+export const getCurrentLoggedInUserHandler = async (
+  _req: Request,
+  res: Response
+) => {
+  try {
+    const userId = res.locals.user.id;
+
+    const user = await findUserById(userId, true);
+
+    if (!user) {
+      res
+        .status(400)
+        .json({ message: "The email or password provided is incorrect." });
+      return;
+    }
+
+    const userWithFieldsRemoved = removeFieldsFromObject(user, [
+      "password",
+      "email",
+    ]);
+
+    res.status(200).json(userWithFieldsRemoved);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
 export const searchUsersHandler = async (req: Request, res: Response) => {
   try {
     const username = req.params.username;
@@ -253,6 +282,50 @@ export const searchUsersHandler = async (req: Request, res: Response) => {
     }
 
     res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+export const uploadUserAvatarHandler = async (req: Request, res: Response) => {
+  const body = req.body;
+  try {
+    // based on the public_id and the version that the (potentially malicious) user is submitting...
+    // we can combine those values along with our SECRET key to see what we would expect the signature to be if it was innocent / valid / actually coming from Cloudinary
+    const expectedSignature = Cloudinary.v2.utils.api_sign_request(
+      { public_id: req.body.public_id, version: req.body.version },
+      config.cloudinaryApiSecret as string
+    );
+
+    // We can trust the visitor's data if their signature is what we'd expect it to be...
+    // Because without the SECRET key there's no way for someone to know what the signature should be...
+    if (expectedSignature === body.signature) {
+      const userId = parseInt(req.params.id);
+
+      // First identify whether the user exists or not
+      const validUser = await findUserById(userId, false);
+
+      if (!validUser) {
+        res.status(400).json({
+          message: "Could not find a user matching the given ID.",
+        });
+        return;
+      }
+
+      // Store the users avatar url in database
+      const imageUrl = body.image_url;
+
+      const updatedUser = await updateUsersAvatar(userId, imageUrl);
+
+      const userWithFieldsRemoved = removeFieldsFromObject(updatedUser, [
+        "password",
+        "email",
+      ]);
+
+      res.status(200).json(userWithFieldsRemoved);
+    } else {
+      res.status(401).json({ error: "Unauthorised signature." });
+    }
   } catch (err) {
     res.status(500).json(err);
   }

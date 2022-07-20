@@ -6,6 +6,9 @@ import { User } from "../../../interfaces/User";
 import fetcher from "../../../utils/fetcher";
 import { useQuery } from "react-query";
 
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
 interface ChatProps {
   user: User | null;
 }
@@ -15,7 +18,7 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
 
   const { data } = useQuery(
     ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`),
+    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
       initialData: user,
       onSuccess: (data: User) => {
@@ -32,8 +35,19 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
     <main>
       <div className="flex h-screen antialiased text-gray-800">
         <div className="flex flex-row h-full w-full overflow-x-hidden">
-          <SideNav user={data}/>
+          <SideNav user={data} />
           <Main />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
         </div>
       </div>
     </main>

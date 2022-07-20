@@ -16,4 +16,8 @@ export const config = {
   accessTokenPublicKey: process.env.ACCESS_TOKEN_PUBLIC_KEY,
   refreshTokenPrivateKey: process.env.REFRESH_PRIVATE_KEY,
   refreshTokenPublicKey: process.env.REFRESH_PUBLIC_KEY,
+
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 };

@@ -1,7 +1,7 @@
 import { User } from "../interfaces/User";
 
 export interface initialStateI {
-  user: {};
+  user: User;
 }
 
 export interface IUserActions {
@@ -10,11 +10,11 @@ export interface IUserActions {
 }
 
 export interface IUserState {
-  user: { [key: string | number]: User };
+  user: User;
 }
 
 export const initialState: IUserState = {
-  user: {},
+  user: {} as User,
 };
 
 export const actionTypes = {

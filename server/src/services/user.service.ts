@@ -53,6 +53,7 @@ export async function findUserById(userId: number, includeRelations: boolean) {
   if (includeRelations === true) {
     return await prisma.user.findUnique({
       where: { id: userId },
+      include: { profile: true, posts: true },
       // select: {
       //   id: true,
       //   createdAt: true,
@@ -161,3 +162,18 @@ export async function deleteUser(userId: number, async: boolean) {
     });
   }
 }
+
+export async function updateUsersAvatar(userId: number, avatar: string) {
+  return await prisma.user.update({
+    where: { id: userId },
+    data: { profile: { update: { avatar } } },
+    include: { profile: true },
+  });
+}
+
+// export async function updateUsersAvatar(userId: number, avatar: string) {
+//   return await prisma.profile.update({
+//     where: { id: userId },
+//     data: { avatar },
+//   });
+// }

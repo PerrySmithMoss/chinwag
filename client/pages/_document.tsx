@@ -29,6 +29,7 @@ class MyDocument extends Document {
         </Head>
         <body>
           <Main />
+          <div id="updateUserAvatarModal" />
           <NextScript />
         </body>
       </Html>
