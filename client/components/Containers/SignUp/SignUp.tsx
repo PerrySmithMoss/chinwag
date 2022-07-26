@@ -1,8 +1,11 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Login } from "../../Icons/Login";
 import { User } from "../../../interfaces/User";
+import fetcher from "../../../utils/fetcher";
+import { useQuery } from "react-query";
+import { UserContext } from "../../../context/user-context";
 
 interface ISignUpForm {
   firstName: string;
@@ -14,6 +17,7 @@ interface ISignUpForm {
 
 export const SignUp: React.FC = () => {
   const router = useRouter();
+  const { userState, userDispatch } = useContext(UserContext);
   const [formValues, setFormValues] = useState<ISignUpForm>({
     firstName: "",
     lastName: "",
@@ -21,6 +25,18 @@ export const SignUp: React.FC = () => {
     email: "",
     password: "",
   });
+
+  const { data, refetch: refetchCurrentUser } = useQuery(
+    ["me"],
+    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+    {
+      onSuccess: (data: User) => {
+        // console.log("Logged in user: ", data);
+        userDispatch({ type: "SET_USER", payload: data });
+      },
+      refetchOnWindowFocus: false
+    }
+  );
 
   const onFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormValues({
@@ -53,7 +69,9 @@ export const SignUp: React.FC = () => {
   };
 
   const handleLoginUser = async () => {
-    await registerUser();
+    const registerUserRes = await registerUser();
+
+    if (registerUserRes) refetchCurrentUser();
 
     router.push("/");
   };

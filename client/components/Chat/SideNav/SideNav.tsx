@@ -12,6 +12,7 @@ import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
 import { useRouter } from "next/router";
 import { UpdateUserAvatar } from "../../Modals/UserAvatar/UpdateUserAvatar/UpdateUserAvatar";
+import fetcher from "../../../utils/fetcher";
 
 interface SideNavProps {
   user: User | null;
@@ -34,6 +35,18 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
 
+    const { data, refetch: refetchCurrentUser } = useQuery(
+      ["me"],
+      () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+      {
+        initialData: user,
+        onSuccess: (data: User) => {
+          // console.log("Logged in user: ", data);
+          userDispatch({ type: "SET_USER", payload: data });
+        },
+      }
+    );
+    
   const {
     isLoading: isFriendsLoading,
     isError: isFriendsError,
@@ -119,7 +132,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         }
       );
       if (res.status === 204) {
-        router.push("/");
+        refetchCurrentUser()
       }
     } catch (err: any) {
       console.log("Login error: ", err);

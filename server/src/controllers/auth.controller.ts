@@ -76,8 +76,6 @@ export async function createSessionHandler(req: Request, res: Response) {
     res.status(400).json({ message: message });
   }
 
-  console.log("Full user: ", user)
-
   // Remove email and password fields before sending user back
   const userWithFieldsRemoved = removeFieldsFromObject(user, [
     "password",

@@ -21,7 +21,7 @@ type UserData = {
 
 const Home: NextPage<UserData | null> = ({ user }) => {
   const { userState, userDispatch } = useContext(UserContext);
-  const { data } = useQuery(
+  const { data, refetch: refetchCurrentUser } = useQuery(
     ["me"],
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
@@ -47,7 +47,9 @@ const Home: NextPage<UserData | null> = ({ user }) => {
   
   const handleLoginUser = async () => {
     // mutateAsync();
-    await postUser();
+    const userRes = await postUser();
+
+    if(userRes) refetchCurrentUser()
     // router.push("/chat");
   };
 
@@ -65,6 +67,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
         }
       );
       const json = await res.json();
+      
       return json;
     } catch (err: any) {
       console.log("Login error: ", err);
