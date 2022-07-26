@@ -35,7 +35,7 @@ export async function findUserByEmail(
   if (includeRelations === true) {
     return await prisma.user.findUnique({
       where: { email: email },
-      include: { posts: true, profile: true },
+      include: { profile: true },
     });
   } else {
     return await prisma.user.findUnique({
@@ -52,7 +52,6 @@ export async function getAllUsers() {
       firstName: true,
       lastName: true,
       username: true,
-      posts: true,
       profile: true,
     },
   });
@@ -62,7 +61,7 @@ export async function findUserById(userId: number, includeRelations: boolean) {
   if (includeRelations === true) {
     return await prisma.user.findUnique({
       where: { id: userId },
-      include: { profile: true, posts: true },
+      include: { profile: true },
       // select: {
       //   id: true,
       //   createdAt: true,
@@ -128,7 +127,6 @@ export async function getAllUsersExceptSpecifiedUser(userId: number) {
       firstName: true,
       lastName: true,
       username: true,
-      posts: true,
       profile: true,
     },
   });

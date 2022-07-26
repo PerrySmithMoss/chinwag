@@ -83,9 +83,6 @@ export async function createSessionHandler(req: Request, res: Response) {
     "posts"
   ]);
 
-  console.log("userWithFieldsRemoved: ", userWithFieldsRemoved)
-
-
   // sign a access token
   const accessToken = signAccessToken(userWithFieldsRemoved);
 

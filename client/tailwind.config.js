@@ -1,14 +1,16 @@
-const defaultTheme = require('tailwindcss/defaultTheme')
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 module.exports = {
-  purge: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
+  purge: ["./pages/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
       fontSize: {
-        'sMd': '15px',
-    },
+        sMd: "15px",
+      },
       colors: {
+        "brand-green": "#04948c",
+        "brand-green_hover": "#229c95",
         "dark-background": "#1b1b23",
         "dark-background-accent": "#2b2b37",
         "light-background": "#ffffff",
@@ -20,7 +22,7 @@ module.exports = {
         "blue-text": "#2b68b0",
       },
       fontFamily: {
-        sans: ['Nunito', ...defaultTheme.fontFamily.sans],
+        sans: ["Nunito", ...defaultTheme.fontFamily.sans],
       },
     },
   },
@@ -28,4 +30,4 @@ module.exports = {
     extend: {},
   },
   plugins: [],
-}
+};

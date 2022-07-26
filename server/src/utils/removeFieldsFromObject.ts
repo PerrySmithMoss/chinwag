@@ -14,10 +14,10 @@
 //   return newObj;
 // };
 
-import {  Message, Post, Profile } from "@prisma/client";
+import {  Message, Profile } from "@prisma/client";
 import { User } from "../types/User";
 
-type Object = User | Message | Post | Profile;
+type Object = User | Message | Profile;
 
 export const removeFieldsFromObject = (object: any, fields: string[]) => {
   let newObj = { ...object };

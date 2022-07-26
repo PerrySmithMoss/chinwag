@@ -22,7 +22,6 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
     {
       initialData: user,
       onSuccess: (data: User) => {
-        // console.log("Logged in user: ", data);
         userDispatch({ type: "SET_USER", payload: data });
       },
     }

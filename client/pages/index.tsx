@@ -3,12 +3,13 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useContext, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useQuery } from "react-query";
 import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
 import { UserContext } from "../context/user-context";
 import fetcher from "../utils/fetcher";
 import { Chat } from "../components/Containers/Chat/Chat";
+import { SocketProvider } from "../context/socket.context";
 
 interface ILoginForm {
   email: string;
@@ -27,7 +28,6 @@ const Home: NextPage<UserData | null> = ({ user }) => {
     {
       initialData: user,
       onSuccess: (data: User) => {
-        // console.log("Logged in user: ", data);
         userDispatch({ type: "SET_USER", payload: data });
       },
     }
@@ -44,13 +44,11 @@ const Home: NextPage<UserData | null> = ({ user }) => {
       [event.target.name]: event.target.value,
     });
   };
-  
+
   const handleLoginUser = async () => {
-    // mutateAsync();
     const userRes = await postUser();
 
-    if(userRes) refetchCurrentUser()
-    // router.push("/chat");
+    if (userRes) refetchCurrentUser();
   };
 
   const postUser = async (): Promise<User> => {
@@ -67,7 +65,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
         }
       );
       const json = await res.json();
-      
+
       return json;
     } catch (err: any) {
       console.log("Login error: ", err);
@@ -75,34 +73,28 @@ const Home: NextPage<UserData | null> = ({ user }) => {
     }
   };
 
-  // const { mutateAsync, data } = useMutation("loginUser", postUser, {
-  //   onSuccess: (data) => {
-  //     // console.log("Logged in user: ", data)
-  //     queryClient.setQueryData(["user"], data);
-  //     userDispatch({ type: "SET_USER", payload: data });
-  //   },
-  // });
-
   if (data?.id) {
     return (
-      <div>
-        <Head>
-          <title>Chat | Chinwag</title>
-          <meta
-            name="description"
-            content="Text, Phone, Video with anyone, anywhere."
-          />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+      <SocketProvider>
+        <div>
+          <Head>
+            <title>Chat | Chinwag</title>
+            <meta
+              name="description"
+              content="Text, Phone, Video with anyone, anywhere."
+            />
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
 
-        <Chat user={data} />
-      </div>
+          <Chat user={data} />
+        </div>
+      </SocketProvider>
     );
   } else
     return (
       <div>
         <Head>
-          <title>Log in | Chinwag</title>
+          <title>Chinwag</title>
           <meta
             name="description"
             content="Text, Phone, Video with anyone, anywhere."
@@ -150,7 +142,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
                   </Link>
                 </div>
               </div>
-              <div className="flex mt-7 space-x-3">
+              {/* <div className="flex mt-7 space-x-3">
                 <button className="bg-white border shadow-md hover:bg-gray-100 px-4 py-2 font-semibold inline-flex items-center space-x-2 rounded">
                   <svg
                     viewBox="0 0 24 24"
@@ -191,7 +183,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
                   </svg>
                   <span className="text-sm">Login with Facebook</span>
                 </button>
-              </div>
+              </div> */}
               {/* <div className="mt-4 flex items-center">
               <span className="border-b w-2/5 lg:w-2/4"></span>
               <a
@@ -202,7 +194,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
               </a>
               <span className="border-b w-2/5 lg:w-2/4"></span>
             </div> */}
-              <div className="mt-10">
+              <div className="mt-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Email Address
                 </label>
@@ -229,36 +221,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
                   type="password"
                 />
               </div>
-              <div className="flex">
-                <div className="ml-1 mt-2">
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    name="checkbok-1"
-                    id="checkbok-1"
-                  />
-                  <span className="check-icon"></span>
-                </div>
-                <div>
-                  <p className="mt-2 ml-2 text-sm text-gray-400">
-                    I agree to the
-                  </p>
-                </div>
-                <div>
-                  <p className="ml-1 mt-2 text-tan-background-accent text-sm">
-                    Terms of Service
-                  </p>
-                </div>
-                <div>
-                  <p className="ml-1 mt-2 text-sm text-gray-400">&</p>
-                </div>
-                <div>
-                  <p className="ml-1 mt-2 text-tan-background-accent text-sm">
-                    Privacy Policy
-                  </p>
-                </div>
-              </div>
-              <div className="mt-8">
+              <div className="mt-5">
                 <button
                   onClick={handleLoginUser}
                   className="bg-tan-background-accent text-white font-bold py-2 px-4 w-96 rounded hover:bg-tan-background"
@@ -272,28 +235,5 @@ const Home: NextPage<UserData | null> = ({ user }) => {
       </div>
     );
 };
-
-// export const getServerSideProps: GetServerSideProps = async (context) => {
-//   let user: null | UserData = null;
-
-//   if (context.req.headers.cookie) {
-//     try {
-//       user = await fetcher(
-//         `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`,
-//         context.req.headers
-//       );
-//     } catch (e) {
-//       console.error("Error while trying to fetch current user", e);
-//     }
-//   }
-
-//   // console.log(context.req.headers.cookie ? context.req.headers.cookie : null);
-
-//   return {
-//     props: {
-//       user,
-//     },
-//   };
-// };
 
 export default Home;

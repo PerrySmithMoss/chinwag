@@ -169,12 +169,6 @@ export const Main: React.FC<MainProps> = ({}) => {
     }
   };
 
-  // const handleSearchForUser = (event: React.MouseEvent<HTMLButtonElement>) => {
-  //   event.preventDefault();
-
-  //   searchForUserByEmail();
-  // };
-
   const handleCreateNewConversationWithUser = (userId: number) => {
     setSelectedUserId(userId);
 
@@ -187,14 +181,12 @@ export const Main: React.FC<MainProps> = ({}) => {
   };
 
   useEffect(() => {
-    // console.log(selectedUserId)
     if (selectedUserId) {
       refetchUserDetails();
       fetchAllMessagesWithUser(
         selectedUserId,
         userState.user.id as unknown as number
       ).then((json) => setMessages(json));
-      // console.log("Messages: ", messages);
     }
   }, [selectedUserId]);
 
@@ -249,10 +241,8 @@ export const Main: React.FC<MainProps> = ({}) => {
 
   useEffect(() => {
     if (recipientInput.length === 0) {
-      // setFilteredProducts([]);
       setIsSearching(false);
-      // setIsProductSearchResultsOpen(false);
-
+      
       return;
     }
 

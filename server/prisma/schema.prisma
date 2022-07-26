@@ -11,17 +11,6 @@ generator client {
   previewFeatures = ["interactiveTransactions"]
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  Int
-}
-
 model Profile {
   id     Int     @id @default(autoincrement())
   bio    String?
@@ -41,7 +30,6 @@ model User {
   username  String    @unique
   sender    Message[] @relation("Sender")
   receiver  Message[] @relation("Reciever")
-  posts     Post[]
   profile   Profile?
 }
 

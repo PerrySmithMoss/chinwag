@@ -1,10 +1,9 @@
 import { useQuery } from "react-query";
 import Image from "next/image";
 import styles from "./SidebarNav.module.css";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { User } from "../../../interfaces/User";
 import { UserContext } from "../../../context/user-context";
-import { fetchAllFriends } from "../../../api/user";
 import { fetchUserDetails } from "../../../api/user";
 import { getAllUserMessages } from "../../../api/message";
 import { useAppContext } from "../../../context/global.context";
@@ -32,31 +31,20 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
   const { socket } = useSocket();
 
+  const [isActive, setIsActive] = useState(true);
+
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
 
-    const { data, refetch: refetchCurrentUser } = useQuery(
-      ["me"],
-      () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-      {
-        initialData: user,
-        onSuccess: (data: User) => {
-          // console.log("Logged in user: ", data);
-          userDispatch({ type: "SET_USER", payload: data });
-        },
-      }
-    );
-    
-  const {
-    isLoading: isFriendsLoading,
-    isError: isFriendsError,
-    data: friends,
-    refetch: refetchFriends,
-    error: friendsError,
-  } = useQuery(
-    ["userFriends", userState.user.id as unknown as number],
-    () => fetchAllFriends(userState.user.id as unknown as number),
-    { refetchOnWindowFocus: false }
+  const { data, refetch: refetchCurrentUser } = useQuery(
+    ["me"],
+    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+    {
+      initialData: user,
+      onSuccess: (data: User) => {
+        userDispatch({ type: "SET_USER", payload: data });
+      },
+    }
   );
 
   const {
@@ -84,19 +72,16 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   );
 
   const handleCreateNewMessage = () => {
-    // Set newMessage global state to true
-    setCreateNewMessage(true);
-    setIsRecipientSearchResultsOpen(true);
     // Open new main component with blank details
-    // User types in the friend they would like to message
-    // OR
-    // User types in the username they would like to message
+    // User types in the email they would like to message
     // THEN
     // User clicks the user they would like to message
     // Request is sent to the server to fetch the selectedUserId details and message thread (if they have one already)
     // selectedUserId global state is then updated to the user Id they selected to message
     // User can now send message
     // User
+    setCreateNewMessage(true);
+    setIsRecipientSearchResultsOpen(true);
   };
 
   //   socket.off("notifications").on("notifications", (room) => {
@@ -132,19 +117,13 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         }
       );
       if (res.status === 204) {
-        refetchCurrentUser()
+        refetchCurrentUser();
       }
     } catch (err: any) {
       console.log("Login error: ", err);
       throw Error(err);
     }
   };
-
-  useEffect(() => {
-    if (userState.user.id) {
-      refetchFriends();
-    }
-  }, []);
 
   useEffect(() => {
     if (selectedUserId) {
@@ -244,108 +223,88 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
             <div className="text-xs text-gray-500">
               {userState.user.username}
             </div>
-            <div className="flex flex-row items-center mt-3">
-              <div className="flex flex-col justify-center h-4 w-8 bg-indigo-500 rounded-full">
-                <div className="h-3 w-3 bg-white rounded-full self-end mr-1"></div>
+            <div className="flex items-center mt-2.5">
+              <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                <input
+                  type="checkbox"
+                  name="toggle"
+                  checked={isActive}
+                  onChange={() => setIsActive(!isActive)}
+                  id="toggle"
+                  className={`${styles.toggleCheckbox} absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer`}
+                />
+                <label
+                  htmlFor="toggle"
+                  className={`${styles.toggleLabel} block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer`}
+                ></label>
               </div>
-              <div className="leading-none ml-1 text-xs">Active</div>
+              {isActive ? (
+                <label htmlFor="toggle" className="text-xs text-gray-700">
+                  Active
+                </label>
+              ) : (
+                <label htmlFor="toggle" className="text-xs text-gray-700">
+                  Busy
+                </label>
+              )}
             </div>
           </div>
           <div className="flex flex-col mt-8">
-            <div className="mb-3 flex flex-row items-center justify-between text-xs">
+            <div className="mb-3 flex flex-row items-center justify-between">
               <span className="font-bold">Messages</span>
               <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
                 {userMessages?.length}
               </span>
             </div>
-            <div className="max-h-64 overflow-y-auto overflow-x-hidden">
-              {userMessages?.map((message) => (
-                <div key={message.id} className="flex flex-col space-y-1 -mx-2">
-                  <button
-                    onClick={() => handlePrivateMemberMsg(message.receiverId)}
-                    className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
-                  >
-                    <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                      {message.receiver_firstName.charAt(0).toUpperCase()}
-                      {message.receiver_lastName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-2 text-sm font-semibold">
-                      {message.receiverId ===
-                      (userState.user.id as unknown as number) ? (
-                        <div>
-                          {message.sender_firstName} {message.sender_lastName}
-                        </div>
-                      ) : (
-                        <div>
-                          {message.receiver_firstName}{" "}
-                          {message.receiver_lastName}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                </div>
-              ))}
-              {/* {[...Array(10)].map((e, i) => (
-                <div key={i} className="flex flex-col space-y-1 -mx-2">
-                  <button
-                    //  onClick={() => handlePrivateMemberMsg(message.receiverId)}
-                    className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
-                  >
-                    <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                      TE
-                    </div>
-                    <div className="ml-2 text-sm font-semibold">
-                      <div>Test Example</div>
-                    </div>
-                  </button>
-                </div>
-              ))} */}
-            </div>
-            <div className="mb-3 flex flex-row items-center justify-between text-xs mt-6">
-              <span className="font-bold">Friends</span>
-              <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
-                {friends?.length}
-              </span>
-            </div>
-            <div className="max-h-64 overflow-y-auto overflow-x-hidden">
-              {friends &&
-                friends?.map((friend: User) => (
+            {Array.isArray(userMessages) && userMessages.length > 0 ? (
+              <div className="max-h-64 overflow-y-auto overflow-x-hidden">
+                {userMessages?.map((message) => (
                   <div
-                    key={friend.id}
+                    key={message.id}
                     className="flex flex-col space-y-1 -mx-2"
                   >
                     <button
-                      onClick={() => handlePrivateMemberMsg(friend.id)}
+                      onClick={() => handlePrivateMemberMsg(message.receiverId)}
                       className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
-                      <div className="flex text-sm items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                        {friend.firstName.charAt(0).toUpperCase()}
-                        {friend.lastName.charAt(0).toUpperCase()}
+                      <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
+                        {message.receiver_firstName.charAt(0).toUpperCase()}
+                        {message.receiver_lastName.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-2 text-sm font-semibold">
-                        {friend.firstName} {friend.lastName}
+                        {message.receiverId ===
+                        (userState.user.id as unknown as number) ? (
+                          <div>
+                            {message.sender_firstName} {message.sender_lastName}
+                          </div>
+                        ) : (
+                          <div>
+                            {message.receiver_firstName}{" "}
+                            {message.receiver_lastName}
+                          </div>
+                        )}
                       </div>
                     </button>
                   </div>
                 ))}
-            </div>
+              </div>
+            ) : (
+              <div className="mt-1">
+                <button
+                  onClick={handleCreateNewMessage}
+                  className="bg-brand-green hover:bg-brand-green_hover text-white py-2 w-full rounded-full"
+                >
+                  Create message
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-auto">
-          {/* <button className="" onClick={() => handleLogoutUser()}>
-            Logout
-          </button> */}
           <button
             onClick={() => handleLogoutUser()}
             className="bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
           >
-            {/* <svg
-              className="w-4 h-4 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-            >
-              <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
-            </svg> */}
             <span>Logout</span>
           </button>
         </div>

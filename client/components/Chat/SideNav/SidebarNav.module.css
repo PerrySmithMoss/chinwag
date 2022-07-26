@@ -1,3 +1,10 @@
 .avatar:hover {
-    filter: brightness(90%);
+  filter: brightness(90%);
+}
+.toggleCheckbox:checked {
+  right: 0;
+  border-color: #68d391;
+}
+.toggleCheckbox:checked + .toggleLabel {
+  background-color: #68d391;
 }

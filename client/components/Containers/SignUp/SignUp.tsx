@@ -6,6 +6,7 @@ import { User } from "../../../interfaces/User";
 import fetcher from "../../../utils/fetcher";
 import { useQuery } from "react-query";
 import { UserContext } from "../../../context/user-context";
+import Link from "next/link";
 
 interface ISignUpForm {
   firstName: string;
@@ -31,10 +32,9 @@ export const SignUp: React.FC = () => {
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
       onSuccess: (data: User) => {
-        // console.log("Logged in user: ", data);
         userDispatch({ type: "SET_USER", payload: data });
       },
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
     }
   );
 
@@ -108,12 +108,14 @@ export const SignUp: React.FC = () => {
               </p>
             </div>
             <div>
-              <p className="ml-1 mt-1 text-tan-background-accent text-sm tracking-wide">
-                Log in
-              </p>
+              <Link href="/">
+                <p className="cursor-pointer ml-1 mt-1 text-tan-background-accent text-sm tracking-wide">
+                  Log in
+                </p>
+              </Link>
             </div>
           </div>
-          <div className="flex mt-7 space-x-3">
+          {/* <div className="flex mt-7 space-x-3">
             <button className="bg-white border shadow-md hover:bg-gray-100 px-4 py-2 font-semibold inline-flex items-center space-x-2 rounded">
               <svg
                 viewBox="0 0 24 24"
@@ -152,7 +154,7 @@ export const SignUp: React.FC = () => {
               </svg>
               <span className="text-sm">Login with Facebook</span>
             </button>
-          </div>
+          </div> */}
           {/* <div className="mt-4 flex items-center">
           <span className="border-b w-2/5 lg:w-2/4"></span>
           <a
