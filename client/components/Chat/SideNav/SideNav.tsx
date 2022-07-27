@@ -252,7 +252,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
           <div className="flex flex-col mt-8">
             <div className="mb-3 flex flex-row items-center justify-between">
               <span className="font-bold">Messages</span>
-              <span className="flex items-center justify-center bg-gray-300 h-4 w-4 rounded-full">
+              <span className="flex items-center justify-center text-sm bg-gray-300 h-5 w-5 rounded-full">
                 {userMessages?.length}
               </span>
             </div>

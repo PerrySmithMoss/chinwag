@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { Message } from "../interfaces/Message";
 
 // @TODO: Need to type the props
 type GlobalUIProps = {
@@ -36,7 +37,7 @@ const AppContext = createContext<GlobalUIProps>({
 export const AppContextProvider = ({
   children,
 }: React.PropsWithChildren<unknown>) => {
-  const [messages, setMessages] = useState<any>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<any>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(
     undefined

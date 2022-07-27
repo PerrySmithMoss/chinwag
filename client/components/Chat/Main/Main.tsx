@@ -70,21 +70,21 @@ export const Main: React.FC<MainProps> = ({}) => {
     { refetchOnWindowFocus: false, enabled: false }
   );
 
-  const {
-    isLoading: isAllMessagesWithSpecificUserLoading,
-    isError: isAllMessagesWithSpecificUserError,
-    data: allMessagesWithSpecificUserData,
-    refetch: refetchAllMessagesWithSpecificUser,
-    error: allMessagesWithSpecificUserError,
-  } = useQuery(
-    ["userMessages", selectedUserId, userState.user.id],
-    () =>
-      fetchAllMessagesWithUser(
-        selectedUserId as number,
-        userState.user.id as unknown as number
-      ),
-    { refetchOnWindowFocus: false, enabled: false }
-  );
+  // const {
+  //   isLoading: isAllMessagesWithSpecificUserLoading,
+  //   isError: isAllMessagesWithSpecificUserError,
+  //   data: allMessagesWithSpecificUserData,
+  //   refetch: refetchAllMessagesWithSpecificUser,
+  //   error: allMessagesWithSpecificUserError,
+  // } = useQuery(
+  //   ["userMessages", selectedUserId, userState.user.id],
+  //   () =>
+  //     fetchAllMessagesWithUser(
+  //       selectedUserId as number,
+  //       userState.user.id as unknown as number
+  //     ),
+  //   { refetchOnWindowFocus: false, enabled: false }
+  // );
 
   const {
     data: recipientSearchResults,
@@ -97,7 +97,7 @@ export const Main: React.FC<MainProps> = ({}) => {
     {
       enabled: false,
       refetchOnWindowFocus: false,
-      retry: 0,
+      retry: 1,
     }
   );
 
@@ -180,6 +180,16 @@ export const Main: React.FC<MainProps> = ({}) => {
     setIsRecipientSearchResultsOpen(false);
   };
 
+  const handleLoadEarlierMessages = async () => {
+    const earlierMessagesRes = await fetchAllMessagesWithUser(
+      selectedUserId as number,
+      userState.user.id as number,
+      messages[messages.length - 1].createdAt
+    );
+
+    setMessages((prev: Message[]) => [...prev, ...earlierMessagesRes]);
+  };
+
   useEffect(() => {
     if (selectedUserId) {
       refetchUserDetails();
@@ -192,7 +202,7 @@ export const Main: React.FC<MainProps> = ({}) => {
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [allMessagesWithSpecificUserData, messages]);
+  }, [messages]);
 
   useEffect(() => {
     if (socket === null) return;
@@ -242,7 +252,7 @@ export const Main: React.FC<MainProps> = ({}) => {
   useEffect(() => {
     if (recipientInput.length === 0) {
       setIsSearching(false);
-      
+
       return;
     }
 
@@ -300,51 +310,70 @@ export const Main: React.FC<MainProps> = ({}) => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col h-full overflow-x-auto mb-4">
-              <div className="flex flex-col h-full">
-                <div className="grid grid-cols-12 gap-y-2">
-                  {messages?.map((message: Message) => (
-                    <div
-                      ref={scrollRef}
-                      key={message.id}
-                      className={
-                        message.receiverId ===
-                        (userState.user.id as unknown as number)
-                          ? `col-start-1 col-end-8 p-3 rounded-lg`
-                          : `col-start-6 col-end-13 p-3 rounded-lg`
-                      }
-                    >
-                      <div
-                        className={
-                          message.receiverId ===
-                          (userState.user.id as unknown as number)
-                            ? `flex flex-row items-center`
-                            : `flex items-center justify-start flex-row-reverse`
-                        }
-                      >
-                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
-                          {message.sender.firstName.charAt(0).toUpperCase()}
-                          {message.sender.lastName.charAt(0).toUpperCase()}
-                        </div>
+            <div className="h-full overflow-x-auto ">
+              {messages.length >= 20 && (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    onClick={handleLoadEarlierMessages}
+                    className="ml-12 bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
+                  >
+                    <span>Load older messages</span>
+                  </button>
+                </div>
+              )}
 
+              <div className="flex flex-col mb-4">
+                <div className="flex flex-col h-full">
+                  <div className="grid grid-cols-12 gap-y-2">
+                    {messages
+                      .slice()
+                      .reverse()
+                      .map((message: Message) => (
                         <div
+                          ref={scrollRef}
+                          key={message.id}
                           className={
                             message.receiverId ===
                             (userState.user.id as unknown as number)
-                              ? `relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl`
-                              : `relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl`
+                              ? `col-start-1 col-end-8 p-3 rounded-lg`
+                              : `col-start-6 col-end-13 p-3 rounded-lg`
                           }
                         >
-                          <div>{message.message}</div>
+                          <div className="text-gray-400 text-sm">
+                            {message.createdAt}
+                          </div>
+                          <div
+                            className={
+                              message.receiverId ===
+                              (userState.user.id as unknown as number)
+                                ? `flex flex-row items-center`
+                                : `flex items-center justify-start flex-row-reverse`
+                            }
+                          >
+                            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
+                              {message.sender.firstName.charAt(0).toUpperCase()}
+                              {message.sender.lastName.charAt(0).toUpperCase()}
+                            </div>
+
+                            <div
+                              className={
+                                message.receiverId ===
+                                (userState.user.id as unknown as number)
+                                  ? `relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl`
+                                  : `relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl`
+                              }
+                            >
+                              <div>{message.message}</div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>
             <div className="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
-              <div>
+              {/* <div>
                 <button className="flex items-center justify-center text-gray-400 hover:text-gray-600">
                   <svg
                     className="w-5 h-5"
@@ -361,8 +390,8 @@ export const Main: React.FC<MainProps> = ({}) => {
                     ></path>
                   </svg>
                 </button>
-              </div>
-              <div className="flex-grow ml-4">
+              </div> */}
+              <div className="flex-grow ">
                 <div className="relative w-full">
                   <input
                     ref={emojiRef}
@@ -512,8 +541,8 @@ export const Main: React.FC<MainProps> = ({}) => {
                           isRecipientSearchResultsFetching === false ? (
                           // if input is > 0
                           // if isError
-                          // if !fetching 
-                          // User not found 
+                          // if !fetching
+                          // User not found
                           // Show red
                           <svg
                             className="w-6 h-6"

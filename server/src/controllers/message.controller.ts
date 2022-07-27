@@ -28,8 +28,14 @@ export const getAllMessagesBetweenTwoUsersHandler = async (
   try {
     const senderId = parseInt(req.params.senderId);
     const receiverId = parseInt(req.params.receiverId);
+    
+    const { cursor } = req.body;
 
-    const messages = await getMessagesBetweenTwoUsers(senderId, receiverId);
+    const messages = await getMessagesBetweenTwoUsers(
+      senderId,
+      receiverId,
+      cursor
+    );
 
     res.status(200).json(messages);
   } catch (err) {

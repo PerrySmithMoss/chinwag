@@ -24,31 +24,67 @@ export async function createMessage(
 // Returns a message thread between two users
 export async function getMessagesBetweenTwoUsers(
   senderId: number,
-  receiverId: number
+  receiverId: number,
+  cursor?: string
 ) {
-  const roomMessages = await prisma.message.findMany({
-    where: {
-      OR: [
-        {
-          senderId: senderId,
-          receiverId: receiverId,
-        },
-        {
-          senderId: receiverId,
-          receiverId: senderId,
-        },
-      ],
-    },
-    include: {
-      sender: true,
-      receiver: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+  if (cursor) {
+    const roomMessages = await prisma.message.findMany({
+      take: 20,
+      where: {
+        OR: [
+          {
+            senderId: senderId,
+            receiverId: receiverId,
+          },
+          {
+            senderId: receiverId,
+            receiverId: senderId,
+          },
+        ],
+        AND: [
+          {
+            createdAt: {
+              lt: cursor,
+            },
+          },
+        ],
+      },
+      include: {
+        sender: true,
+        receiver: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-  return roomMessages;
+    return roomMessages;
+  } else {
+    const roomMessages = await prisma.message.findMany({
+      take: 20,
+      where: {
+        OR: [
+          {
+            senderId: senderId,
+            receiverId: receiverId,
+          },
+          {
+            senderId: receiverId,
+            receiverId: senderId,
+          },
+        ],
+      },
+      include: {
+        sender: true,
+        receiver: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return roomMessages;
+  }
 }
 
 export async function getUsersMessages(userId: number) {
