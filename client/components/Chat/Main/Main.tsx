@@ -41,9 +41,15 @@ export const Main: React.FC<MainProps> = ({}) => {
   const debouncedSearchTerm = useDebounce(recipientInput, 1500);
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
+  const [
+    earlierMessagesPaginationHasMore,
+    setEarlierMessagesPaginationHasMore,
+  ] = useState(true);
+
   const [newMessage, setNewMessage] = useState<string>("");
   const [showEmojis, setShowEmojis] = useState<boolean>(false);
   const [cursorPosition, setCursorPosition] = useState();
+
   const scrollRef = useRef<any>();
   const emojiRef = useRef<any>();
 
@@ -187,7 +193,16 @@ export const Main: React.FC<MainProps> = ({}) => {
       messages[messages.length - 1].createdAt
     );
 
-    setMessages((prev: Message[]) => [...prev, ...earlierMessagesRes]);
+    console.log("messages: ", messages);
+    console.log("earlierMessagesRes: ", earlierMessagesRes);
+
+    if (earlierMessagesRes.length < 20) {
+      setEarlierMessagesPaginationHasMore(false);
+    }
+
+    if (earlierMessagesRes.length > 0) {
+      setMessages((prev: Message[]) => [...prev, ...earlierMessagesRes]);
+    }
   };
 
   useEffect(() => {
@@ -311,7 +326,7 @@ export const Main: React.FC<MainProps> = ({}) => {
               </div>
             </div>
             <div className="h-full overflow-x-auto ">
-              {messages.length >= 20 && (
+              {earlierMessagesPaginationHasMore && messages.length >= 20 && (
                 <div className="mt-4 flex justify-center">
                   <button
                     onClick={handleLoadEarlierMessages}
