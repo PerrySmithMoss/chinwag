@@ -193,9 +193,6 @@ export const Main: React.FC<MainProps> = ({}) => {
       messages[messages.length - 1].createdAt
     );
 
-    console.log("messages: ", messages);
-    console.log("earlierMessagesRes: ", earlierMessagesRes);
-
     if (earlierMessagesRes.length < 20) {
       setEarlierMessagesPaginationHasMore(false);
     }

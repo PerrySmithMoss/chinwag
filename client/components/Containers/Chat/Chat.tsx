@@ -14,7 +14,7 @@ interface ChatProps {
 }
 
 export const Chat: React.FC<ChatProps> = ({ user }) => {
-  const { userState, userDispatch } = useContext(UserContext);
+  const { userDispatch } = useContext(UserContext);
 
   const { data } = useQuery(
     ["me"],

@@ -15,8 +15,12 @@ import {
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../../config/config";
 import * as Cloudinary from "cloudinary";
+import { CreateUserInput } from "../schema/User.schema";
 
-export const createUserHandler = async (req: Request, res: Response) => {
+export const createUserHandler = async (
+  req: Request<{}, {}, CreateUserInput["body"]>,
+  res: Response
+) => {
   const body = req.body;
   try {
     const registeredUser = await createUser(body);
@@ -32,7 +36,7 @@ export const createUserHandler = async (req: Request, res: Response) => {
     if (err.code === 11000) {
       return res.status(409).send("Account already exists");
     }
-    return res.status(500).json(err);
+    return res.status(409).json(err);
   }
 };
 
@@ -303,7 +307,7 @@ export const searchForUserByEmailHandler = async (
       // res.status(400).json({
       //   error: "There is no user with the specified email.",
       // });
-      res.sendStatus(400)
+      res.sendStatus(400);
       return;
     }
 
@@ -313,7 +317,7 @@ export const searchForUserByEmailHandler = async (
       "email",
       "posts",
       "createdAt",
-      "updatedAt"
+      "updatedAt",
     ]);
 
     res.status(200).json(userWithFieldsRemoved);

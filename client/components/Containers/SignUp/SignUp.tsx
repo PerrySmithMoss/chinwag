@@ -7,27 +7,47 @@ import fetcher from "../../../utils/fetcher";
 import { useQuery } from "react-query";
 import { UserContext } from "../../../context/user-context";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { object, string, TypeOf } from "zod";
 
-interface ISignUpForm {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  password: string;
-}
+const createUserSchema = object({
+  firstName: string().min(1, {
+    message: "First name is required",
+  }),
+  lastName: string().min(1, {
+    message: "Last name is required",
+  }),
+  password: string().min(6, "Password too short - should be 6 chars minimum"),
+  email: string({
+    required_error: "Email is required",
+  })
+    .email("Not a valid email")
+    .min(5, {
+      message: "Email is required",
+    }),
+  username: string().min(1, {
+    message: "Username is required",
+  }),
+});
+
+type CreateUserInput = TypeOf<typeof createUserSchema>;
 
 export const SignUp: React.FC = () => {
   const router = useRouter();
-  const { userState, userDispatch } = useContext(UserContext);
-  const [formValues, setFormValues] = useState<ISignUpForm>({
-    firstName: "",
-    lastName: "",
-    username: "",
-    email: "",
-    password: "",
+  const { userDispatch } = useContext(UserContext);
+
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<CreateUserInput>({
+    resolver: zodResolver(createUserSchema),
   });
 
-  const { data, refetch: refetchCurrentUser } = useQuery(
+  const [registerError, setRegisterError] = useState(null);
+
+  const { refetch: refetchCurrentUser } = useQuery(
     ["me"],
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
@@ -35,23 +55,17 @@ export const SignUp: React.FC = () => {
         userDispatch({ type: "SET_USER", payload: data });
       },
       refetchOnWindowFocus: false,
+      enabled: false
     }
   );
 
-  const onFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({
-      ...formValues,
-      [event.target.name]: event.target.value,
-    });
-  };
-
-  const registerUser = async (): Promise<User> => {
+  async function onSubmit(values: CreateUserInput) {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/register`,
         {
           method: "POST",
-          body: JSON.stringify(formValues),
+          body: JSON.stringify(values),
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
@@ -59,22 +73,19 @@ export const SignUp: React.FC = () => {
         }
       );
 
-      const json = await res.json();
+      const userJson = await res.json();
+      if (Object.hasOwn(userJson, "error")) {
+        setRegisterError(userJson.error);
+      } else {
+        refetchCurrentUser();
+        router.push("/");
+      }
+    } catch (e: any) {
+      console.log(e);
 
-      return json;
-    } catch (err: any) {
-      console.log("Login error: ", err);
-      throw Error(err);
+      setRegisterError(e.message);
     }
-  };
-
-  const handleLoginUser = async () => {
-    const registerUserRes = await registerUser();
-
-    if (registerUserRes) refetchCurrentUser();
-
-    router.push("/");
-  };
+  }
 
   return (
     <main>
@@ -165,105 +176,124 @@ export const SignUp: React.FC = () => {
           </a>
           <span className="border-b w-2/5 lg:w-2/4"></span>
         </div> */}
-          <div className="grid xl:grid-cols-2 xl:gap-6 mt-6">
-            <div className="w-full">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                First name
-              </label>
-              <input
-                name="firstName"
-                onChange={onFormChange}
-                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                type="text"
-              />
-            </div>
-            <div className="mt-4 xl:mt-0 w-full">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Last name
-              </label>
-              <input
-                name="lastName"
-                onChange={onFormChange}
-                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Email Address
-            </label>
-            <input
-              name="email"
-              onChange={onFormChange}
-              className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-              type="email"
-            />
-          </div>
-          <div className="grid xl:grid-cols-2 xl:gap-6 mt-4">
-            <div className="w-full">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Username
-              </label>
-              <input
-                name="username"
-                onChange={onFormChange}
-                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                type="text"
-              />
-            </div>
-            <div className="mt-4 xl:mt-0 w-full">
-              <div className="flex justify-between">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid xl:grid-cols-2 xl:gap-6 mt-6">
+              <div className="w-full">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Password
+                  First name
                 </label>
-                {/* <a href="#" className="text-xs text-gray-500">
+                <input
+                  {...register("firstName")}
+                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                  type="text"
+                />
+                <p className="text-red-400 font-bold text-sm">
+                  {errors.firstName?.message}
+                </p>
+              </div>
+              <div className="mt-4 xl:mt-0 w-full">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Last name
+                </label>
+                <input
+                  {...register("lastName")}
+                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                  type="text"
+                />
+                <p className="text-red-400 font-bold text-sm">
+                  {errors.lastName?.message}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Email Address
+              </label>
+              <input
+                {...register("email")}
+                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                type="email"
+              />
+              <p className="text-red-400 font-bold text-sm">
+                {errors.email?.message}
+              </p>
+            </div>
+            <div className="grid xl:grid-cols-2 xl:gap-6 mt-4">
+              <div className="w-full">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Username
+                </label>
+                <input
+                  autoComplete="off"
+                  {...register("username")}
+                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                  type="text"
+                />
+                <p className="text-red-400 font-bold text-sm">
+                  {errors.username?.message}
+                </p>
+              </div>
+              <div className="mt-4 xl:mt-0 w-full">
+                <div className="flex justify-between">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Password
+                  </label>
+                  {/* <a href="#" className="text-xs text-gray-500">
               Forgot Password?
             </a> */}
+                </div>
+                <input
+                  autoComplete="password"
+                  {...register("password")}
+                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                  type="password"
+                />
+                <p className="text-red-400 font-bold text-sm">
+                  {errors.password?.message}
+                </p>
               </div>
-              <input
-                name="password"
-                onChange={onFormChange}
-                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                type="password"
-              />
             </div>
-          </div>
-          <div className="flex">
-            <div className="ml-1 mt-2">
-              <input
-                type="checkbox"
-                defaultChecked
-                name="checkbok-1"
-                id="checkbok-1"
-              />
-              <span className="check-icon"></span>
+            <div className="flex">
+              <div className="ml-1 mt-2">
+                <input
+                  type="checkbox"
+                  defaultChecked
+                  name="checkbok-1"
+                  id="checkbok-1"
+                />
+                <span className="check-icon"></span>
+              </div>
+              <div>
+                <p className="mt-2 ml-2 text-sm text-gray-400">
+                  I agree to the
+                </p>
+              </div>
+              <div>
+                <p className="ml-1 mt-2 text-tan-background-accent text-sm">
+                  Terms of Service
+                </p>
+              </div>
+              <div>
+                <p className="ml-1 mt-2 text-sm text-gray-400">&</p>
+              </div>
+              <div>
+                <p className="ml-1 mt-2 text-tan-background-accent text-sm">
+                  Privacy Policy
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="mt-2 ml-2 text-sm text-gray-400">I agree to the</p>
+            {registerError && (
+              <p className="mt-2 text-red-400 font-bold">{registerError}</p>
+            )}
+            <div className="mt-8">
+              <button
+                type="submit"
+                className="bg-tan-background-accent text-white font-bold py-2 px-4 w-full rounded hover:bg-tan-background"
+              >
+                Sign up
+              </button>
             </div>
-            <div>
-              <p className="ml-1 mt-2 text-tan-background-accent text-sm">
-                Terms of Service
-              </p>
-            </div>
-            <div>
-              <p className="ml-1 mt-2 text-sm text-gray-400">&</p>
-            </div>
-            <div>
-              <p className="ml-1 mt-2 text-tan-background-accent text-sm">
-                Privacy Policy
-              </p>
-            </div>
-          </div>
-          <div className="mt-8">
-            <button
-              onClick={handleLoginUser}
-              className="bg-tan-background-accent text-white font-bold py-2 px-4 w-full rounded hover:bg-tan-background"
-            >
-              Sign up
-            </button>
-          </div>
+          </form>
         </div>
       </div>
     </main>

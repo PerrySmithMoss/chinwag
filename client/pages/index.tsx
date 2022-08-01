@@ -1,4 +1,4 @@
-import type { NextPage } from "next";
+import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,18 +10,37 @@ import { UserContext } from "../context/user-context";
 import fetcher from "../utils/fetcher";
 import { Chat } from "../components/Containers/Chat/Chat";
 import { SocketProvider } from "../context/socket.context";
+import { object, string, TypeOf } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface ILoginForm {
-  email: string;
-  password: string;
-}
+const loginSchema = object({
+  email: string().min(1, {
+    message: "Email is required",
+  }),
+  password: string().min(1, {
+    message: "Password is required",
+  }),
+});
+
+type LoginInput = TypeOf<typeof loginSchema>;
 
 type UserData = {
   user: User | null;
 };
 
 const Home: NextPage<UserData | null> = ({ user }) => {
-  const { userState, userDispatch } = useContext(UserContext);
+  const { userDispatch } = useContext(UserContext);
+  const [loginError, setLoginError] = useState(null);
+
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+  });
+
   const { data, refetch: refetchCurrentUser } = useQuery(
     ["me"],
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
@@ -30,48 +49,35 @@ const Home: NextPage<UserData | null> = ({ user }) => {
       onSuccess: (data: User) => {
         userDispatch({ type: "SET_USER", payload: data });
       },
+      refetchOnWindowFocus: false
     }
   );
 
-  const [formValues, setFormValues] = useState<ILoginForm>({
-    email: "",
-    password: "",
-  });
-
-  const onFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormValues({
-      ...formValues,
-      [event.target.name]: event.target.value,
-    });
-  };
-
-  const handleLoginUser = async () => {
-    const userRes = await postUser();
-
-    if (userRes) refetchCurrentUser();
-  };
-
-  const postUser = async (): Promise<User> => {
+  async function onSubmit(values: LoginInput) {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/create`,
         {
           method: "POST",
-          body: JSON.stringify(formValues),
+          body: JSON.stringify(values),
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-      const json = await res.json();
+      const userJson = await res.json();
 
-      return json;
-    } catch (err: any) {
-      console.log("Login error: ", err);
-      throw Error(err);
+      if (Object.hasOwn(userJson, "error")) {
+        setLoginError(userJson.error);
+      } else {
+        refetchCurrentUser();
+      }
+    } catch (e: any) {
+      console.log(e);
+      setLoginError(e.message);
     }
-  };
+  }
 
   if (data?.id) {
     return (
@@ -194,46 +200,78 @@ const Home: NextPage<UserData | null> = ({ user }) => {
               </a>
               <span className="border-b w-2/5 lg:w-2/4"></span>
             </div> */}
-              <div className="mt-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Email Address
-                </label>
-                <input
-                  name="email"
-                  onChange={onFormChange}
-                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-96 appearance-none"
-                  type="email"
-                />
-              </div>
-              <div className="mt-4">
-                <div className="flex justify-between">
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <div className="mt-6">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Password
+                    Email Address
                   </label>
-                  {/* <a href="#" className="text-xs text-gray-500">
+                  <input
+                    autoComplete="on"
+                    {...register("email")}
+                    className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-96 appearance-none"
+                    type="email"
+                  />
+                  <p className="text-red-400 text-sm font-bold">
+                    {errors.email?.message}
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <div className="flex justify-between">
+                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                      Password
+                    </label>
+                    {/* <a href="#" className="text-xs text-gray-500">
                   Forgot Password?
                 </a> */}
+                  </div>
+                  <input
+                    autoComplete="on"
+                    {...register("password")}
+                    className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-96 appearance-none"
+                    type="password"
+                  />
+                  <p className="text-red-400 text-sm font-bold">
+                    {errors.password?.message}
+                  </p>
                 </div>
-                <input
-                  name="password"
-                  onChange={onFormChange}
-                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-96 appearance-none"
-                  type="password"
-                />
-              </div>
-              <div className="mt-5">
-                <button
-                  onClick={handleLoginUser}
-                  className="bg-tan-background-accent text-white font-bold py-2 px-4 w-96 rounded hover:bg-tan-background"
-                >
-                  Login
-                </button>
-              </div>
+                {loginError && (
+                  <p className="mt-2 text-red-400 font-bold">{loginError}</p>
+                )}
+                <div className="mt-5">
+                  <button
+                    type="submit"
+                    className="bg-tan-background-accent text-white font-bold py-2 px-4 w-96 rounded hover:bg-tan-background"
+                  >
+                    Login
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </main>
       </div>
     );
+};
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  let user: null | UserData = null;
+
+  if (context.req.headers.cookie) {
+    try {
+      user = await fetcher(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`,
+        context.req.headers
+      );
+    } catch (e) {
+      console.error("Error while trying to fetch current user", e);
+    }
+  }
+
+  return {
+    props: {
+      user,
+    },
+  };
 };
 
 export default Home;

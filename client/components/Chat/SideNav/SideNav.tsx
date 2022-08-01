@@ -36,7 +36,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
 
-  const { data, refetch: refetchCurrentUser } = useQuery(
+  const { refetch: refetchCurrentUser } = useQuery(
     ["me"],
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
