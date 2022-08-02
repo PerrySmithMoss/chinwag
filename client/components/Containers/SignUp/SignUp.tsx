@@ -26,9 +26,14 @@ const createUserSchema = object({
     .min(5, {
       message: "Email is required",
     }),
-  username: string().min(1, {
-    message: "Username is required",
-  }),
+  username: string()
+    .min(1, {
+      message: "Username is required",
+    })
+    .refine(
+      (val) => /^\S+$/.test(val),
+      (val) => ({ message: `Username must not include white space. Please remove any whitespace.` })
+    ),
 });
 
 type CreateUserInput = TypeOf<typeof createUserSchema>;
@@ -55,7 +60,7 @@ export const SignUp: React.FC = () => {
         userDispatch({ type: "SET_USER", payload: data });
       },
       refetchOnWindowFocus: false,
-      enabled: false
+      enabled: false,
     }
   );
 
