@@ -44,17 +44,47 @@ export async function findUserByEmail(
   }
 }
 
-export async function getAllUsers() {
-  return await prisma.user.findMany({
-    select: {
-      id: true,
-      createdAt: true,
-      firstName: true,
-      lastName: true,
-      username: true,
-      profile: true,
-    },
-  });
+export async function getAllUsers(cursor?: number) {
+  if (cursor) {
+    const users = await prisma.user.findMany({
+      take: 20,
+      select: {
+        id: true,
+        createdAt: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        profile: true,
+      },
+      where: {
+        id: {
+          gt: cursor,
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return users;
+  } else {
+    const users = await prisma.user.findMany({
+      take: 20,
+      select: {
+        id: true,
+        createdAt: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        profile: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return users;
+  }
 }
 
 export async function findUserById(userId: number, includeRelations: boolean) {

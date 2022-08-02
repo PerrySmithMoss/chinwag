@@ -77,7 +77,10 @@ export const loginUserHandler = async (req: Request, res: Response) => {
 
 export const allUsersHandler = async (req: Request, res: Response) => {
   try {
-    const users = await getAllUsers();
+    const { cursor } = req.body;
+
+    // @TODO: Need to paginate these
+    const users = await getAllUsers(cursor);
 
     res.status(200).json(users);
   } catch (err) {
