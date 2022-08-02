@@ -47,7 +47,7 @@ export async function findUserByEmail(
 export async function getAllUsers(cursor?: number) {
   if (cursor) {
     const users = await prisma.user.findMany({
-      take: 20,
+      take: 2,
       select: {
         id: true,
         createdAt: true,
@@ -62,14 +62,14 @@ export async function getAllUsers(cursor?: number) {
         },
       },
       orderBy: {
-        createdAt: "asc",
+        id: "asc",
       },
     });
 
     return users;
   } else {
     const users = await prisma.user.findMany({
-      take: 20,
+      take: 2,
       select: {
         id: true,
         createdAt: true,
@@ -79,7 +79,7 @@ export async function getAllUsers(cursor?: number) {
         profile: true,
       },
       orderBy: {
-        createdAt: "asc",
+        id: "asc",
       },
     });
 
@@ -111,29 +111,72 @@ export async function findUserById(userId: number, includeRelations: boolean) {
 
 export async function findUserByUsername(
   username: string,
-  includeRelations: boolean
+  includeRelations: boolean,
+  cursor?: string
 ) {
-  if (includeRelations === true) {
-    const res = await prisma.user.findMany({
-      where: { username: { contains: username } },
-      include: { profile: true },
-    });
+  if (cursor) {
+    if (includeRelations === true) {
+      const res = await prisma.user.findMany({
+        take: 10,
+        where: {
+          username: { contains: username },
+          AND: [
+            {
+              username: {
+                gt: cursor,
+              },
+            },
+          ],
+        },
+        include: { profile: true },
+        orderBy: {
+          username: "asc",
+        },
+      });
 
-    const removeUnwantedFieldsFromEachUser = res.map((user) => {
-      return removeFieldsFromObject(user, ["password", "email"]);
-    });
+      const removeUnwantedFieldsFromEachUser = res.map((user) => {
+        return removeFieldsFromObject(user, ["password", "email"]);
+      });
 
-    return removeUnwantedFieldsFromEachUser;
+      return removeUnwantedFieldsFromEachUser;
+    } else {
+      const res = await prisma.user.findMany({
+        where: { username },
+      });
+
+      const removeUnwantedFieldsFromEachUser = res.map((user) => {
+        removeFieldsFromObject(user, ["password", "email"]);
+      });
+
+      return removeUnwantedFieldsFromEachUser;
+    }
   } else {
-    const res = await prisma.user.findMany({
-      where: { username },
-    });
+    if (includeRelations === true) {
+      const res = await prisma.user.findMany({
+        take: 10,
+        where: { username: { contains: username } },
+        include: { profile: true },
+        orderBy: {
+          username: "asc",
+        },
+      });
 
-    const removeUnwantedFieldsFromEachUser = res.map((user) => {
-      removeFieldsFromObject(user, ["password", "email"]);
-    });
+      const removeUnwantedFieldsFromEachUser = res.map((user) => {
+        return removeFieldsFromObject(user, ["password", "email"]);
+      });
 
-    return removeUnwantedFieldsFromEachUser;
+      return removeUnwantedFieldsFromEachUser;
+    } else {
+      const res = await prisma.user.findMany({
+        where: { username },
+      });
+
+      const removeUnwantedFieldsFromEachUser = res.map((user) => {
+        removeFieldsFromObject(user, ["password", "email"]);
+      });
+
+      return removeUnwantedFieldsFromEachUser;
+    }
   }
 }
 

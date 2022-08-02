@@ -9,7 +9,6 @@ import { getAllUserMessages } from "../../../api/message";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
-import { useRouter } from "next/router";
 import { UpdateUserAvatar } from "../../Modals/UserAvatar/UpdateUserAvatar/UpdateUserAvatar";
 import fetcher from "../../../utils/fetcher";
 
@@ -18,9 +17,7 @@ interface SideNavProps {
 }
 
 export const SideNav: React.FC<SideNavProps> = ({ user }) => {
-  const router = useRouter();
   const { userState, userDispatch } = useContext(UserContext);
-
   const {
     selectedUserId,
     setSelectedUserId,
@@ -56,8 +53,15 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   } = useQuery(
     ["allUserMessages", userState.user.id as unknown as number],
     () => getAllUserMessages(userState.user.id as unknown as number),
-    { refetchOnWindowFocus: false }
+    {
+      refetchOnWindowFocus: false,
+      enabled: !!userState.user.id,
+      onSuccess: () => {
+        setIsLoadingMessages(false);
+      },
+    }
   );
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
   const {
     isLoading: isuserDetailsLoading,
@@ -149,12 +153,12 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
           </div>
           <div className="flex flex-col items-center bg-indigo-100 border border-gray-200 mt-4 w-full py-6 px-4 rounded-lg">
             <div className="relative">
-              <Image
-                src={userState.user.profile.avatar}
+              <img
+                src={userState?.user?.profile?.avatar}
                 alt="Avatar"
                 width={80}
                 height={80}
-                className={`${styles.avatar} h-full w-full rounded-full cursor-pointer relative`}
+                className={`${styles.avatar} h-20 w-20 rounded-full cursor-pointer relative`}
               />
               <div
                 style={{ transform: "translate(50%, 0%)" }}

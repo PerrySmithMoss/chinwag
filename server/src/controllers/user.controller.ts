@@ -77,10 +77,9 @@ export const loginUserHandler = async (req: Request, res: Response) => {
 
 export const allUsersHandler = async (req: Request, res: Response) => {
   try {
-    const { cursor } = req.body;
+    const { cursor } = req.query;
 
-    // @TODO: Need to paginate these
-    const users = await getAllUsers(cursor);
+    const users = await getAllUsers(parseInt(cursor as string));
 
     res.status(200).json(users);
   } catch (err) {
@@ -282,7 +281,9 @@ export const searchForUserByUsernameHandler = async (
   try {
     const username = req.params.username;
 
-    const users = await findUserByUsername(username, true);
+    const { cursor } = req.query;
+
+    const users = await findUserByUsername(username, true, cursor as string);
 
     if (!users) {
       res.status(400).json({

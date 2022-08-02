@@ -29,12 +29,13 @@ export const getAllMessagesBetweenTwoUsersHandler = async (
     const senderId = parseInt(req.params.senderId);
     const receiverId = parseInt(req.params.receiverId);
     
-    const { cursor } = req.body;
+    // const { cursor } = req.body;
+    const { cursor } = req.query;
 
     const messages = await getMessagesBetweenTwoUsers(
       senderId,
       receiverId,
-      cursor
+      cursor as string
     );
 
     res.status(200).json(messages);

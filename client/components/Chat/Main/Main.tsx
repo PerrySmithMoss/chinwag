@@ -18,10 +18,13 @@ import { orderIds } from "../../../utils/orderIds";
 import { io } from "socket.io-client";
 import useDebounce from "../../../hooks/useDebounce";
 import ClipLoader from "react-spinners/ClipLoader";
+import { User } from "../../../interfaces/User";
 
-interface MainProps {}
+interface MainProps {
+  user: User | null;
+}
 
-export const Main: React.FC<MainProps> = ({}) => {
+export const Main: React.FC<MainProps> = ({ user }) => {
   const { socket, setSocket } = useSocket();
   const { userState, userDispatch } = useContext(UserContext);
   const {
@@ -62,7 +65,7 @@ export const Main: React.FC<MainProps> = ({}) => {
   } = useQuery(
     ["userDetails", selectedUserId],
     () => fetchUserDetails(selectedUserId as number),
-    { refetchOnWindowFocus: false, enabled: false }
+    { initialData: user, refetchOnWindowFocus: false, enabled: false }
   );
 
   const {

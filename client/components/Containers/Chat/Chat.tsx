@@ -35,7 +35,7 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
       <div className="flex h-screen antialiased text-gray-800">
         <div className="flex flex-row h-full w-full overflow-x-hidden">
           <SideNav user={data} />
-          <Main />
+          <Main user={data}/>
           <ToastContainer
             position="top-right"
             autoClose={5000}

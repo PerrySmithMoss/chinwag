@@ -7,6 +7,6 @@ const messageRouter = Router();
 messageRouter.get("/:userID", getUserConversationsHandler);
 
 // Return all messages between two users
-messageRouter.post("/:senderId/:receiverId", getAllMessagesBetweenTwoUsersHandler);
+messageRouter.get("/:senderId/:receiverId", getAllMessagesBetweenTwoUsersHandler);
 
 export default messageRouter;
