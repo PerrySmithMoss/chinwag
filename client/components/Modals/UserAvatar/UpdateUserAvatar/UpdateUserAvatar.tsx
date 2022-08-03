@@ -86,7 +86,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     const reader = new FileReader();
     reader.readAsDataURL(selectedFile);
     reader.onloadend = () => {
-      uploadImageToCloudinary();
+      uploadImageToCloudinary(userState.user.profile.avatarId);
     };
     reader.onerror = () => {
       console.error("AHHHHHHHH!!");
@@ -94,15 +94,10 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     };
   };
 
-  const uploadImageToCloudinary = async () => {
+  const uploadImageToCloudinary = async (avatarId: string) => {
     try {
-      // get signature. In reality you could store this in localstorage or some other cache mechanism, it's good for 1 hour
-      // const signatureResponse = await fetcher(
-      //   `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/signature`
-      // );
-
       const signatureResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/signature`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/signature?avatarId=${avatarId}`,
         {
           method: "GET",
           credentials: "include",
@@ -110,17 +105,19 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       );
 
       const signatureResponseJSON = await signatureResponse.json();
-      // console.log("signatureResponse", signatureResponseJSON);
 
       const data = new FormData();
       data.append("file", selectedFile as any);
-      // https://res.cloudinary.com/perrysmith-moss/image/upload/w_300,h_300,c_fill,q_100/v1658311607/chinwag/avatars/xpxrpnznfzmjldotx6fh.jpg
       data.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY as any);
       data.append("signature", signatureResponseJSON.signature);
       data.append("timestamp", signatureResponseJSON.timestamp);
+      // If the user already has an avatar then we need to tell cloudinary to overwite that image
+      if (avatarId) {
+        data.append("invalidate", "true");
+        data.append("overwrite", "true");
+        data.append("public_id", avatarId);
+      }
       data.append("folder", "chinwag/avatars");
-
-      // console.log("Form data: ", Object.fromEntries(data));
 
       const cloudinaryResponse = await fetch(
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
@@ -130,8 +127,6 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         }
       );
       const cloudinaryResponseJSON = await cloudinaryResponse.json();
-
-      // console.log(cloudinaryResponseJSON);
 
       // send the image info back to our server
       const photoData = {
@@ -154,7 +149,6 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       );
 
       const updateUserAvatarJSON = await updateUserAvatarResponse.json();
-      // console.log(updateUserAvatarJSON);
 
       // close the modal
       // reset the setFileInputState, setPreviewSource, setSelectedFile

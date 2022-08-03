@@ -8,14 +8,34 @@ import * as Cloudinary from "cloudinary";
 // then do not allow them to generate a new signature
 export async function createSignatureHandler(req: Request, res: Response) {
   try {
+    let { avatarId } = req.query;
+    const parsedAvatarId = avatarId === "null" ? null : avatarId;
+
     const timestamp = Math.round(new Date().getTime() / 1000);
-    const signature = Cloudinary.v2.utils.api_sign_request(
-      {
-        timestamp: timestamp,
-        folder: "chinwag/avatars"
-      },
-      config.cloudinaryApiSecret as string
-    );
+
+    let signature;
+
+    if (parsedAvatarId) {
+      signature = Cloudinary.v2.utils.api_sign_request(
+        {
+          timestamp: timestamp,
+          folder: "chinwag/avatars",
+          invalidate: true,
+          overwrite: true,
+          public_id: avatarId, // @TODO: This should be unique for every user
+        },
+        config.cloudinaryApiSecret as string
+      );
+    } else {
+      signature = Cloudinary.v2.utils.api_sign_request(
+        {
+          timestamp: timestamp,
+          folder: "chinwag/avatars",
+        },
+        config.cloudinaryApiSecret as string
+      );
+    }
+
     res.json({ timestamp, signature });
   } catch (err) {
     res.status(500).json(err);

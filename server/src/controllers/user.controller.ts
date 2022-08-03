@@ -16,6 +16,7 @@ import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../../config/config";
 import * as Cloudinary from "cloudinary";
 import { CreateUserInput } from "../schema/User.schema";
+import { removeCharsFromString } from "../utils/removeCharsFromString";
 
 export const createUserHandler = async (
   req: Request<{}, {}, CreateUserInput["body"]>,
@@ -331,18 +332,19 @@ export const searchForUserByEmailHandler = async (
 };
 
 export const uploadUserAvatarHandler = async (req: Request, res: Response) => {
-  const body = req.body;
   try {
+    const { signature, public_id, image_url, version } = req.body;
     // based on the public_id and the version that the (potentially malicious) user is submitting...
-    // we can combine those values along with our SECRET key to see what we would expect the signature to be if it was innocent / valid / actually coming from Cloudinary
+    // we can combine those values along with our SECRET key to see what we would expect the signature
+    // to be if it was innocent / valid / actually coming from Cloudinary
     const expectedSignature = Cloudinary.v2.utils.api_sign_request(
-      { public_id: req.body.public_id, version: req.body.version },
+      { public_id: public_id, version: version },
       config.cloudinaryApiSecret as string
     );
 
     // We can trust the visitor's data if their signature is what we'd expect it to be...
     // Because without the SECRET key there's no way for someone to know what the signature should be...
-    if (expectedSignature === body.signature) {
+    if (expectedSignature === signature) {
       const userId = parseInt(req.params.id);
 
       // First identify whether the user exists or not
@@ -355,10 +357,19 @@ export const uploadUserAvatarHandler = async (req: Request, res: Response) => {
         return;
       }
 
-      // Store the users avatar url in database
-      const imageUrl = body.image_url;
+      const imageUrl = image_url;
 
-      const updatedUser = await updateUsersAvatar(userId, imageUrl);
+      const publicImageId = removeCharsFromString(
+        public_id,
+        "chinwag/avatars/"
+      );
+
+      // Store the users avatar url in database
+      const updatedUser = await updateUsersAvatar(
+        userId,
+        imageUrl,
+        publicImageId
+      );
 
       const userWithFieldsRemoved = removeFieldsFromObject(updatedUser, [
         "password",

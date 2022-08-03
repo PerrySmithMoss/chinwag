@@ -158,6 +158,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                 alt="Avatar"
                 width={80}
                 height={80}
+                onClick={() => setIsUpdateUserAvatarModalOpen(true)}
                 className={`${styles.avatar} h-20 w-20 rounded-full cursor-pointer relative`}
               />
               <div

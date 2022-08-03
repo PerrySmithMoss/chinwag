@@ -243,17 +243,14 @@ export async function deleteUser(userId: number, async: boolean) {
   }
 }
 
-export async function updateUsersAvatar(userId: number, avatar: string) {
+export async function updateUsersAvatar(
+  userId: number,
+  avatar: string,
+  imageId: string
+) {
   return await prisma.user.update({
     where: { id: userId },
-    data: { profile: { update: { avatar } } },
+    data: { profile: { update: { avatar: avatar, avatarId: imageId } } },
     include: { profile: true },
   });
 }
-
-// export async function updateUsersAvatar(userId: number, avatar: string) {
-//   return await prisma.profile.update({
-//     where: { id: userId },
-//     data: { avatar },
-//   });
-// }
