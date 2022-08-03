@@ -273,8 +273,18 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                       className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
                       <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
-                        {message.receiver_firstName.charAt(0).toUpperCase()}
-                        {message.receiver_lastName.charAt(0).toUpperCase()}
+                        {message.receiverId ===
+                        (userState.user.id as unknown as number) ? (
+                          <div>
+                            {message.sender_firstName.charAt(0).toUpperCase()}
+                            {message.sender_lastName.charAt(0).toUpperCase()}
+                          </div>
+                        ) : (
+                          <div>
+                            {message.receiver_firstName.charAt(0).toUpperCase()}
+                            {message.receiver_lastName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       <div className="ml-2 text-sm font-semibold">
                         {message.receiverId ===
@@ -284,7 +294,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           </div>
                         ) : (
                           <div>
-                            {message.receiver_firstName}{" "}
+                            {message.receiver_firstName}
                             {message.receiver_lastName}
                           </div>
                         )}

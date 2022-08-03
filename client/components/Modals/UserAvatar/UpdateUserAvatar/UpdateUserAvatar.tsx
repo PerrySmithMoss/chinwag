@@ -136,7 +136,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         image_url: cloudinaryResponseJSON.secure_url,
       };
 
-      const updateUserAvatarResponse = await fetch(
+      await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/avatar/${userState.user.id}`,
         {
           method: "POST",
@@ -147,8 +147,6 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
           },
         }
       );
-
-      const updateUserAvatarJSON = await updateUserAvatarResponse.json();
 
       // close the modal
       // reset the setFileInputState, setPreviewSource, setSelectedFile
