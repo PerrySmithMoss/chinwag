@@ -11,6 +11,8 @@ import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
 import { UpdateUserAvatar } from "../../Modals/UserAvatar/UpdateUserAvatar/UpdateUserAvatar";
 import fetcher from "../../../utils/fetcher";
+import { truncateString } from "../../../utils/string";
+import { timeAgo, timeSince } from "../../../utils/dateTime";
 
 interface SideNavProps {
   user: User | null;
@@ -105,7 +107,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   }
 
   function handlePrivateMemberMsg(receiverId: number, senderId: number) {
-    // Determine who the other user is 
+    // Determine who the other user is
     if (userState.user.id === receiverId) {
       setSelectedUserId(senderId);
 
@@ -116,10 +118,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     } else if (userState.user.id === senderId) {
       setSelectedUserId(receiverId);
 
-      const roomId = orderIds(
-        userState.user.id,
-        receiverId
-      );
+      const roomId = orderIds(userState.user.id, receiverId);
 
       setRoomName(roomId);
       joinRoom(roomId, receiverId);
@@ -150,8 +149,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       refetchMessages();
     }
   }, [selectedUserId]);
-
-  console.log("userMessages: ", userMessages)
 
   return (
     <aside className="flex flex-col py-3 pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
@@ -294,32 +291,59 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                       }
                       className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full">
-                        {message.receiverId ===
-                        (userState.user.id) ? (
-                          <div className="rounded-full">
-                            {/* {message.sender_firstName.charAt(0).toUpperCase()}
-                            {message.sender_lastName.charAt(0).toUpperCase()} */}
-                            <Image className="rounded-full" src={message.sender_avatar} height={32} width={32} />
-                          </div>
+                      <div className="flex items-center justify-center">
+                        {message.receiverId === userState.user.id ? (
+                          <Image
+                            className="rounded-full"
+                            src={message.sender_avatar}
+                            height={40}
+                            width={40}
+                          />
                         ) : (
-                          <div className="rounded-full">
-                            {/* {message.receiver_firstName.charAt(0).toUpperCase()}
-                            {message.receiver_lastName.charAt(0).toUpperCase()} */}
-                            <Image className="rounded-full" src={message.receiver_avatar} height={32} width={32} />
-                          </div>
+                          <Image
+                            className="rounded-full"
+                            src={message.receiver_avatar}
+                            height={40}
+                            width={40}
+                          />
                         )}
                       </div>
-                      <div className="ml-2 text-sm font-semibold">
-                        {message.receiverId ===
-                        (userState.user.id) ? (
+                      <div className="ml-2 flex flex-col items-start">
+                        {message.receiverId === userState.user.id ? (
                           <div>
-                            {message.sender_firstName} {" "} {message.sender_lastName}
+                            <p className="text-sMd text-left font-semibold">
+                              {message.sender_firstName}{" "}
+                              {message.sender_lastName}
+                            </p>
+                            <div className="flex items-center space-x-2">
+                              <p className="text-xsS text-left">
+                                {truncateString(message.message, 23)}
+                              </p>
+                              <p className="text-xsS text-left">·</p>
+                              <p className="text-xsS text-left">
+                                {timeSince(
+                                  new Date(Date.parse(message.createdAt))
+                                )}
+                              </p>
+                            </div>
                           </div>
                         ) : (
                           <div>
-                            {message.receiver_firstName} {" "}
-                            {message.receiver_lastName}
+                            <p className="text-sMd font-semibold text-left">
+                              {message.receiver_firstName}{" "}
+                              {message.receiver_lastName}
+                            </p>
+                            <div className="flex items-center space-x-2">
+                              <p className="text-xsS text-left">
+                                {truncateString(message.message, 23)}
+                              </p>
+                              <p className="text-xsS text-left">·</p>
+                              <p className="text-xsS text-left">
+                                {timeSince(
+                                  new Date(Date.parse(message.createdAt))
+                                )}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>

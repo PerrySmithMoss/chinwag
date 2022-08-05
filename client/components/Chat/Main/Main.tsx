@@ -19,7 +19,7 @@ import { io } from "socket.io-client";
 import useDebounce from "../../../hooks/useDebounce";
 import ClipLoader from "react-spinners/ClipLoader";
 import { User } from "../../../interfaces/User";
-import { formatDate } from "../../../utils/formatDate";
+import { formatDate } from "../../../utils/dateTime";
 
 interface MainProps {
   user: User | null;
@@ -27,7 +27,7 @@ interface MainProps {
 
 export const Main: React.FC<MainProps> = ({ user }) => {
   const { socket, setSocket } = useSocket();
-  const { userState, userDispatch } = useContext(UserContext);
+  const { userState } = useContext(UserContext);
   const {
     setMessages,
     messages,
@@ -215,7 +215,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
         // Only overwrite the messages state if the receiver has a chat open with the user sending the message
         if (orderIds(receiverId, senderId) === roomName) {
-          setMessages((prevMessages: any) => [...prevMessages, newMessage]);
+          setMessages((prevMessages: any) => [newMessage, ...prevMessages]);
         }
       });
 
@@ -253,6 +253,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
   // }, [cursorPosition]);
+
+  console.log(messages);
 
   return (
     <>

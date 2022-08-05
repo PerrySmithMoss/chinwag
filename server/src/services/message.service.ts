@@ -13,8 +13,36 @@ export async function createMessage(
       receiverId,
     },
     include: {
-      receiver: true,
-      sender: true,
+      receiver: {
+        select: {
+          createdAt: true,
+          firstName: true,
+          lastName: true,
+          id: true,
+          username: true,
+          profile: {
+            select: {
+              avatar: true,
+              avatarId: true,
+            },
+          },
+        },
+      },
+      sender: {
+        select: {
+          createdAt: true,
+          firstName: true,
+          lastName: true,
+          id: true,
+          username: true,
+          profile: {
+            select: {
+              avatar: true,
+              avatarId: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -51,13 +79,33 @@ export async function getMessagesBetweenTwoUsers(
       },
       include: {
         sender: {
-          include: {
-            profile: true,
+          select: {
+            createdAt: true,
+            firstName: true,
+            lastName: true,
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                avatar: true,
+                avatarId: true,
+              },
+            },
           },
         },
         receiver: {
-          include: {
-            profile: true,
+          select: {
+            createdAt: true,
+            firstName: true,
+            lastName: true,
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                avatar: true,
+                avatarId: true,
+              },
+            },
           },
         },
       },
