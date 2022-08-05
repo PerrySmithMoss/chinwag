@@ -26,4 +26,6 @@ export interface UniqueMessage {
   sender_firstName: string;
   sender_lastName: string;
   sender_username: string;
+  sender_avatar: string;
+  receiver_avatar: string;
 }

@@ -4,7 +4,7 @@ import * as Cloudinary from "cloudinary";
 
 // Create a cloudinary signature
 // @TODO: Tag each image which a user ID
-// if that user ID has already uploaded 10 images
+// if that user ID has already uploaded 5 images in the last 24 hours
 // then do not allow them to generate a new signature
 export async function createSignatureHandler(req: Request, res: Response) {
   try {
@@ -16,17 +16,20 @@ export async function createSignatureHandler(req: Request, res: Response) {
     let signature;
 
     if (parsedAvatarId) {
+      // If user already has an avatar - overwrite 
+      // their current avatar with the new one
       signature = Cloudinary.v2.utils.api_sign_request(
         {
           timestamp: timestamp,
           folder: "chinwag/avatars",
           invalidate: true,
           overwrite: true,
-          public_id: avatarId, // @TODO: This should be unique for every user
+          public_id: avatarId,
         },
         config.cloudinaryApiSecret as string
       );
     } else {
+      // If user does not have an avatar - upload the image
       signature = Cloudinary.v2.utils.api_sign_request(
         {
           timestamp: timestamp,

@@ -116,7 +116,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
                   <Image src="/assets/images/logo.png" height={50} width={50} />
                 </div>
                 <div>
-                  <h1 className=" text-blue-text text-2xl font-bold">
+                  <h1 className="text-brand-green text-2xl font-bold">
                     Chinwag
                   </h1>
                 </div>

@@ -121,7 +121,7 @@ export const SignUp: React.FC = () => {
               <Image src="/assets/images/logo.png" height={50} width={50} />
             </div>
             <div>
-              <h1 className=" text-blue-text text-2xl font-bold">Chinwag</h1>
+              <h1 className=" text-brand-green text-2xl font-bold">Chinwag</h1>
             </div>
           </div>
           <div className="flex justify-center mt-60">

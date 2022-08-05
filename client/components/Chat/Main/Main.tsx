@@ -19,6 +19,7 @@ import { io } from "socket.io-client";
 import useDebounce from "../../../hooks/useDebounce";
 import ClipLoader from "react-spinners/ClipLoader";
 import { User } from "../../../interfaces/User";
+import { formatDate } from "../../../utils/formatDate";
 
 interface MainProps {
   user: User | null;
@@ -74,26 +75,10 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     refetch: refetchMessages,
     error: userMessagesError,
   } = useQuery(
-    ["allUserMessages", userState.user.id as unknown as number],
-    () => getAllUserMessages(userState.user.id as unknown as number),
+    ["allUserMessages", userState.user.id],
+    () => getAllUserMessages(userState.user.id),
     { refetchOnWindowFocus: false, enabled: false }
   );
-
-  // const {
-  //   isLoading: isAllMessagesWithSpecificUserLoading,
-  //   isError: isAllMessagesWithSpecificUserError,
-  //   data: allMessagesWithSpecificUserData,
-  //   refetch: refetchAllMessagesWithSpecificUser,
-  //   error: allMessagesWithSpecificUserError,
-  // } = useQuery(
-  //   ["userMessages", selectedUserId, userState.user.id],
-  //   () =>
-  //     fetchAllMessagesWithUser(
-  //       selectedUserId as number,
-  //       userState.user.id as unknown as number
-  //     ),
-  //   { refetchOnWindowFocus: false, enabled: false }
-  // );
 
   const {
     data: recipientSearchResults,
@@ -116,11 +101,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   const handleSendMessage = async () => {
-    sendMessage(
-      userState.user.id as unknown as number,
-      selectedUserId as number,
-      newMessage
-    );
+    sendMessage(userState.user.id, selectedUserId as number, newMessage);
     setNewMessage("");
   };
 
@@ -152,11 +133,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
       if (newMessage === "") {
         console.log("Please enter a message");
       } else {
-        sendMessage(
-          userState.user.id as unknown as number,
-          selectedUserId as number,
-          newMessage
-        );
+        sendMessage(userState.user.id, selectedUserId as number, newMessage);
         setNewMessage("");
       }
     }
@@ -181,7 +158,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const handleCreateNewConversationWithUser = (userId: number) => {
     setSelectedUserId(userId);
 
-    const roomId = orderIds(userState.user.id as unknown as number, userId);
+    const roomId = orderIds(userState.user.id, userId);
     setRoomName(roomId);
     joinRoom(roomId, userId);
 
@@ -208,10 +185,9 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   useEffect(() => {
     if (selectedUserId) {
       refetchUserDetails();
-      fetchAllMessagesWithUser(
-        selectedUserId,
-        userState.user.id as unknown as number
-      ).then((json) => setMessages(json));
+      fetchAllMessagesWithUser(selectedUserId, userState.user.id).then((json) =>
+        setMessages(json)
+      );
     }
   }, [selectedUserId]);
 
@@ -286,9 +262,14 @@ export const Main: React.FC<MainProps> = ({ user }) => {
             <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
               <div className="flex justify-between ml-3 rounded-lg">
                 <div className="flex flex-row items-center">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
-                    {userDetails?.firstName.charAt(0)}
-                    {userDetails?.lastName.charAt(0)}
+                  <div className="flex items-center justify-center h-10 w-10 rounded-full flex-shrink-0">
+                    <img
+                      className="rounded-full"
+                      alt="User Avatar"
+                      src={userDetails?.profile?.avatar as string}
+                      height={40}
+                      width={40}
+                    />
                   </div>
                   <div className="relative ml-1 py-2 px-4">
                     <div className="font-bold">
@@ -348,32 +329,42 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           ref={scrollRef}
                           key={message.id}
                           className={
-                            message.receiverId ===
-                            (userState.user.id as unknown as number)
+                            message.receiverId === userState.user.id
                               ? `col-start-1 col-end-8 p-3 rounded-lg`
                               : `col-start-6 col-end-13 p-3 rounded-lg`
                           }
                         >
-                          <div className="text-gray-400 text-sm">
-                            {message.createdAt}
+                          <div
+                            className={`text-gray-400 text-sm pb-3 ${
+                              message.receiverId === userState.user.id
+                                ? ``
+                                : `text-right`
+                            }`}
+                          >
+                            {formatDate(
+                              new Date(Date.parse(message.createdAt))
+                            )}
                           </div>
                           <div
                             className={
-                              message.receiverId ===
-                              (userState.user.id as unknown as number)
+                              message.receiverId === userState.user.id
                                 ? `flex flex-row items-center`
                                 : `flex items-center justify-start flex-row-reverse`
                             }
                           >
                             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0">
-                              {message.sender.firstName.charAt(0).toUpperCase()}
-                              {message.sender.lastName.charAt(0).toUpperCase()}
+                              <img
+                                className="rounded-full"
+                                alt="User Avatar"
+                                src={message?.sender?.profile?.avatar as string}
+                                height={40}
+                                width={40}
+                              />
                             </div>
 
                             <div
                               className={
-                                message.receiverId ===
-                                (userState.user.id as unknown as number)
+                                message.receiverId === userState.user.id
                                   ? `relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl`
                                   : `relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl`
                               }

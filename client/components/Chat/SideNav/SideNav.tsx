@@ -18,6 +18,7 @@ interface SideNavProps {
 
 export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const { userState, userDispatch } = useContext(UserContext);
+
   const {
     selectedUserId,
     setSelectedUserId,
@@ -51,8 +52,8 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     refetch: refetchMessages,
     error: userMessagesError,
   } = useQuery(
-    ["allUserMessages", userState.user.id as unknown as number],
-    () => getAllUserMessages(userState.user.id as unknown as number),
+    ["allUserMessages", userState.user.id],
+    () => getAllUserMessages(userState.user.id),
     {
       refetchOnWindowFocus: false,
       enabled: !!userState.user.id,
@@ -103,12 +104,26 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     // dispatch(resetNotifications(room));
   }
 
-  function handlePrivateMemberMsg(memberId: any) {
-    setSelectedUserId(memberId);
-    const roomId = orderIds(userState.user.id as unknown as number, memberId);
+  function handlePrivateMemberMsg(receiverId: number, senderId: number) {
+    // Determine who the other user is 
+    if (userState.user.id === receiverId) {
+      setSelectedUserId(senderId);
 
-    setRoomName(roomId);
-    joinRoom(roomId, memberId);
+      const roomId = orderIds(userState.user.id, senderId);
+
+      setRoomName(roomId);
+      joinRoom(roomId, senderId);
+    } else if (userState.user.id === senderId) {
+      setSelectedUserId(receiverId);
+
+      const roomId = orderIds(
+        userState.user.id,
+        receiverId
+      );
+
+      setRoomName(roomId);
+      joinRoom(roomId, receiverId);
+    }
   }
 
   const handleLogoutUser = async () => {
@@ -135,6 +150,8 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       refetchMessages();
     }
   }, [selectedUserId]);
+
+  console.log("userMessages: ", userMessages)
 
   return (
     <aside className="flex flex-col py-3 pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
@@ -269,32 +286,39 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                     className="flex flex-col space-y-1 -mx-2"
                   >
                     <button
-                      onClick={() => handlePrivateMemberMsg(message.receiverId)}
+                      onClick={() =>
+                        handlePrivateMemberMsg(
+                          message.receiverId,
+                          message.senderId
+                        )
+                      }
                       className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
-                      <div className="flex items-center justify-center h-8 w-8 bg-indigo-200 rounded-full">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-full">
                         {message.receiverId ===
-                        (userState.user.id as unknown as number) ? (
-                          <div>
-                            {message.sender_firstName.charAt(0).toUpperCase()}
-                            {message.sender_lastName.charAt(0).toUpperCase()}
+                        (userState.user.id) ? (
+                          <div className="rounded-full">
+                            {/* {message.sender_firstName.charAt(0).toUpperCase()}
+                            {message.sender_lastName.charAt(0).toUpperCase()} */}
+                            <Image className="rounded-full" src={message.sender_avatar} height={32} width={32} />
                           </div>
                         ) : (
-                          <div>
-                            {message.receiver_firstName.charAt(0).toUpperCase()}
-                            {message.receiver_lastName.charAt(0).toUpperCase()}
+                          <div className="rounded-full">
+                            {/* {message.receiver_firstName.charAt(0).toUpperCase()}
+                            {message.receiver_lastName.charAt(0).toUpperCase()} */}
+                            <Image className="rounded-full" src={message.receiver_avatar} height={32} width={32} />
                           </div>
                         )}
                       </div>
                       <div className="ml-2 text-sm font-semibold">
                         {message.receiverId ===
-                        (userState.user.id as unknown as number) ? (
+                        (userState.user.id) ? (
                           <div>
-                            {message.sender_firstName} {message.sender_lastName}
+                            {message.sender_firstName} {" "} {message.sender_lastName}
                           </div>
                         ) : (
                           <div>
-                            {message.receiver_firstName}
+                            {message.receiver_firstName} {" "}
                             {message.receiver_lastName}
                           </div>
                         )}

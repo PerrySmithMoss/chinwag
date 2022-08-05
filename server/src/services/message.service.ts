@@ -50,8 +50,16 @@ export async function getMessagesBetweenTwoUsers(
         ],
       },
       include: {
-        sender: true,
-        receiver: true,
+        sender: {
+          include: {
+            profile: true,
+          },
+        },
+        receiver: {
+          include: {
+            profile: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -75,8 +83,36 @@ export async function getMessagesBetweenTwoUsers(
         ],
       },
       include: {
-        sender: true,
-        receiver: true,
+        sender: {
+          select: {
+            createdAt: true,
+            firstName: true,
+            lastName: true,
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                avatar: true,
+                avatarId: true,
+              },
+            },
+          },
+        },
+        receiver: {
+          select: {
+            createdAt: true,
+            firstName: true,
+            lastName: true,
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                avatar: true,
+                avatarId: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -98,10 +134,14 @@ export async function getUsersMessages(userId: number) {
   s.username AS sender_username,
   r.firstName AS receiver_firstName, 
   r.lastName AS receiver_lastName,
-  r.username AS receiver_username
+  r.username AS receiver_username,
+  sp.avatar AS sender_avatar,
+  rp.avatar AS receiver_avatar
   FROM Message m
   INNER JOIN User s ON s.id = m.senderId
   INNER JOIN User r ON r.id = m.receiverId
+  INNER JOIN Profile sp ON sp.userId = m.senderId
+  INNER JOIN Profile rp ON rp.userId = m.receiverId
   JOIN (SELECT CASE WHEN senderId = ${userId}
   THEN receiverId ELSE senderId END AS other, MAX(createdAt) AS latest
   FROM Message
