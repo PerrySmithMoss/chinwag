@@ -12,7 +12,7 @@ import { orderIds } from "../../../utils/orderIds";
 import { UpdateUserAvatar } from "../../Modals/UserAvatar/UpdateUserAvatar/UpdateUserAvatar";
 import fetcher from "../../../utils/fetcher";
 import { truncateString } from "../../../utils/string";
-import { timeAgo, timeSince } from "../../../utils/dateTime";
+import { timeSince } from "../../../utils/dateTime";
 
 interface SideNavProps {
   user: User | null;
@@ -155,7 +155,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       <div className="flex flex-col justify-between flex-1">
         <div>
           <div className="flex flex-row items-center justify-between h-12 w-full">
-            <div className="ml-2 font-bold text-2xl">QuickChat</div>
+            <div className="ml-2 font-bold text-2xl">Chinwag</div>
             <div
               onClick={handleCreateNewMessage}
               className="cursor-pointer flex items-center justify-center rounded-2xl text-indigo-700 bg-indigo-100 h-8 w-8"
@@ -276,7 +276,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
               </span>
             </div>
             {Array.isArray(userMessages) && userMessages.length > 0 ? (
-              <div className="max-h-64 overflow-y-auto overflow-x-hidden">
+              <div className="max-h-96 overflow-y-auto overflow-x-hidden">
                 {userMessages?.map((message) => (
                   <div
                     key={message.id}

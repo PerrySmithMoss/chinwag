@@ -175,7 +175,8 @@ export async function getUsersMessages(userId: number) {
   // Return one message per conversation
   // Will only return one message for each conversation
   // Order by the last message sent
-  const messages = prisma.$queryRaw`SELECT
+  const messages = prisma.$queryRaw`
+  SELECT
   m.*,     
   s.firstName AS sender_firstName, 
   s.lastName AS sender_lastName,
@@ -196,7 +197,9 @@ export async function getUsersMessages(userId: number) {
   WHERE senderId = ${userId} OR receiverId = ${userId}
   GROUP BY other) m
   ON (m.senderId = ${userId} AND m.receiverId = m.other OR m.receiverId = ${userId}
-  AND m.senderId = m.other) AND m.createdAt = m.latest`;
+  AND m.senderId = m.other) AND m.createdAt = m.latest
+  ORDER BY createdAt DESC
+  `;
 
   return messages;
 }

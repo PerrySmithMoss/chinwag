@@ -12,21 +12,33 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { object, string, TypeOf } from "zod";
 
 const createUserSchema = object({
-  firstName: string()
+  firstName: string({ required_error: "First name is required" })
     .min(1, {
       message: "First name is required",
     })
     .max(100, {
       message: "First name must be 100 characters or less.",
-    }),
-  lastName: string()
+    })
+    .refine(
+      (val) => /^\S+$/.test(val),
+      () => ({
+        message: `First name must not include white space. Please remove any whitespace.`,
+      })
+    ),
+  lastName: string({ required_error: "Last name is required" })
     .min(1, {
       message: "Last name is required",
     })
     .max(100, {
       message: "Last name must be 100 characters or less.",
-    }),
-  password: string()
+    })
+    .refine(
+      (val) => /^\S+$/.test(val),
+      () => ({
+        message: `Last name must not include white space. Please remove any whitespace.`,
+      })
+    ),
+  password: string({ required_error: "Password is required" })
     .min(6, "Password too short - should be 6 chars minimum")
     .max(256, {
       message: "Password must be 256 characters or less.",
@@ -40,8 +52,14 @@ const createUserSchema = object({
     })
     .max(256, {
       message: "Email address must be 256 characters or less.",
-    }),
-  username: string()
+    })
+    .refine(
+      (val) => /^\S+$/.test(val),
+      () => ({
+        message: `Email must not include white space. Please remove any whitespace.`,
+      })
+    ),
+  username: string({ required_error: "Username is required" })
     .min(1, {
       message: "Username is required",
     })

@@ -82,10 +82,8 @@ export function dateToTimeAgo(date: Date): string {
     diffDate.getMonth(),
   ];
   const f = (property: number, end: string) => {
-    // console.log(property,end)
     return `${property} ${end}${property > 1 ? "s" : ""} ago`;
   };
-  // console.log(diffDate.toLocaleString());
   return month >= 1
     ? f(month, "month")
     : day >= 1
@@ -97,6 +95,4 @@ export function dateToTimeAgo(date: Date): string {
     : day >= 1
     ? f(sec, "sec")
     : "";
-
-  throw new Error("Date To time ago not implmented");
 }
