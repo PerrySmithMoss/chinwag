@@ -18,6 +18,7 @@
 <ul>
   <li>Next.js with React-Query</li>
   <li>Node.js & Express</li>
+  <li>JWT Authentication with access/refresh tokens</li>
   <li>Prisma ORM</li>
   <li>MySQL</li>
 </ul>
