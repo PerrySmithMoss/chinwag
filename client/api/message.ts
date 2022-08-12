@@ -6,36 +6,22 @@ export const fetchAllMessagesWithUser = async (
   cursor?: string
 ): Promise<Message[]> => {
   const cursorFormatted = {
-    cursor: cursor
-  }
+    cursor: cursor,
+  };
 
-  if(cursor) {
+  if (cursor) {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${senderId}/${receiverId}?cursor=${cursor}`,
-      // {
-      //   method: "POST",
-      //   body: JSON.stringify(cursorFormatted),
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // }
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${senderId}/${receiverId}?cursor=${cursor}`
     );
     const json: Message[] = await res.json();
-  
+
     return json;
   } else {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${senderId}/${receiverId}`,
-      // {
-      //   method: "POST",
-      //   body: JSON.stringify(cursorFormatted),
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // }
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${senderId}/${receiverId}`
     );
     const json: Message[] = await res.json();
-  
+
     return json;
   }
 };
@@ -43,7 +29,9 @@ export const fetchAllMessagesWithUser = async (
 export const getAllUserMessages = async (
   userID: number
 ): Promise<UniqueMessage[]> => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${userID}`);
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${userID}`
+  );
   const json: UniqueMessage[] = await res.json();
 
   return json;

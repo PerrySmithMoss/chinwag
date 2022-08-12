@@ -257,21 +257,19 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   return (
     <>
       {selectedUserId !== undefined && createNewMessage === false ? (
-        <div className="flex flex-col flex-auto h-full pl-6">
+        <div className="flex flex-col flex-auto h-full sm:pl-6">
           <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-3">
             <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
               <div className="flex justify-between ml-3 rounded-lg">
                 <div className="flex flex-row items-center">
                   <div className="flex items-center justify-center h-10 w-10 rounded-full flex-shrink-0">
                     <img
-                      className="rounded-full"
+                      className="rounded-full h-10 w-10"
                       alt="User Avatar"
                       src={userDetails?.profile?.avatar as string}
-                      height={40}
-                      width={40}
                     />
                   </div>
-                  <div className="relative ml-1 py-2 px-4">
+                  <div className="relative py-2 pl-2.5 pr-4">
                     <div className="font-bold">
                       {userDetails?.firstName} {userDetails?.lastName}
                     </div>

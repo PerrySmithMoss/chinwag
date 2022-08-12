@@ -151,16 +151,23 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   }, [selectedUserId]);
 
   return (
-    <aside className="flex flex-col py-3 pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
+    <aside className="hidden sm:flex flex-col py-3 pl-0 sm:pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
       <div className="flex flex-col justify-between flex-1">
         <div>
           <div className="flex flex-row items-center justify-between h-12 w-full">
-            <div className="ml-2 font-bold text-2xl">Chinwag</div>
+            <div className="ml-2 flex items-center">
+              <div>
+                <Image src="/assets/images/logo.png" height={30} width={30} />
+              </div>
+              <div>
+                <p className="ml-2 font-bold text-2xl">Chinwag</p>
+              </div>
+            </div>
             <div
               onClick={handleCreateNewMessage}
-              className="cursor-pointer flex items-center justify-center rounded-2xl text-indigo-700 bg-indigo-100 h-8 w-8"
+              className="cursor-pointer flex items-center justify-center rounded-2xl text-blue-500 bg-indigo-100 h-8 w-8"
             >
-              <svg height="27px" viewBox="0 0 24 24" className="fill-current">
+              <svg height="23px" viewBox="0 0 24 24" className="fill-current">
                 <path d="M6.3 12.3l10-10a1 1 0 0 1 1.4 0l4 4a1 1 0 0 1 0 1.4l-10 10a1 1 0 0 1-.7.3H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 .3-.7zM8 16h2.59l9-9L17 4.41l-9 9V16zm10-2a1 1 0 0 1 2 0v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h6a1 1 0 0 1 0 2H4v14h14v-6z" />
               </svg>
             </div>
