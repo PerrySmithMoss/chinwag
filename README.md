@@ -10,6 +10,7 @@
 <ul>
   <li>Login / Registration / Logout</li>
   <li>Real-time messaging</li>
+  <li>JWT Authentication with access/refresh tokens</li>
 </ul>
 </div>
 
@@ -18,7 +19,7 @@
 <ul>
   <li>Next.js with React-Query</li>
   <li>Node.js & Express</li>
-  <li>JWT Authentication with access/refresh tokens</li>
+  <li>JWT</li>
   <li>Prisma ORM</li>
   <li>MySQL</li>
 </ul>
