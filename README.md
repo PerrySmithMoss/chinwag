@@ -31,4 +31,9 @@
 <h2>Images</h2>
 
 ![Desktop/Mobile App Images](https://user-images.githubusercontent.com/59027997/184316990-61f0458b-ccd2-465e-bc0d-8ec30732f8f8.png)
+
+![Desktop Design](https://user-images.githubusercontent.com/59027997/184318271-5774357a-5839-4b9d-b799-b6ea87c4f0a3.png)
+
+![Mobile Design](https://user-images.githubusercontent.com/59027997/184318225-369cb779-f1bc-4033-a313-fe0302adfdbb.png)
+
 </div>
