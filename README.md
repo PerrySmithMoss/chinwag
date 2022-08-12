@@ -24,9 +24,11 @@
 </div>
 
 <h2>Video Demo</h2>
+
 [![Watch the video](https://user-images.githubusercontent.com/59027997/184316677-d14e579b-03b2-4234-89e9-1f0b3ae18ef5.png)](https://user-images.githubusercontent.com/59027997/184316414-fec2b62a-0c07-4b56-84ce-e6123942eaf3.mp4)
 </div>
 
 <h2>Images</h2>
-![Group 11 (2)](https://user-images.githubusercontent.com/59027997/184316990-61f0458b-ccd2-465e-bc0d-8ec30732f8f8.png)
+
+![Desktop/Mobile App Images](https://user-images.githubusercontent.com/59027997/184316990-61f0458b-ccd2-465e-bc0d-8ec30732f8f8.png)
 </div>
