@@ -62,8 +62,8 @@ export async function isAuthenticated(
           httpOnly: true,
           domain: config.serverDomain,
           path: "/",
-          sameSite: "strict",
-          secure: false,
+          sameSite: "none",
+          secure: true,
         });
       }
 

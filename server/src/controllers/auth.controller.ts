@@ -46,8 +46,8 @@ export async function registerSessionHandler(
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
-      sameSite: "strict",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -55,8 +55,8 @@ export async function registerSessionHandler(
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
-      sameSite: "strict",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
 
     // send the tokens
@@ -122,8 +122,8 @@ export async function createSessionHandler(
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
-      sameSite: "strict",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -131,8 +131,8 @@ export async function createSessionHandler(
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
-      sameSite: "strict",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
 
     // send the tokens
@@ -187,16 +187,16 @@ export const deleteUserSessionHandler = async (req: Request, res: Response) => {
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
-      sameSite: "strict",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
-      sameSite: "strict",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
 
     res.removeHeader("x-access-token");
