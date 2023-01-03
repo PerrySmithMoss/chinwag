@@ -68,7 +68,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
       );
       const userJson = await res.json();
 
-      if (Object.hasOwn(userJson, "error")) {
+      if (userJson.error !== undefined) {
         setLoginError(userJson.error);
       } else {
         refetchCurrentUser();

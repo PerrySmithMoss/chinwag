@@ -117,7 +117,7 @@ export const SignUp: React.FC = () => {
       );
 
       const userJson = await res.json();
-      if (Object.hasOwn(userJson, "error")) {
+      if (userJson.error !== undefined) {
         setRegisterError(userJson.error);
       } else {
         refetchCurrentUser();
