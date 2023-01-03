@@ -33,6 +33,8 @@ const Home: NextPage<UserData> = ({ user }) => {
   const { userDispatch } = useContext(UserContext);
   const [loginError, setLoginError] = useState(null);
 
+  console.log("client user: ", user)
+
   const {
     register,
     formState: { errors },
@@ -79,7 +81,7 @@ const Home: NextPage<UserData> = ({ user }) => {
     }
   }
 
-  if (data?.id) {
+  if (user) {
     return (
       <SocketProvider>
         <div>
@@ -266,6 +268,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       console.error("Error while trying to fetch current user", e);
     }
   }
+
+  console.log("Server user: ", user)
 
   return {
     props: {
