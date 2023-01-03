@@ -258,6 +258,8 @@ const Home: NextPage<UserData> = ({ user }) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   let user: null | UserData = null;
 
+  console.log("Cookies ", context.req.headers.cookie)
+  
   if (context.req.headers.cookie) {
     try {
       user = await fetcher(
