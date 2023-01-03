@@ -2,7 +2,7 @@ import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
@@ -32,8 +32,7 @@ type UserData = {
 const Home: NextPage<UserData> = ({ user }) => {
   const { userDispatch } = useContext(UserContext);
   const [loginError, setLoginError] = useState(null);
-
-  console.log("client user: ", user)
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
@@ -81,7 +80,17 @@ const Home: NextPage<UserData> = ({ user }) => {
     }
   }
 
-  if (user) {
+  useEffect(() => {
+    setLoading(true)
+    if(data) {
+      setLoading(false)
+    }
+  }, [data])
+
+  if(loading) {
+    return null
+  }
+  if (data && !loading) {
     return (
       <SocketProvider>
         <div>
@@ -258,8 +267,6 @@ const Home: NextPage<UserData> = ({ user }) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   let user: null | UserData = null;
 
-  console.log("Cookies ", context.req.headers.cookie)
-  
   if (context.req.headers.cookie) {
     try {
       user = await fetcher(
@@ -270,8 +277,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       console.error("Error while trying to fetch current user", e);
     }
   }
-
-  console.log("Server user: ", user)
 
   return {
     props: {
