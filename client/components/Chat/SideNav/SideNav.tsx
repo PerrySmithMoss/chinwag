@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import styles from "./SidebarNav.module.css";
 import { useContext, useEffect, useState } from "react";

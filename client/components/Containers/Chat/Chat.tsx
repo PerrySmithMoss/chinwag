@@ -4,7 +4,7 @@ import { SideNav } from "../../Chat/SideNav/SideNav";
 import { Main } from "../../Chat/Main/Main";
 import { User } from "../../../interfaces/User";
 import fetcher from "../../../utils/fetcher";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';

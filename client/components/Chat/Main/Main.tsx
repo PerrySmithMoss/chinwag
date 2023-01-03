@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
@@ -506,8 +506,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 y1="986.67"
                                 id="0"
                               >
-                                <stop stop-color="#ffce3b" />
-                                <stop offset="1" stop-color="#ffd762" />
+                                <stop stopColor="#ffce3b" />
+                                <stop offset="1" stopColor="#ffd762" />
                               </linearGradient>
                               <linearGradient
                                 y2="-2.623"
@@ -515,8 +515,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 y1="986.67"
                                 gradientUnits="userSpaceOnUse"
                               >
-                                <stop stop-color="#ffce3b" />
-                                <stop offset="1" stop-color="#fef4ab" />
+                                <stop stopColor="#ffce3b" />
+                                <stop offset="1" stopColor="#fef4ab" />
                               </linearGradient>
                             </defs>
                             <g
@@ -536,7 +536,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 fill="#fff"
                                 transform="matrix(.0436 0 0 .0436 8.177 1039.72)"
                                 stroke="none"
-                                stroke-width="9.512"
+                                strokeWidth="9.512"
                               />
                             </g>
                           </svg>
@@ -561,8 +561,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 x2="0"
                                 y1="986.67"
                               >
-                                <stop stop-color="#ffce3b" />
-                                <stop offset="1" stop-color="#ffd762" />
+                                <stop stopColor="#ffce3b" />
+                                <stop offset="1" stopColor="#ffd762" />
                               </linearGradient>
                               <linearGradient
                                 id="0"
@@ -571,8 +571,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 x2="0"
                                 y2="-2.623"
                               >
-                                <stop stop-color="#ffce3b" />
-                                <stop offset="1" stop-color="#fef4ab" />
+                                <stop stopColor="#ffce3b" />
+                                <stop offset="1" stopColor="#fef4ab" />
                               </linearGradient>
                               <linearGradient
                                 gradientUnits="userSpaceOnUse"

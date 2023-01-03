@@ -4,7 +4,7 @@ import { useContext, useState } from "react";
 import { Login } from "../../Icons/Login";
 import { User } from "../../../interfaces/User";
 import fetcher from "../../../utils/fetcher";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { UserContext } from "../../../context/user-context";
 import Link from "next/link";
 import { useForm } from "react-hook-form";

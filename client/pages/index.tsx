@@ -3,7 +3,7 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useContext, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
 import { UserContext } from "../context/user-context";
@@ -27,9 +27,9 @@ type LoginInput = TypeOf<typeof loginSchema>;
 
 type UserData = {
   user: User | null;
-};
+}
 
-const Home: NextPage<UserData | null> = ({ user }) => {
+const Home: NextPage<UserData> = ({ user }) => {
   const { userDispatch } = useContext(UserContext);
   const [loginError, setLoginError] = useState(null);
 
@@ -137,7 +137,7 @@ const Home: NextPage<UserData | null> = ({ user }) => {
               <div className="flex">
                 <div>
                   <p className="mt-1 text-sm text-gray-400">
-                    Don't have an account?
+                    Don&apos;t have an account?
                   </p>
                 </div>
                 <div>
