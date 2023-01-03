@@ -14,7 +14,7 @@ generator client {
 model Profile {
   id       Int     @id @default(autoincrement())
   bio      String?
-  avatar   String? @default("http://localhost:5000/images/default-avatar.jpg")
+  avatar   String? @default("https://chinwag.up.railway.app/images/default-avatar.jpg")
   avatarId String?
   user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   Int     @unique
