@@ -5,7 +5,7 @@ dotenv.config();
 export const config = {
   isProduction: process.env.NODE_ENV! === "production",
 
-  serverPort: process.env.SERVER_PORT,
+  serverPort: process.env.PORT,
   serverDomain: process.env.SERVER_DOMAIN,
   clientURL: process.env.CLIENT_URL,
   serverURL: process.env.SERVER_URL,
