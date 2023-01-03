@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
     "start": "node dist/src/index.js",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "build:production": "npx prisma generate && npx prisma migrate deploy && tsc -p ."
   },
   "license": "MIT",
   "devDependencies": {

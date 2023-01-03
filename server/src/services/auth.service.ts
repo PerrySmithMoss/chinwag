@@ -1,5 +1,4 @@
 import { User } from "@prisma/client";
-import prisma from "../lib/prisma";
 import { signJwt } from "../utils/token";
 
 export async function signRefreshToken(userId: number ) {
