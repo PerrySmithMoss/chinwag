@@ -51,7 +51,7 @@ export async function registerSessionHandler(
     });
 
     res.cookie("refreshToken", refreshToken, {
-      maxAge: 3.154e10, // 1 year
+      maxAge: 6.048e+8, // 1 year
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
@@ -127,7 +127,7 @@ export async function createSessionHandler(
     });
 
     res.cookie("refreshToken", refreshToken, {
-      maxAge: 3.154e10, // 1 year
+      maxAge: 6.048e+8, // 1 year
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
