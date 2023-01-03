@@ -30,7 +30,7 @@ type UserData = {
 }
 
 const Home: NextPage<UserData> = ({ user }) => {
-  const { userDispatch } = useContext(UserContext);
+  const { userDispatch, userState } = useContext(UserContext);
   const [loginError, setLoginError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +47,7 @@ const Home: NextPage<UserData> = ({ user }) => {
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
       initialData: user,
+      onSettled: () => setLoading(false),
       onSuccess: (data: User) => {
         userDispatch({ type: "SET_USER", payload: data });
       },
@@ -80,17 +81,13 @@ const Home: NextPage<UserData> = ({ user }) => {
     }
   }
 
-  useEffect(() => {
-    setLoading(true)
-    if(data) {
-      setLoading(false)
-    }
-  }, [data])
+  console.log("data ", data)
+  console.log("userState ", userState)
 
   if(loading) {
     return null
   }
-  if (data && !loading) {
+  if (data && !loading && userState) {
     return (
       <SocketProvider>
         <div>

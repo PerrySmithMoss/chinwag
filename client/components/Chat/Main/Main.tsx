@@ -20,6 +20,7 @@ import useDebounce from "../../../hooks/useDebounce";
 import ClipLoader from "react-spinners/ClipLoader";
 import { User } from "../../../interfaces/User";
 import { formatDate } from "../../../utils/dateTime";
+import fetcher from "../../../utils/fetcher";
 
 interface MainProps {
   user: User | null;
@@ -27,7 +28,7 @@ interface MainProps {
 
 export const Main: React.FC<MainProps> = ({ user }) => {
   const { socket, setSocket } = useSocket();
-  const { userState } = useContext(UserContext);
+  const { userDispatch } = useContext(UserContext);
   const {
     setMessages,
     messages,
@@ -57,6 +58,18 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const scrollRef = useRef<any>();
   const emojiRef = useRef<any>();
 
+  const { data: userData } = useQuery(
+    ["me"],
+    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+    {
+      initialData: user,
+      onSuccess: (data: User) => {
+        userDispatch({ type: "SET_USER", payload: data });
+      },
+      refetchOnWindowFocus: false
+    }
+  );
+
   const {
     isLoading: isuserDetailsLoading,
     isError: isuserDetailsError,
@@ -75,8 +88,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     refetch: refetchMessages,
     error: userMessagesError,
   } = useQuery(
-    ["allUserMessages", userState.user.id],
-    () => getAllUserMessages(userState.user.id),
+    ["allUserMessages", userData.id],
+    () => getAllUserMessages(userData.id),
     { refetchOnWindowFocus: false, enabled: false }
   );
 
@@ -101,16 +114,16 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   const handleSendMessage = async () => {
-    sendMessage(userState.user.id, selectedUserId as number, newMessage);
+    sendMessage(userData.id, selectedUserId as number, newMessage);
     setNewMessage("");
   };
 
   function joinRoom(room: any, selectedUserId: number) {
-    if (!userState.user.id) {
+    if (!userData.id) {
       return alert("Please login");
     }
 
-    socket.emit("join-room", room, selectedUserId, userState.user.id);
+    socket.emit("join-room", room, selectedUserId, userData.id);
 
     // dispatch for notifications
     // dispatch(resetNotifications(room));
@@ -133,7 +146,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
       if (newMessage === "") {
         console.log("Please enter a message");
       } else {
-        sendMessage(userState.user.id, selectedUserId as number, newMessage);
+        sendMessage(userData.id, selectedUserId as number, newMessage);
         setNewMessage("");
       }
     }
@@ -158,7 +171,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const handleCreateNewConversationWithUser = (userId: number) => {
     setSelectedUserId(userId);
 
-    const roomId = orderIds(userState.user.id, userId);
+    const roomId = orderIds(userData.id, userId);
     setRoomName(roomId);
     joinRoom(roomId, userId);
 
@@ -169,7 +182,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const handleLoadEarlierMessages = async () => {
     const earlierMessagesRes = await fetchAllMessagesWithUser(
       selectedUserId as number,
-      userState.user.id as number,
+      userData.id as number,
       messages[messages.length - 1].createdAt
     );
 
@@ -185,7 +198,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   useEffect(() => {
     if (selectedUserId) {
       refetchUserDetails();
-      fetchAllMessagesWithUser(selectedUserId, userState.user.id).then((json) =>
+      fetchAllMessagesWithUser(selectedUserId, userData.id).then((json) =>
         setMessages(json)
       );
     }
@@ -327,14 +340,14 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           ref={scrollRef}
                           key={message.id}
                           className={
-                            message.receiverId === userState.user.id
+                            message.receiverId === userData.id
                               ? `col-start-1 col-end-8 p-3 rounded-lg`
                               : `col-start-6 col-end-13 p-3 rounded-lg`
                           }
                         >
                           <div
                             className={`text-gray-400 text-sm pb-3 ${
-                              message.receiverId === userState.user.id
+                              message.receiverId === userData.id
                                 ? ``
                                 : `text-right`
                             }`}
@@ -345,7 +358,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           </div>
                           <div
                             className={
-                              message.receiverId === userState.user.id
+                              message.receiverId === userData.id
                                 ? `flex flex-row items-center`
                                 : `flex items-center justify-start flex-row-reverse`
                             }
@@ -362,7 +375,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
                             <div
                               className={
-                                message.receiverId === userState.user.id
+                                message.receiverId === userData.id
                                   ? `relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl`
                                   : `relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl`
                               }

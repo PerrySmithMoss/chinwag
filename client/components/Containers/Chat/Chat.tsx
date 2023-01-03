@@ -27,9 +27,7 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
     }
   );
 
-  if (!data?.id) {
-    return <div>You need to login!</div>;
-  }
+  if(!data) return null
   return (
     <main>
       <div className="flex h-screen antialiased text-gray-800">

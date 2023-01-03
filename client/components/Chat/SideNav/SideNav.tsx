@@ -19,7 +19,7 @@ interface SideNavProps {
 }
 
 export const SideNav: React.FC<SideNavProps> = ({ user }) => {
-  const { userState, userDispatch } = useContext(UserContext);
+  const { userDispatch } = useContext(UserContext);
 
   const {
     selectedUserId,
@@ -36,7 +36,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
 
-  const { refetch: refetchCurrentUser } = useQuery(
+  const { refetch: refetchCurrentUser, data: userData } = useQuery(
     ["me"],
     () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
     {
@@ -54,11 +54,11 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     refetch: refetchMessages,
     error: userMessagesError,
   } = useQuery(
-    ["allUserMessages", userState.user.id],
-    () => getAllUserMessages(userState.user.id),
+    ["allUserMessages", userData.id],
+    () => getAllUserMessages(userData.id),
     {
       refetchOnWindowFocus: false,
-      enabled: !!userState.user.id,
+      enabled: !!userData.id,
       onSuccess: () => {
         setIsLoadingMessages(false);
       },
@@ -96,11 +96,11 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   // });
 
   function joinRoom(room: any, selectedUserId: number) {
-    if (!userState.user.id) {
+    if (!userData.id) {
       return alert("Please login");
     }
 
-    socket.emit("join-room", room, selectedUserId, userState.user.id);
+    socket.emit("join-room", room, selectedUserId, userData.id);
 
     // dispatch for notifications
     // dispatch(resetNotifications(room));
@@ -108,17 +108,17 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
   function handlePrivateMemberMsg(receiverId: number, senderId: number) {
     // Determine who the other user is
-    if (userState.user.id === receiverId) {
+    if (userData.id === receiverId) {
       setSelectedUserId(senderId);
 
-      const roomId = orderIds(userState.user.id, senderId);
+      const roomId = orderIds(userData.id, senderId);
 
       setRoomName(roomId);
       joinRoom(roomId, senderId);
-    } else if (userState.user.id === senderId) {
+    } else if (userData.id === senderId) {
       setSelectedUserId(receiverId);
 
-      const roomId = orderIds(userState.user.id, receiverId);
+      const roomId = orderIds(userData.id, receiverId);
 
       setRoomName(roomId);
       joinRoom(roomId, receiverId);
@@ -150,6 +150,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     }
   }, [selectedUserId]);
 
+  if(!userData) return null
   return (
     <aside className="hidden sm:flex flex-col py-3 pl-0 sm:pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
       <div className="flex flex-col justify-between flex-1">
@@ -175,7 +176,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
           <div className="flex flex-col items-center bg-indigo-100 border border-gray-200 mt-4 w-full py-6 px-4 rounded-lg">
             <div className="relative">
               <img
-                src={userState?.user?.profile?.avatar}
+                src={userData.profile.avatar}
                 alt="Avatar"
                 width={80}
                 height={80}
@@ -244,10 +245,10 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
               />
             )}
             <div className="text-sm font-semibold mt-2">
-              {userState.user.firstName} {userState.user.lastName}
+              {userData.firstName} {userData.lastName}
             </div>
             <div className="text-xs text-gray-500">
-              {userState.user.username}
+              {userData.username}
             </div>
             <div className="flex items-center mt-2.5">
               <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
@@ -299,7 +300,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                       className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
                       <div className="flex items-center justify-center">
-                        {message.receiverId === userState.user.id ? (
+                        {message.receiverId === userData.id ? (
                           <Image
                             className="rounded-full"
                             src={message.sender_avatar}
@@ -316,7 +317,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                         )}
                       </div>
                       <div className="ml-2 flex flex-col items-start">
-                        {message.receiverId === userState.user.id ? (
+                        {message.receiverId === userData.id ? (
                           <div>
                             <p className="text-sMd text-left font-semibold">
                               {message.sender_firstName}{" "}
