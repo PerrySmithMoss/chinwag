@@ -363,7 +363,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
               <div className="mt-1">
                 <button
                   onClick={handleCreateNewMessage}
-                  className="bg-brand-green hover:bg-brand-green_hover text-white py-2 w-full rounded-full"
+                  className="bg-brand-green hover:bg-brand-green_hover text-white py-2 w-full rounded"
                 >
                   Create message
                 </button>

@@ -227,7 +227,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   <button
                     onClick={handleButtonClick}
                     id="button"
-                    className="mt-2 rounded-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
+                    className="rounded px-10 py-3 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
                   >
                     Upload a file
                   </button>
@@ -273,7 +273,8 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                 <button
                   id="submit"
                   onClick={handleSubmitFile}
-                  className="rounded-sm px-3 py-1 bg-blue-700 hover:bg-blue-500 text-white focus:shadow-outline focus:outline-none"
+                  disabled={selectedFile === null}
+                  className={`rounded px-4 py-1.5 ${selectedFile === null ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:bg-brand-green_hover"} bg-brand-green text-white focus:shadow-outline focus:outline-none`}
                 >
                   Upload now
                 </button>
@@ -281,7 +282,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   // onClick={() => showToastSuccess()}
                   onClick={() => onClose()}
                   id="cancel"
-                  className="ml-3 rounded-sm px-3 py-1 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
+                  className="ml-3 rounded px-4 py-1.5 hover:bg-gray-200 focus:shadow-outline focus:outline-none"
                 >
                   Cancel
                 </button>
