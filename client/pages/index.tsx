@@ -81,9 +81,6 @@ const Home: NextPage<UserData> = ({ user }) => {
     }
   }
 
-  console.log("data ", data)
-  console.log("userState ", userState)
-
   if(loading) {
     return null
   }

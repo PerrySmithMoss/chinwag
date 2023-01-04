@@ -255,9 +255,11 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                       </div>
                     ) : (
                       <div>
-                        <img
+                        <Image
                           className="mx-auto w-32"
-                          src="https://user-images.githubusercontent.com/507615/54591670-ac0a0180-4a65-11e9-846c-e55ffce0fe7b.png"
+                          height={128}
+                          width={110}
+                          src="/assets/images/upload-image.png"
                           alt="no data"
                         />
                         <span className="text-small text-gray-500">
