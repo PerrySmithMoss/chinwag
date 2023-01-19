@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -14,7 +14,7 @@ generator client {
 model Profile {
   id       Int     @id @default(autoincrement())
   bio      String?
-  avatar   String? @default("https://chinwag.up.railway.app/images/default-avatar.jpg")
+  avatar   String? @default("https://chinwag.onrender.com/images/default-avatar.jpg")
   avatarId String?
   user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   Int     @unique
