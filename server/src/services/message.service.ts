@@ -202,7 +202,6 @@ export async function getUsersMessages(userId: number) {
   // `;
 
   const messages = prisma.$queryRaw`SELECT
-  SELECT
   m.*,     
   s."firstName" AS sender_firstName, 
   s."lastName" AS sender_lastName,
