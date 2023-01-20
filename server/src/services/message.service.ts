@@ -203,14 +203,14 @@ export async function getUsersMessages(userId: number) {
 
   const messages = prisma.$queryRaw`SELECT
   m.*,     
-  s."firstName" AS sender_firstName, 
-  s."lastName" AS sender_lastName,
-  s."username" AS sender_username,
-  r."firstName" AS receiver_firstName, 
-  r."lastName" AS receiver_lastName,
-  r."username" AS receiver_username,
-  sp."avatar" AS sender_avatar,
-  rp."avatar" AS receiver_avatar
+  s."firstName" AS "sender_firstName", 
+  s."lastName" AS "sender_lastName",
+  s."username" AS "sender_username",
+  r."firstName" AS "receiver_firstName", 
+  r."lastName" AS "receiver_lastName",
+  r."username" AS "receiver_username",
+  sp."avatar" AS "sender_avatar",
+  rp."avatar" AS "receiver_avatar"
   FROM "Message" m
   INNER JOIN "User" s ON s."id" = m."senderId"
   INNER JOIN "User" r ON r."id" = m."receiverId"
