@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17.4
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=chinwag
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=adminpassword
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "chinwag"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chinwag_net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    container_name: chinwag_api
+    restart: unless-stopped
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: ${DOCKER_BUILD_TARGET:-dev}
+    ports:
+      - "5560:5560"
+    env_file:
+      - ./server/.env.${NODE_ENV:-example}
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://admin:adminpassword@postgres:5432/chinwag}
+      NODE_ENV: ${NODE_ENV:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - chinwag_net
+    volumes:
+      - ./server/src:/app/src:cached
+      - /app/node_modules
+
+networks:
+  chinwag_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
