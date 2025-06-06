@@ -13,7 +13,7 @@ import {
   validatePassword,
 } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
-import { config } from "../../config/config";
+import { config } from "../config/config";
 import * as Cloudinary from "cloudinary";
 import { CreateUserInput } from "../schema/User.schema";
 import { removeCharsFromString } from "../utils/removeCharsFromString";

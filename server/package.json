@@ -1,11 +1,11 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.ts",
-    "start": "node dist/src/index.js",
+    "dev": "nodemon src/server.ts",
+    "start": "node dist/src/server.js",
     "build": "tsc -p .",
     "build:production": "npx prisma generate && npx prisma migrate deploy && tsc -p ."
   },

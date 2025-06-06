@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { config } from "../../config/config";
+import { config } from "../config/config";
 import * as Cloudinary from "cloudinary";
 
 // Create a cloudinary signature
@@ -16,7 +16,7 @@ export async function createSignatureHandler(req: Request, res: Response) {
     let signature;
 
     if (parsedAvatarId) {
-      // If user already has an avatar - overwrite 
+      // If user already has an avatar - overwrite
       // their current avatar with the new one
       signature = Cloudinary.v2.utils.api_sign_request(
         {

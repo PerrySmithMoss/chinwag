@@ -8,7 +8,7 @@ import {
 } from "../services/user.service";
 import { verifyJwt } from "../utils/token";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
-import { config } from "../../config/config";
+import { config } from "../config/config";
 import { CreateUserInput, LoginUserInput } from "../schema/Auth.schema";
 import { Prisma } from "@prisma/client";
 
@@ -51,7 +51,7 @@ export async function registerSessionHandler(
     });
 
     res.cookie("refreshToken", refreshToken, {
-      maxAge: 6.048e+8, // 1 year
+      maxAge: 6.048e8, // 1 year
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
@@ -68,12 +68,10 @@ export async function registerSessionHandler(
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       // The .code property can be accessed in a type-safe manner
       if (e.code === "P2002") {
-        return res
-          .status(409)
-          .json({
-            error:
-              "A user already exists with the specified email address, please use another. ",
-          });
+        return res.status(409).json({
+          error:
+            "A user already exists with the specified email address, please use another. ",
+        });
       }
     }
     return res.status(500).json(e);
@@ -127,7 +125,7 @@ export async function createSessionHandler(
     });
 
     res.cookie("refreshToken", refreshToken, {
-      maxAge: 6.048e+8, // 1 year
+      maxAge: 6.048e8, // 1 year
       httpOnly: true,
       domain: config.serverDomain,
       path: "/",
@@ -154,7 +152,7 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
       return res.status(401).send("No refresh token available");
     }
 
-    const { decoded } = verifyJwt(refreshToken, "refreshTokenPublicKey");
+    const { decoded } = verifyJwt(refreshToken);
 
     if (!decoded || decoded === null) {
       return res.status(401).send("Could not refresh access token");

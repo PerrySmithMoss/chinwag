@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { config } from "../../config/config";
+import { config } from "../config/config";
 import { signAccessToken } from "../services/auth.service";
 import { findUserById } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
@@ -13,7 +13,7 @@ export async function isAuthenticated(
   const { accessToken, refreshToken } = req.cookies;
   if (accessToken) {
     // Valid access token
-    const { decoded } = verifyJwt(accessToken, "accessTokenPublicKey");
+    const { decoded } = verifyJwt(accessToken);
 
     if (decoded) {
       res.locals.user = decoded;
@@ -26,7 +26,7 @@ export async function isAuthenticated(
   } else if (!accessToken) {
     // Access token has expired
     const { decoded: refresh } = refreshToken
-      ? verifyJwt(refreshToken, "refreshTokenPublicKey")
+      ? verifyJwt(refreshToken)
       : { decoded: null };
 
     if (!refresh) {
@@ -48,7 +48,7 @@ export async function isAuthenticated(
       const userWithFieldsRemoved = removeFieldsFromObject(user, [
         "password",
         "email",
-        "posts"
+        "posts",
       ]);
 
       const newAccessToken = signAccessToken(userWithFieldsRemoved);
@@ -67,7 +67,7 @@ export async function isAuthenticated(
         });
       }
 
-      const result = verifyJwt(newAccessToken, "accessTokenPublicKey");
+      const result = verifyJwt(newAccessToken);
 
       res.locals.user = result.decoded;
 
