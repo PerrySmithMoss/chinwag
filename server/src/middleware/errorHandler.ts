@@ -7,12 +7,13 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  if (isDevelopment) {
-    console.error("Error:", err);
-  }
+  console.error("Error:", err);
 
-  res.status(500).json({
-    message: "Internal server error",
-    ...(isDevelopment && { error: err.message }),
+  const status = res.statusCode !== 200 ? res.statusCode : 500;
+
+  res.status(status).json({
+    message: err.message || "Internal Server Error",
+    // optionally, include stack trace in dev mode
+    stack: isDevelopment ? err.stack : undefined,
   });
 };

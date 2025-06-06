@@ -32,12 +32,13 @@ export const createUserHandler = async (
       "email",
     ]);
 
-    return res.status(200).json(userWithFieldsRemoved);
+    res.status(200).json(userWithFieldsRemoved);
   } catch (err: any) {
     if (err.code === 11000) {
-      return res.status(409).send("Account already exists");
+      res.status(409).send("Account already exists");
+      return;
     }
-    return res.status(409).json(err);
+    res.status(409).json(err);
   }
 };
 
@@ -242,7 +243,7 @@ export const deleteUserHandler = async (req: Request, res: Response) => {
 
 export const getCurrentUserHandler = async (_req: Request, res: Response) => {
   try {
-    return res.send(res.locals.user);
+    res.send(res.locals.user);
   } catch (err) {
     res.status(500).json(err);
   }

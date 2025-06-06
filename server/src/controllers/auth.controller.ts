@@ -60,7 +60,7 @@ export async function registerSessionHandler(
     });
 
     // send the tokens
-    return res.status(200).send({
+    res.status(200).send({
       accessToken,
       refreshToken,
     });
@@ -68,13 +68,14 @@ export async function registerSessionHandler(
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       // The .code property can be accessed in a type-safe manner
       if (e.code === "P2002") {
-        return res.status(409).json({
+        res.status(409).json({
           error:
             "A user already exists with the specified email address, please use another. ",
         });
+        return;
       }
     }
-    return res.status(500).json(e);
+    res.status(500).json(e);
   }
 }
 
@@ -134,7 +135,7 @@ export async function createSessionHandler(
     });
 
     // send the tokens
-    return res.status(200).send({
+    res.status(200).send({
       accessToken,
       refreshToken,
     });
@@ -149,19 +150,22 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
     const refreshToken = req.header("x.refresh");
 
     if (!refreshToken) {
-      return res.status(401).send("No refresh token available");
+      res.status(401).send("No refresh token available");
+      return;
     }
 
     const { decoded } = verifyJwt(refreshToken);
 
     if (!decoded || decoded === null) {
-      return res.status(401).send("Could not refresh access token");
+      res.status(401).send("Could not refresh access token");
+      return;
     }
 
     const user = await findUserById(decoded.session, true);
 
     if (!user) {
-      return res.status(401).send("Could not refresh access token");
+      res.status(401).send("Could not refresh access token");
+      return;
     }
 
     // Remove email and password fields before sending user back
@@ -172,7 +176,7 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
 
     const accessToken = signAccessToken(userWithFieldsRemoved);
 
-    return res.send({ accessToken });
+    res.send({ accessToken });
   } catch (err) {
     res.status(500).json(err);
     console.log(err);
