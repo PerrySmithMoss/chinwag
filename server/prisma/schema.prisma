@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -14,7 +11,7 @@ generator client {
 model Profile {
   id       Int     @id @default(autoincrement())
   bio      String?
-  avatar   String? @default("https://chinwag.up.railway.app/images/default-avatar.jpg")
+  avatar   String? 
   avatarId String?
   user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   Int     @unique
@@ -30,7 +27,7 @@ model User {
   lastName  String
   username  String    @unique
   sender    Message[] @relation("Sender")
-  receiver  Message[] @relation("Reciever")
+  receiver  Message[] @relation("Receiver")
   profile   Profile?
 }
 
@@ -40,7 +37,7 @@ model Message {
   updatedAt  DateTime @updatedAt
   message    String
   sender     User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver   User     @relation("Reciever", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   senderId   Int
   receiverId Int
 }
