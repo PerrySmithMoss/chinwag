@@ -27,7 +27,7 @@ type LoginInput = TypeOf<typeof loginSchema>;
 
 type UserData = {
   user: User | null;
-}
+};
 
 const Home: NextPage<UserData> = ({ user }) => {
   const { userDispatch, userState } = useContext(UserContext);
@@ -42,18 +42,17 @@ const Home: NextPage<UserData> = ({ user }) => {
     resolver: zodResolver(loginSchema),
   });
 
-  const { data, refetch: refetchCurrentUser } = useQuery(
-    ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-    {
-      initialData: user,
-      onSettled: () => setLoading(false),
-      onSuccess: (data: User) => {
-        userDispatch({ type: "SET_USER", payload: data });
-      },
-      refetchOnWindowFocus: false
-    }
-  );
+  const {
+    data,
+    refetch: refetchCurrentUser,
+    isFetching,
+  } = useQuery<User | null>({
+    queryKey: ["me"],
+    queryFn: () =>
+      fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+    initialData: user,
+    refetchOnWindowFocus: false,
+  });
 
   async function onSubmit(values: LoginInput) {
     try {
@@ -81,8 +80,20 @@ const Home: NextPage<UserData> = ({ user }) => {
     }
   }
 
-  if(loading) {
-    return null
+  useEffect(() => {
+    if (data) {
+      userDispatch({ type: "SET_USER", payload: data });
+    }
+  }, [data, userDispatch]);
+
+  useEffect(() => {
+    if (!isFetching) {
+      setLoading(false);
+    }
+  }, [isFetching]);
+
+  if (loading) {
+    return null;
   }
   if (data && !loading && userState) {
     return (
@@ -118,7 +129,12 @@ const Home: NextPage<UserData> = ({ user }) => {
             <div className="bg-tan-background">
               <div className="ml-6 mt-4 flex flex-wrap content-center items-center">
                 <div>
-                  <Image src="/assets/images/logo.png" height={50} width={50} />
+                  <Image
+                    src="/assets/images/logo.png"
+                    height={50}
+                    width={50}
+                    alt="Logo"
+                  />
                 </div>
                 <div>
                   <h1 className="text-brand-green text-2xl font-bold">
