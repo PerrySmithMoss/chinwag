@@ -3,7 +3,7 @@ import { Message } from "../interfaces/Message";
 
 export default function useWebsocket({
   url,
-  onConnected
+  onConnected,
 }: {
   url: string;
   onConnected: any;
@@ -49,7 +49,7 @@ export default function useWebsocket({
         socket.current = null;
       };
     }
-  }, [reconnecting, url]);
+  }, [reconnecting, url, activeConnection, onConnected]);
 
   function readyState() {
     switch (socket.current.readyState) {

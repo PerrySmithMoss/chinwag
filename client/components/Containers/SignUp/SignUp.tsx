@@ -1,15 +1,13 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Login } from "../../Icons/Login";
-import { User } from "../../../interfaces/User";
-import fetcher from "../../../utils/fetcher";
-import { useQuery } from "@tanstack/react-query";
 import { UserContext } from "../../../context/user-context";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { object, string, TypeOf } from "zod";
+import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 
 const createUserSchema = object({
   firstName: string({ required_error: "First name is required" })
@@ -90,17 +88,10 @@ export const SignUp: React.FC = () => {
 
   const [registerError, setRegisterError] = useState(null);
 
-  const { refetch: refetchCurrentUser } = useQuery(
-    ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-    {
-      onSuccess: (data: User) => {
-        userDispatch({ type: "SET_USER", payload: data });
-      },
-      refetchOnWindowFocus: false,
-      enabled: false,
-    }
-  );
+  const { data, refetch: refetchCurrentUser } = useCurrentUser({
+    enabled: false,
+    refetchOnWindowFocus: false,
+  });
 
   async function onSubmit(values: CreateUserInput) {
     try {
@@ -130,13 +121,24 @@ export const SignUp: React.FC = () => {
     }
   }
 
+  useEffect(() => {
+    if (data) {
+      userDispatch({ type: "SET_USER", payload: data });
+    }
+  }, [data, userDispatch]);
+
   return (
     <main>
       <div className="grid grid-cols-2 h-screen antialiased">
         <div className="bg-tan-background">
           <div className="ml-6 mt-4 flex flex-wrap content-center items-center">
             <div>
-              <Image src="/assets/images/logo.png" height={50} width={50} />
+              <Image
+                alt="Logo"
+                src="/assets/images/logo.png"
+                height={50}
+                width={50}
+              />
             </div>
             <div>
               <h1 className=" text-brand-green text-2xl font-bold">Chinwag</h1>

@@ -13,6 +13,7 @@ import { User } from "../../../../interfaces/User";
 import fetcher from "../../../../utils/fetcher";
 
 import { toast } from "react-toastify";
+import { useCurrentUser } from "../../../../hooks/queries/useCurrentUser";
 
 interface UpdateUserAvatarProps {
   open: boolean;
@@ -27,8 +28,8 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
 }) => {
   const { userState, userDispatch } = useContext(UserContext);
 
-  const ref = useRef<any>(null);
-  const inputRef = useRef(null) as RefObject<HTMLInputElement>;
+  const ref = useRef<Element | DocumentFragment | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -37,18 +38,10 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errMsg, setErrMsg] = useState("");
 
-  const { data, refetch: refetchCurrentUser } = useQuery(
-    ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-    {
-      refetchOnWindowFocus: false,
-      enabled: false,
-      onSuccess: (data: User) => {
-        // console.log("Logged in user: ", data);
-        userDispatch({ type: "SET_USER", payload: data });
-      },
-    }
-  );
+  const { data, refetch: refetchCurrentUser } = useCurrentUser({
+    enabled: false,
+    refetchOnWindowFocus: false,
+  });
 
   const handleButtonClick = () => {
     if (!inputRef.current) return;
@@ -185,7 +178,14 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     setMounted(true);
   }, [selector]);
 
+  useEffect(() => {
+    if (data) {
+      userDispatch({ type: "SET_USER", payload: data });
+    }
+  }, [data, userDispatch]);
+
   if (!open) return null;
+  if (!ref.current) return null;
 
   return mounted
     ? createPortal(
@@ -276,7 +276,11 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   id="submit"
                   onClick={handleSubmitFile}
                   disabled={selectedFile === null}
-                  className={`rounded px-4 py-1.5 ${selectedFile === null ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:bg-brand-green_hover"} bg-brand-green text-white focus:shadow-outline focus:outline-none`}
+                  className={`rounded px-4 py-1.5 ${
+                    selectedFile === null
+                      ? "opacity-40 cursor-not-allowed"
+                      : "opacity-100 hover:bg-brand-green_hover"
+                  } bg-brand-green text-white focus:shadow-outline focus:outline-none`}
                 >
                   Upload now
                 </button>

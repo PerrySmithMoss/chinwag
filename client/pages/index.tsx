@@ -3,7 +3,6 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Login } from "../components/Icons/Login";
 import { User } from "../interfaces/User";
 import { UserContext } from "../context/user-context";
@@ -13,6 +12,7 @@ import { SocketProvider } from "../context/socket.context";
 import { object, string, TypeOf } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCurrentUser } from "../hooks/queries/useCurrentUser";
 
 const loginSchema = object({
   email: string().min(1, {
@@ -46,13 +46,7 @@ const Home: NextPage<UserData> = ({ user }) => {
     data,
     refetch: refetchCurrentUser,
     isFetching,
-  } = useQuery<User | null>({
-    queryKey: ["me"],
-    queryFn: () =>
-      fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-    initialData: user,
-    refetchOnWindowFocus: false,
-  });
+  } = useCurrentUser({ initialData: user, refetchOnWindowFocus: false });
 
   async function onSubmit(values: LoginInput) {
     try {

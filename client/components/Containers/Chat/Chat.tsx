@@ -1,13 +1,12 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { UserContext } from "../../../context/user-context";
 import { SideNav } from "../../Chat/SideNav/SideNav";
 import { Main } from "../../Chat/Main/Main";
 import { User } from "../../../interfaces/User";
-import fetcher from "../../../utils/fetcher";
-import { useQuery } from "@tanstack/react-query";
 
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
+import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 
 interface ChatProps {
   user: User | null;
@@ -16,24 +15,21 @@ interface ChatProps {
 export const Chat: React.FC<ChatProps> = ({ user }) => {
   const { userDispatch } = useContext(UserContext);
 
-  const { data } = useQuery(
-    ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-    {
-      initialData: user,
-      onSuccess: (data: User) => {
-        userDispatch({ type: "SET_USER", payload: data });
-      },
-    }
-  );
+  const { data } = useCurrentUser({ initialData: user });
 
-  if(!data) return null
+  useEffect(() => {
+    if (data) {
+      userDispatch({ type: "SET_USER", payload: data });
+    }
+  }, [data, userDispatch]);
+
+  if (!data) return null;
   return (
     <main>
       <div className="flex h-screen antialiased text-gray-800">
         <div className="flex flex-row h-full w-full overflow-x-hidden">
           <SideNav user={data} />
-          <Main user={data}/>
+          <Main user={data} />
           <ToastContainer
             position="top-right"
             autoClose={5000}

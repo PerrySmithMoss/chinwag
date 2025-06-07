@@ -1,15 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 import dynamic from "next/dynamic";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 import { UserContext } from "../../../context/user-context";
-import {
-  fetchAllMessagesWithUser,
-  getAllUserMessages,
-} from "../../../api/message";
+import { fetchAllMessagesWithUser } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
 import { fetchUserDetails, fetchUsersByEmail } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
@@ -20,7 +17,8 @@ import useDebounce from "../../../hooks/useDebounce";
 import ClipLoader from "react-spinners/ClipLoader";
 import { User } from "../../../interfaces/User";
 import { formatDate } from "../../../utils/dateTime";
-import fetcher from "../../../utils/fetcher";
+import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
+import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 
 interface MainProps {
   user: User | null;
@@ -55,71 +53,59 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const [showEmojis, setShowEmojis] = useState<boolean>(false);
   const [cursorPosition, setCursorPosition] = useState();
 
-  const scrollRef = useRef<any>();
-  const emojiRef = useRef<any>();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const emojiRef = useRef<HTMLInputElement>(null);
 
-  const { data: userData } = useQuery(
-    ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+  const { data: userData } = useCurrentUser({
+    initialData: user,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: userDetails, refetch: refetchUserDetails } = useUserDetails(
+    selectedUserId,
     {
       initialData: user,
-      onSuccess: (data: User) => {
-        userDispatch({ type: "SET_USER", payload: data });
-      },
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      enabled: false,
     }
   );
 
-  const {
-    isLoading: isuserDetailsLoading,
-    isError: isuserDetailsError,
-    data: userDetails,
-    refetch: refetchUserDetails,
-    error: userDetailsError,
-  } = useQuery(
-    ["userDetails", selectedUserId],
-    () => fetchUserDetails(selectedUserId as number),
-    { initialData: user, refetchOnWindowFocus: false, enabled: false }
-  );
-
-  const {
-    isLoading: isUserMessagesLoading,
-    isError: isUserMessagesError,
-    refetch: refetchMessages,
-    error: userMessagesError,
-  } = useQuery(
-    ["allUserMessages", userData.id],
-    () => getAllUserMessages(userData.id),
-    { refetchOnWindowFocus: false, enabled: false }
-  );
+  const { refetch: refetchMessages } = useCurrentUser({
+    refetchOnWindowFocus: false,
+    enabled: false,
+  });
 
   const {
     data: recipientSearchResults,
     refetch: refetchRecipientSearchResults,
     isError: recipientSearchResultsError,
     isFetching: isRecipientSearchResultsFetching,
-  } = useQuery(
-    ["recipientSearchResults"],
-    () => fetchUsersByEmail(recipientInput),
-    {
-      enabled: false,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    }
-  );
+  } = useQuery({
+    queryKey: ["recipientSearchResults"],
+    queryFn: () => fetchUsersByEmail(recipientInput),
+
+    enabled: false,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
 
   const handleShowEmojis = () => {
-    emojiRef.current.focus();
+    emojiRef?.current?.focus();
     setShowEmojis(!showEmojis);
   };
 
   const handleSendMessage = async () => {
+    if (!userData || !selectedUserId) {
+      console.warn("Missing user data or selected user");
+      return;
+    }
+
     sendMessage(userData.id, selectedUserId as number, newMessage);
     setNewMessage("");
   };
 
   function joinRoom(room: any, selectedUserId: number) {
-    if (!userData.id) {
+    if (!userData?.id) {
       return alert("Please login");
     }
 
@@ -129,10 +115,16 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     // dispatch(resetNotifications(room));
   }
 
-  const onEmojiClick = (event: any, { emoji }: any) => {
-    emojiRef.current.focus();
-    const start = newMessage.substring(0, emojiRef.current.selectionStart);
-    const end = newMessage.substring(emojiRef.current.selectionStart);
+  const onEmojiClick = (_event: any, { emoji }: any) => {
+    if (!emojiRef.current) return;
+
+    emojiRef?.current?.focus();
+
+    const selectionStart = emojiRef.current.selectionStart ?? 0;
+    const selectionEnd = emojiRef.current.selectionEnd ?? 0;
+
+    const start = newMessage.substring(0, selectionStart);
+    const end = newMessage.substring(selectionEnd);
 
     const text = start + emoji + end;
     setNewMessage(text);
@@ -146,6 +138,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
       if (newMessage === "") {
         console.log("Please enter a message");
       } else {
+        if (!userData || !selectedUserId) {
+          console.warn("Missing user data or selected user");
+          return;
+        }
+
         sendMessage(userData.id, selectedUserId as number, newMessage);
         setNewMessage("");
       }
@@ -171,6 +168,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const handleCreateNewConversationWithUser = (userId: number) => {
     setSelectedUserId(userId);
 
+    if (!userData) {
+      console.warn("Missing user data");
+      return;
+    }
+
     const roomId = orderIds(userData.id, userId);
     setRoomName(roomId);
     joinRoom(roomId, userId);
@@ -180,6 +182,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   const handleLoadEarlierMessages = async () => {
+    if (!userData || !selectedUserId) {
+      console.warn("Missing user data or selected user");
+      return;
+    }
+
     const earlierMessagesRes = await fetchAllMessagesWithUser(
       selectedUserId as number,
       userData.id as number,
@@ -196,13 +203,13 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   useEffect(() => {
-    if (selectedUserId) {
+    if (selectedUserId && userData?.id) {
       refetchUserDetails();
       fetchAllMessagesWithUser(selectedUserId, userData.id).then((json) =>
         setMessages(json)
       );
     }
-  }, [selectedUserId]);
+  }, [selectedUserId, refetchUserDetails, userData?.id, setMessages]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -234,13 +241,12 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
       return () => socket.off("receive-message");
     }
-  }, [socket, roomName]);
+  }, [socket, roomName, refetchMessages, setMessages, setSocket]);
 
-  async function searchForUserByEmail() {
+  const searchForUserByEmail = useCallback(async () => {
     await refetchRecipientSearchResults();
-
     setIsSearching(false);
-  }
+  }, [refetchRecipientSearchResults, setIsSearching]);
 
   useEffect(() => {
     if (debouncedSearchTerm.length === 0) {
@@ -251,7 +257,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     setIsSearching(true);
 
     searchForUserByEmail();
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, setIsSearching, searchForUserByEmail]);
 
   useEffect(() => {
     if (recipientInput.length === 0) {
@@ -262,6 +268,12 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
     setIsSearching(true);
   }, [recipientInput]);
+
+  useEffect(() => {
+    if (userData) {
+      userDispatch({ type: "SET_USER", payload: userData });
+    }
+  }, [userData, userDispatch]);
 
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
@@ -326,14 +338,14 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           ref={scrollRef}
                           key={message.id}
                           className={
-                            message.receiverId === userData.id
+                            message.receiverId === userData?.id
                               ? `col-start-1 col-end-8 p-3 rounded-lg`
                               : `col-start-6 col-end-13 p-3 rounded-lg`
                           }
                         >
                           <div
                             className={`text-gray-400 text-sm pb-3 ${
-                              message.receiverId === userData.id
+                              message.receiverId === userData?.id
                                 ? ``
                                 : `text-right`
                             }`}
@@ -344,7 +356,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           </div>
                           <div
                             className={
-                              message.receiverId === userData.id
+                              message.receiverId === userData?.id
                                 ? `flex flex-row items-center`
                                 : `flex items-center justify-start flex-row-reverse`
                             }
@@ -361,7 +373,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
                             <div
                               className={
-                                message.receiverId === userData.id
+                                message.receiverId === userData?.id
                                   ? `relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl`
                                   : `relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl`
                               }
@@ -624,6 +636,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                   className=""
                                   height={36}
                                   width={36}
+                                  alt="Avatar"
                                 />
                               </div>
                             </div>

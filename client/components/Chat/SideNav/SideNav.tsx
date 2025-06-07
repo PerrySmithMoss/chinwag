@@ -10,9 +10,11 @@ import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
 import { UpdateUserAvatar } from "../../Modals/UserAvatar/UpdateUserAvatar/UpdateUserAvatar";
-import fetcher from "../../../utils/fetcher";
 import { truncateString } from "../../../utils/string";
 import { timeSince } from "../../../utils/dateTime";
+import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
+import { useUserDetails } from "../../../hooks/queries/useUserDetails";
+import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 
 interface SideNavProps {
   user: User | null;
@@ -32,51 +34,27 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const { socket } = useSocket();
 
   const [isActive, setIsActive] = useState(true);
-
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
 
-  const { refetch: refetchCurrentUser, data: userData } = useQuery(
-    ["me"],
-    () => fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
-    {
-      initialData: user,
-      onSuccess: (data: User) => {
-        userDispatch({ type: "SET_USER", payload: data });
-      },
-    }
-  );
+  const { refetch: refetchCurrentUser, data: userData } = useCurrentUser({
+    initialData: user,
+    refetchOnWindowFocus: false,
+  });
 
-  const {
-    isLoading: isUserMessagesLoading,
-    isError: isUserMessagesError,
-    data: userMessages,
-    refetch: refetchMessages,
-    error: userMessagesError,
-  } = useQuery(
-    ["allUserMessages", userData.id],
-    () => getAllUserMessages(userData.id),
+  const { data: userMessages, refetch: refetchMessages } = useAllUserMessages(
+    userData?.id,
     {
       refetchOnWindowFocus: false,
-      enabled: !!userData.id,
-      onSuccess: () => {
-        setIsLoadingMessages(false);
-      },
+      enabled: !!userData?.id,
     }
   );
-  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
-  const {
-    isLoading: isuserDetailsLoading,
-    isError: isuserDetailsError,
-    data: userDetails,
-    refetch: refetchUserDetails,
-    error: userDetailsError,
-  } = useQuery(
-    ["userDetails", selectedUserId],
-    () => fetchUserDetails(selectedUserId as number),
-    { refetchOnWindowFocus: false, enabled: false }
-  );
+  const { refetch: refetchUserDetails } = useUserDetails(selectedUserId, {
+    refetchOnWindowFocus: false,
+    enabled: false,
+  });
 
   const handleCreateNewMessage = () => {
     // Open new main component with blank details
@@ -96,7 +74,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   // });
 
   function joinRoom(room: any, selectedUserId: number) {
-    if (!userData.id) {
+    if (!userData?.id) {
       return alert("Please login");
     }
 
@@ -108,14 +86,14 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
   function handlePrivateMemberMsg(receiverId: number, senderId: number) {
     // Determine who the other user is
-    if (userData.id === receiverId) {
+    if (userData?.id === receiverId) {
       setSelectedUserId(senderId);
 
       const roomId = orderIds(userData.id, senderId);
 
       setRoomName(roomId);
       joinRoom(roomId, senderId);
-    } else if (userData.id === senderId) {
+    } else if (userData?.id === senderId) {
       setSelectedUserId(receiverId);
 
       const roomId = orderIds(userData.id, receiverId);
@@ -148,9 +126,21 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       refetchUserDetails();
       refetchMessages();
     }
-  }, [selectedUserId]);
+  }, [selectedUserId, refetchUserDetails, refetchMessages]);
 
-  if(!userData) return null
+  useEffect(() => {
+    if (userData) {
+      userDispatch({ type: "SET_USER", payload: userData });
+    }
+  }, [userData, userDispatch]);
+
+  useEffect(() => {
+    if (userMessages) {
+      setIsLoadingMessages(false);
+    }
+  }, [userMessages, setIsLoadingMessages]);
+
+  if (!userData) return null;
   return (
     <aside className="hidden sm:flex flex-col py-3 pl-0 sm:pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
       <div className="flex flex-col justify-between flex-1">
@@ -158,7 +148,12 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
           <div className="flex flex-row items-center justify-between h-12 w-full">
             <div className="ml-2 flex items-center">
               <div>
-                <Image src="/assets/images/logo.png" height={30} width={30} />
+                <Image
+                  alt="Logo"
+                  src="/assets/images/logo.png"
+                  height={30}
+                  width={30}
+                />
               </div>
               <div>
                 <p className="ml-2 font-bold text-2xl">Chinwag</p>
@@ -247,9 +242,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
             <div className="text-sm font-semibold mt-2">
               {userData.firstName} {userData.lastName}
             </div>
-            <div className="text-xs text-gray-500">
-              {userData.username}
-            </div>
+            <div className="text-xs text-gray-500">{userData.username}</div>
             <div className="flex items-center mt-2.5">
               <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
                 <input
@@ -302,6 +295,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                       <div className="flex items-center justify-center">
                         {message.receiverId === userData.id ? (
                           <Image
+                            alt="Message sender Avatar"
                             className="rounded-full"
                             src={message.sender_avatar}
                             height={40}
@@ -309,6 +303,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           />
                         ) : (
                           <Image
+                            alt="Message receiver avatar"
                             className="rounded-full"
                             src={message.receiver_avatar}
                             height={40}
