@@ -13,23 +13,23 @@
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.2",
-    "@types/jsonwebtoken": "^8.5.8",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/cors": "^2.8.19",
     "@types/ws": "^8.18.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@prisma/client": "3.13.0",
-    "@types/cors": "^2.8.12",
-    "argon2": "^0.28.2",
-    "cloudinary": "^1.30.0",
+    "@prisma/client": "6.9.0",
+    "argon2": "^0.43.0",
+    "cloudinary": "^2.6.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.1",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "jsonwebtoken": "^8.5.1",
-    "prisma": "3.13.0",
-    "socket.io": "^4.5.1",
-    "zod": "^3.17.10"
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "6.9.0",
+    "socket.io": "^4.8.1",
+    "zod": "^3.25.56"
   }
 }

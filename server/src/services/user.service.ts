@@ -1,31 +1,32 @@
 import prisma from "../lib/prisma";
-import { hash } from "argon2";
-import argon2 from "argon2";
+import { hash, verify, argon2id } from "argon2";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
+import { User as PrismaUser } from "@prisma/client";
 
-type User = {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-};
+type CreateUserInput = Pick<
+  PrismaUser,
+  "email" | "password" | "firstName" | "lastName" | "username"
+>;
 
-export async function createUser(userInput: User) {
-  const hashedPassword = await hash(userInput.password);
+export async function createUser(userInput: CreateUserInput) {
+  const hashedPassword = await hash(userInput.password, {
+    type: argon2id,
+    memoryCost: 2 ** 16,
+    timeCost: 3,
+    parallelism: 1,
+  });
 
-  return await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
-      firstName: userInput.firstName,
-      lastName: userInput.lastName,
-      username: userInput.username,
-      email: userInput.email,
+      ...userInput,
       password: hashedPassword,
       profile: {
         create: {},
       },
     },
   });
+
+  return user;
 }
 
 export async function findUserByEmail(
@@ -184,7 +185,7 @@ export async function validatePassword(
   userPassword: string,
   userInput: string
 ) {
-  return await argon2.verify(userPassword, userInput);
+  return await verify(userPassword, userInput);
 }
 
 export async function getAllUsersExceptSpecifiedUser(userId: number) {
@@ -207,7 +208,7 @@ export async function getAllUsersExceptSpecifiedUser(userId: number) {
 
 export async function updateUserWithSpecifiedData(
   userId: number,
-  data: Partial<User>
+  data: Partial<PrismaUser>
 ) {
   return await prisma.user.update({
     where: { id: userId },

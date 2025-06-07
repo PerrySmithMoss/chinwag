@@ -1,14 +1,14 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "../config/config";
 
-type Session = {
+interface SessionPayload extends JwtPayload {
   session: number;
-};
+}
 
 export type VerifiedJWT = {
   valid: boolean;
   expired: boolean;
-  decoded: Session | null;
+  decoded: SessionPayload | null;
 };
 
 export function signJwt(object: Object, options?: jwt.SignOptions | undefined) {
@@ -20,16 +20,18 @@ export function signJwt(object: Object, options?: jwt.SignOptions | undefined) {
 
 export function verifyJwt(token: string): VerifiedJWT {
   try {
-    const decoded = jwt.verify(token, config.jwtSecret) as Session;
+    const decoded = jwt.verify(token, config.jwtSecret) as SessionPayload;
     return {
       valid: true,
       expired: false,
       decoded,
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const error = e as jwt.TokenExpiredError | jwt.JsonWebTokenError;
+
     return {
       valid: false,
-      expired: e.message === "jwt expired",
+      expired: error.name === "TokenExpiredError",
       decoded: null,
     };
   }
