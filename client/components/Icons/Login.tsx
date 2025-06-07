@@ -1,12 +1,11 @@
 import React from "react";
 
 interface LoginProps {
-  fill?: string;
   height?: string;
   width?: string;
 }
 
-export const Login: React.FC<LoginProps> = ({ fill, height, width }) => {
+export const Login: React.FC<LoginProps> = ({ height, width }) => {
   return (
     <svg
       id="b34823bb-54c5-4248-96df-16f3b0e34aaf"

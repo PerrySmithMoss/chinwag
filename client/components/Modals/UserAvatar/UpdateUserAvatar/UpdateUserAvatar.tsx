@@ -1,18 +1,9 @@
 import Image from "next/image";
-import React, {
-  RefObject,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useQuery } from "@tanstack/react-query";
-import { UserContext } from "../../../../context/user-context";
-import { User } from "../../../../interfaces/User";
-import fetcher from "../../../../utils/fetcher";
-
 import { toast } from "react-toastify";
+
+import { UserContext } from "../../../../context/user-context";
 import { useCurrentUser } from "../../../../hooks/queries/useCurrentUser";
 
 interface UpdateUserAvatarProps {
@@ -33,10 +24,10 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
 
   const [mounted, setMounted] = useState(false);
 
-  const [fileInputState, setFileInputState] = useState("");
+  // const [fileInputState, setFileInputState] = useState("");
   const [previewSource, setPreviewSource] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [errMsg, setErrMsg] = useState("");
+  // const [errMsg, setErrMsg] = useState("");
 
   const { data, refetch: refetchCurrentUser } = useCurrentUser({
     enabled: false,
@@ -56,7 +47,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     const file = e.currentTarget.files[0];
     previewFile(file);
     setSelectedFile(file);
-    setFileInputState(e.target.value);
+    // setFileInputState(e.target.value);
   };
 
   const previewFile = (file: File) => {
@@ -83,12 +74,17 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     };
     reader.onerror = () => {
       console.error("AHHHHHHHH!!");
-      setErrMsg("something went wrong!");
+      // setErrMsg("something went wrong!");
     };
   };
 
   const uploadImageToCloudinary = async (avatarId: string) => {
     try {
+      if (!selectedFile) {
+        console.error("No file selected");
+        return;
+      }
+
       const signatureResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/signature?avatarId=${avatarId}`,
         {
@@ -100,8 +96,8 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       const signatureResponseJSON = await signatureResponse.json();
 
       const data = new FormData();
-      data.append("file", selectedFile as any);
-      data.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY as any);
+      data.append("file", selectedFile);
+      data.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "");
       data.append("signature", signatureResponseJSON.signature);
       data.append("timestamp", signatureResponseJSON.timestamp);
       // If the user already has an avatar then we need to tell cloudinary to overwite that image
@@ -149,7 +145,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       onClose();
       showToastSuccess();
 
-      setFileInputState("");
+      // setFileInputState("");
       setPreviewSource("");
       setSelectedFile(null);
     } catch (error) {

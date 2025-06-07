@@ -1,11 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import styles from "./SidebarNav.module.css";
 import { useContext, useEffect, useState } from "react";
 import { User } from "../../../interfaces/User";
 import { UserContext } from "../../../context/user-context";
-import { fetchUserDetails } from "../../../api/user";
-import { getAllUserMessages } from "../../../api/message";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
@@ -34,7 +31,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const { socket } = useSocket();
 
   const [isActive, setIsActive] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  // const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
 
@@ -73,12 +70,12 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   //     if (currentRoom !== room) dispatch(addNotifications(room));
   // });
 
-  function joinRoom(room: any, selectedUserId: number) {
+  function joinRoom(roomId: string, selectedUserId: number) {
     if (!userData?.id) {
       return alert("Please login");
     }
 
-    socket.emit("join-room", room, selectedUserId, userData.id);
+    socket.emit("join-room", roomId, selectedUserId, userData.id);
 
     // dispatch for notifications
     // dispatch(resetNotifications(room));
@@ -115,9 +112,14 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       if (res.status === 204) {
         refetchCurrentUser();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log("Login error: ", err);
-      throw Error(err);
+
+      if (err instanceof Error) {
+        throw Error(err.message);
+      } else {
+        throw Error("An unexpected error occurred.");
+      }
     }
   };
 
@@ -134,11 +136,11 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     }
   }, [userData, userDispatch]);
 
-  useEffect(() => {
-    if (userMessages) {
-      setIsLoadingMessages(false);
-    }
-  }, [userMessages, setIsLoadingMessages]);
+  // useEffect(() => {
+  //   if (userMessages) {
+  //     setIsLoadingMessages(false);
+  //   }
+  // }, [userMessages, setIsLoadingMessages]);
 
   if (!userData) return null;
   return (

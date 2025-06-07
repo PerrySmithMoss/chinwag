@@ -31,7 +31,7 @@ type UserData = {
 
 const Home: NextPage<UserData> = ({ user }) => {
   const { userDispatch, userState } = useContext(UserContext);
-  const [loginError, setLoginError] = useState(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -68,9 +68,14 @@ const Home: NextPage<UserData> = ({ user }) => {
       } else {
         refetchCurrentUser();
       }
-    } catch (e: any) {
-      console.log(e);
-      setLoginError(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error(e);
+        setLoginError(e.message);
+      } else {
+        console.error("Unexpected error", e);
+        setLoginError("An unexpected error occurred.");
+      }
     }
   }
 

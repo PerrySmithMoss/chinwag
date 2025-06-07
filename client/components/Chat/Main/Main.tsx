@@ -8,7 +8,7 @@ const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 import { UserContext } from "../../../context/user-context";
 import { fetchAllMessagesWithUser } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
-import { fetchUserDetails, fetchUsersByEmail } from "../../../api/user";
+import { fetchUsersByEmail } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
@@ -19,6 +19,7 @@ import { User } from "../../../interfaces/User";
 import { formatDate } from "../../../utils/dateTime";
 import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
+import { EmojiClickData } from "emoji-picker-react";
 
 interface MainProps {
   user: User | null;
@@ -51,7 +52,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
   const [newMessage, setNewMessage] = useState<string>("");
   const [showEmojis, setShowEmojis] = useState<boolean>(false);
-  const [cursorPosition, setCursorPosition] = useState();
+  // const [cursorPosition, setCursorPosition] = useState();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const emojiRef = useRef<HTMLInputElement>(null);
@@ -104,21 +105,21 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     setNewMessage("");
   };
 
-  function joinRoom(room: any, selectedUserId: number) {
+  function joinRoom(roomId: string, selectedUserId: number) {
     if (!userData?.id) {
       return alert("Please login");
     }
 
-    socket.emit("join-room", room, selectedUserId, userData.id);
+    socket.emit("join-room", roomId, selectedUserId, userData.id);
 
     // dispatch for notifications
-    // dispatch(resetNotifications(room));
+    // dispatch(resetNotifications(roomId));
   }
 
-  const onEmojiClick = (_event: any, { emoji }: any) => {
+  const onEmojiClick = (emojiObject: EmojiClickData) => {
     if (!emojiRef.current) return;
 
-    emojiRef?.current?.focus();
+    emojiRef.current.focus();
 
     const selectionStart = emojiRef.current.selectionStart ?? 0;
     const selectionEnd = emojiRef.current.selectionEnd ?? 0;
@@ -126,11 +127,16 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     const start = newMessage.substring(0, selectionStart);
     const end = newMessage.substring(selectionEnd);
 
-    const text = start + emoji + end;
-    setNewMessage(text);
-    emojiRef.current.selectionEnd = start.length + emoji.length;
-    setCursorPosition(start.length + emoji.length);
-    // setChosenEmoji(emojiObject);
+    const updatedMessage = start + emojiObject.emoji + end;
+    setNewMessage(updatedMessage);
+
+    // Move cursor after the inserted emoji
+    setTimeout(() => {
+      if (emojiRef.current) {
+        emojiRef.current.selectionStart = emojiRef.current.selectionEnd =
+          start.length + emojiObject.emoji.length;
+      }
+    }, 0);
   };
 
   const handleKeyPress = (ev: React.KeyboardEvent) => {
@@ -223,11 +229,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
       setSocket(newSocket);
 
-      return () => newSocket.close() as any;
+      return () => newSocket.close();
     }
 
     if (socket !== undefined) {
-      socket.on("receive-message", (newMessage: any) => {
+      socket.on("receive-message", (newMessage: Message) => {
         // Re-fetch the user's messages in sidebar when a message has been sent or received
         refetchMessages();
 
@@ -235,7 +241,10 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
         // Only overwrite the messages state if the receiver has a chat open with the user sending the message
         if (orderIds(receiverId, senderId) === roomName) {
-          setMessages((prevMessages: any) => [newMessage, ...prevMessages]);
+          setMessages((prevMessages: Message[]) => [
+            newMessage,
+            ...prevMessages,
+          ]);
         }
       });
 
@@ -412,7 +421,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                     ref={emojiRef}
                     name="newMessage"
                     value={newMessage}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyPress}
                     onChange={(event) => {
                       setNewMessage(event.target.value);
                     }}

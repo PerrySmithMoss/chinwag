@@ -86,7 +86,7 @@ export const SignUp: React.FC = () => {
     resolver: zodResolver(createUserSchema),
   });
 
-  const [registerError, setRegisterError] = useState(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
 
   const { data, refetch: refetchCurrentUser } = useCurrentUser({
     enabled: false,
@@ -114,10 +114,14 @@ export const SignUp: React.FC = () => {
         refetchCurrentUser();
         router.push("/");
       }
-    } catch (e: any) {
-      console.log(e);
-
-      setRegisterError(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error(e);
+        setRegisterError(e.message);
+      } else {
+        console.error("Unexpected error", e);
+        setRegisterError("An unexpected error occurred.");
+      }
     }
   }
 
