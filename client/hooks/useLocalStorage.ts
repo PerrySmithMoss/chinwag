@@ -3,7 +3,7 @@ import { isServer } from "../utils/isServer";
 
 const PREFIX = process.env.NEXT_PUBLIC_LOCAL_STORAGE_PREFIX;
 
-export default function useLocalStorage(key: string, initialValue?: any) {
+export default function useLocalStorage(key: string, initialValue?: unknown) {
   const prefixedKey = PREFIX + key;
 
   const [value, setValue] = useState(() => {

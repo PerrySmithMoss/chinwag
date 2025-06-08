@@ -100,7 +100,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       data.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "");
       data.append("signature", signatureResponseJSON.signature);
       data.append("timestamp", signatureResponseJSON.timestamp);
-      // If the user already has an avatar then we need to tell cloudinary to overwite that image
+      // If the user already has an avatar then we need to tell cloudinary to overwrite that image
       if (avatarId) {
         data.append("invalidate", "true");
         data.append("overwrite", "true");

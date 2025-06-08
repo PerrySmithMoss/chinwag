@@ -243,6 +243,11 @@ export const deleteUserHandler = async (req: Request, res: Response) => {
 
 export const getCurrentUserHandler = async (_req: Request, res: Response) => {
   try {
+    if (!res.locals.user) {
+      res.status(401).json({ message: "User not authenticated" });
+      return;
+    }
+
     res.send(res.locals.user);
   } catch (err) {
     res.status(500).json(err);

@@ -278,10 +278,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   if (context.req.headers.cookie) {
     try {
-      user = await fetcher(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me`,
-        context.req.headers
-      );
+      user = await fetcher(`/users/me`, context.req.headers);
     } catch (e) {
       console.error("Error while trying to fetch current user", e);
     }

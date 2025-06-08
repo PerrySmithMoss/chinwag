@@ -12,8 +12,7 @@ export const useCurrentUser = (
 ) => {
   return useQuery<User | null, Error, User | null, typeof QUERY_KEY>({
     queryKey: QUERY_KEY,
-    queryFn: () =>
-      fetcher(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/me/v2`),
+    queryFn: () => fetcher(`/users/me/v2`),
     ...options,
   });
 };

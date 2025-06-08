@@ -5,6 +5,7 @@ export function requireUser(_req: Request, res: Response, next: NextFunction) {
 
   if (!user) {
     res.status(403).send(null);
+    return;
   }
 
   return next();
