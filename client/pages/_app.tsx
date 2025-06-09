@@ -9,7 +9,7 @@ import {
 import { UserContextProvider } from "../context/user-context";
 import { AppContextProvider } from "../context/global.context";
 
-function MyApp({ Component, pageProps }: AppProps) {
+export default function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={queryClient}>
@@ -23,4 +23,3 @@ function MyApp({ Component, pageProps }: AppProps) {
     </QueryClientProvider>
   );
 }
-export default MyApp;

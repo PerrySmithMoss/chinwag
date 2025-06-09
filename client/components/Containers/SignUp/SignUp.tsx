@@ -318,7 +318,7 @@ export const SignUp: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="ml-1 mt-2 text-tan-background-accent text-sm">
+                <p className="ml-1 mt-2 cursor-pointer text-tan-background-accent text-sm">
                   Terms of Service
                 </p>
               </div>
@@ -326,7 +326,7 @@ export const SignUp: React.FC = () => {
                 <p className="ml-1 mt-2 text-sm text-gray-400">&</p>
               </div>
               <div>
-                <p className="ml-1 mt-2 text-tan-background-accent text-sm">
+                <p className="ml-1 mt-2 cursor-pointer text-tan-background-accent text-sm">
                   Privacy Policy
                 </p>
               </div>
@@ -337,7 +337,7 @@ export const SignUp: React.FC = () => {
             <div className="mt-8">
               <button
                 type="submit"
-                className="bg-tan-background-accent text-white font-bold py-2 px-4 w-full rounded hover:bg-tan-background"
+                className="bg-tan-background-accent cursor-pointer text-white font-bold py-2 px-4 w-full rounded hover:bg-tan-background"
               >
                 Sign up
               </button>

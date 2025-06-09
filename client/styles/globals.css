@@ -1,3 +1,29 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #04948c;
+  --color-brand-green-hover: #229c95;
+  --color-dark-background: #1b1b23;
+  --color-dark-background-accent: #2b2b37;
+  --color-light-background: #ffffff;
+  --color-light-background-accent: #f3f3fd;
+  --color-white-text: #e9eaeb;
+  --color-tan-background: #fbb3a3;
+  --color-tan-background-accent: #ff725e;
+  --color-tan-text: #ff725e;
+  --color-blue-text: #2b68b0;
+
+  --font-size-xs-s: 13px;
+  --font-size-s-md: 15px;
+}
+
+.dark {
+  --color-background: var(--color-dark-background);
+  --color-background-accent: var(--color-dark-background-accent);
+  --color-text: var(--color-white-text);
+}
+
+body {
+  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
