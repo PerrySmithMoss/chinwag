@@ -341,24 +341,22 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                             </div>
                           </div>
                         ) : (
-                          <div>
-                            <div className="w-full flex justify-center items-center">
-                              <div className="w-full flex-col items-center justify-between space-x-1">
-                                <p className="text-sm text-left font-semibold">
-                                  {message.receiverFirstName}{" "}
-                                  {message.receiverLastName}
-                                </p>
-                                <p className="text-sm text-left">
-                                  {truncateString(message.message, 23)}
-                                </p>
-                              </div>
-                              <div className="flex items-center justify-between space-x-1">
-                                <p className="text-xs text-right">
-                                  {timeSince(
-                                    new Date(Date.parse(message.createdAt))
-                                  )}
-                                </p>
-                              </div>
+                          <div className="w-full flex justify-center items-center">
+                            <div className="w-full flex-col items-center justify-between space-x-1">
+                              <p className="text-sm text-left font-semibold">
+                                {message.receiverFirstName}{" "}
+                                {message.receiverLastName}
+                              </p>
+                              <p className="text-sm text-left">
+                                {truncateString(message.message, 23)}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-between space-x-1">
+                              <p className="text-xs text-right">
+                                {timeSince(
+                                  new Date(Date.parse(message.createdAt))
+                                )}
+                              </p>
                             </div>
                           </div>
                         )}

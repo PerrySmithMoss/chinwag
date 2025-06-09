@@ -1,10 +1,10 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import {
   createMessage,
   getMessagesBetweenTwoUsers,
 } from "../../services/message.service";
 
-export const handleConnection = (socket: Socket) => {
+export const handleConnection = (io: Server, socket: Socket) => {
   socket.on(
     "join-room",
     async (newRoom: string, receiverId: number, senderId: number) => {
@@ -15,6 +15,7 @@ export const handleConnection = (socket: Socket) => {
           receiverId,
           senderId
         );
+
         socket.emit("room-messages", roomMessages);
       } catch (error) {
         console.error("Error joining room:", error);
@@ -33,10 +34,9 @@ export const handleConnection = (socket: Socket) => {
     ) => {
       try {
         const newMessage = await createMessage(message, senderId, receiverId);
-        socket.to(room).emit("receive-message", newMessage);
 
-        // Also emit to sender for confirmation
-        socket.emit("message-sent", newMessage);
+        // emit to all clients in the room, including the sender
+        io.to(room).emit("receive-message", newMessage);
       } catch (error) {
         console.error("Error sending message:", error);
         socket.emit("error", { message: "Failed to send message" });

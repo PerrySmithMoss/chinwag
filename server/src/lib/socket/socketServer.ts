@@ -12,7 +12,9 @@ export const createSocketServer = (server: HttpServer): Server => {
     },
   });
 
-  io.on("connection", handleConnection);
+  io.on("connection", (socket) => {
+    handleConnection(io, socket);
+  });
 
   return io;
 };
