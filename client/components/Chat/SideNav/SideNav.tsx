@@ -25,7 +25,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     setSelectedUserId,
     setRoomName,
     setCreateNewMessage,
-    setIsRecipientSearchResultsOpen,
   } = useAppContext();
 
   const { socket } = useSocket();
@@ -63,7 +62,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     // User can now send message
     // User
     setCreateNewMessage(true);
-    setIsRecipientSearchResultsOpen(true);
   };
 
   //   socket.off("notifications").on("notifications", (room) => {
@@ -295,14 +293,17 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           message.senderId
                         )
                       }
-                      className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+                      className="cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
                       <div className="flex items-center justify-center">
                         {message.receiverId === userData.id ? (
                           <Image
                             alt="Message sender Avatar"
                             className="rounded-full"
-                            src={message.sender_avatar}
+                            src={
+                              message?.sender_avatar ??
+                              "/assets/images/default-avatar.jpg"
+                            }
                             height={40}
                             width={40}
                           />
@@ -310,7 +311,10 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           <Image
                             alt="Message receiver avatar"
                             className="rounded-full"
-                            src={message.receiver_avatar}
+                            src={
+                              message?.receiver_avatar ??
+                              "/assets/images/default-avatar.jpg"
+                            }
                             height={40}
                             width={40}
                           />
@@ -363,7 +367,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
               <div className="mt-1">
                 <button
                   onClick={handleCreateNewMessage}
-                  className="bg-brand-green hover:bg-brand-green_hover text-white py-2 w-full rounded"
+                  className="cursor-pointer bg-brand-green hover:bg-brand-green_hover text-white py-2 w-full rounded"
                 >
                   Create message
                 </button>
@@ -374,7 +378,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         <div className="mt-auto">
           <button
             onClick={() => handleLogoutUser()}
-            className="bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
+            className="cursor-pointer bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
           >
             <span>Logout</span>
           </button>

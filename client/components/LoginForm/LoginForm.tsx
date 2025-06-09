@@ -26,7 +26,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, loginError }) => {
   return (
     // google login
     //     <div className="flex mt-7 space-x-3">
-    //     <button className="bg-white border shadow-md hover:bg-gray-100 px-4 py-2 font-semibold inline-flex items-center space-x-2 rounded">
+    //     <button className="cursor-pointer bg-white border shadow-md hover:bg-gray-100 px-4 py-2 font-semibold inline-flex items-center space-x-2 rounded">
     //       <svg
     //         viewBox="0 0 24 24"
     //         className="w-5 h-5 fill-current"
@@ -55,7 +55,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, loginError }) => {
     //         Login with Google
     //       </span>
     //     </button>
-    //     <button className="bg-blue-500 hover:bg-blue-800 px-4 py-2 font-semibold text-white inline-flex items-center space-x-2 rounded">
+    //     <button className="cursor-pointer bg-blue-500 hover:bg-blue-800 px-4 py-2 font-semibold text-white inline-flex items-center space-x-2 rounded">
     //       <svg
     //         className="w-5 h-5 fill-current"
     //         role="img"

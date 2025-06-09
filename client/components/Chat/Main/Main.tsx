@@ -163,6 +163,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRecipientInput(event.target.value);
+    setIsRecipientSearchResultsOpen(true);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -302,7 +303,10 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                       height={40}
                       width={40}
                       alt="User Avatar"
-                      src={userDetails?.profile?.avatar as string}
+                      src={
+                        userDetails?.profile?.avatar ??
+                        "/assets/images/default-avatar.jpg"
+                      }
                     />
                   </div>
                   <div className="relative py-2 pl-2.5 pr-4">
@@ -329,7 +333,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                 <div className="mt-4 flex justify-center">
                   <button
                     onClick={handleLoadEarlierMessages}
-                    className="ml-12 bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
+                    className="cursor-pointer ml-12 bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
                   >
                     <span>Load older messages</span>
                   </button>
@@ -374,7 +378,10 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                               <Image
                                 className="rounded-full h-9 w-9"
                                 alt="User Avatar"
-                                src={message?.sender?.profile?.avatar as string}
+                                src={
+                                  message?.sender?.profile?.avatar ??
+                                  "/assets/images/default-avatar.jpg"
+                                }
                                 height={36}
                                 width={36}
                               />
@@ -398,7 +405,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
             </div>
             <div className="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
               {/* <div>
-                <button className="flex items-center justify-center text-gray-400 hover:text-gray-600">
+                <button className="cursor-pointer flex items-center justify-center text-gray-400 hover:text-gray-600">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -431,7 +438,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
                   <button
                     onClick={handleShowEmojis}
-                    className="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600"
+                    className="cursor-pointer absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600"
                   >
                     {showEmojis ? (
                       <div className="overflow-y-auto absolute bottom-14">
@@ -458,7 +465,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
               <div className="ml-4">
                 <button
                   onClick={handleSendMessage}
-                  className="flex items-center justify-center bg-brand-green hover:bg-brand-green_hover rounded text-white px-4 py-1 flex-shrink-0"
+                  className="cursor-pointer flex items-center justify-center bg-brand-green hover:bg-brand-green_hover rounded text-white px-4 py-1 flex-shrink-0"
                 >
                   <span>Send</span>
                   <span className="ml-2">
@@ -507,7 +514,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                         recipientSearchResults &&
                         Object.keys(recipientSearchResults).length > 0 ? (
                           // if input is > 0
-                          // if isError !== false
+                          // if isError !== true
                           // if isFetching !== true
                           // if recipientSearchResults
                           // recipientSearchResults.length > 0
@@ -641,7 +648,10 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                             <div className="p-2  max-w-full">
                               <div className="relative w-9 h-9 overflow-hidden rounded-full">
                                 <Image
-                                  src={recipientSearchResults.profile.avatar}
+                                  src={
+                                    recipientSearchResults?.profile?.avatar ??
+                                    "/assets/images/default-avatar.jpg"
+                                  }
                                   className=""
                                   height={36}
                                   width={36}

@@ -223,7 +223,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   <button
                     onClick={handleButtonClick}
                     id="button"
-                    className="rounded px-10 py-3 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
+                    className="cursor-pointer rounded px-10 py-3 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
                   >
                     Upload a file
                   </button>
@@ -272,7 +272,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   id="submit"
                   onClick={handleSubmitFile}
                   disabled={selectedFile === null}
-                  className={`rounded px-4 py-1.5 ${
+                  className={`cursor-pointer rounded px-4 py-1.5 ${
                     selectedFile === null
                       ? "opacity-40 cursor-not-allowed"
                       : "opacity-100 hover:bg-brand-green_hover"
@@ -284,7 +284,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                   // onClick={() => showToastSuccess()}
                   onClick={() => onClose()}
                   id="cancel"
-                  className="ml-3 rounded px-4 py-1.5 hover:bg-gray-200 focus:shadow-outline focus:outline-none"
+                  className="cursor-pointer ml-3 rounded px-4 py-1.5 hover:bg-gray-200 focus:shadow-outline focus:outline-none"
                 >
                   Cancel
                 </button>
