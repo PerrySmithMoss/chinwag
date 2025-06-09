@@ -120,7 +120,7 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, loginError }) => {
       <div className="mt-5">
         <button
           type="submit"
-          className="bg-tan-background-accent text-white font-bold py-2 px-4 w-96 rounded hover:bg-tan-background"
+          className="bg-tan-background-accent cursor-pointer text-white font-bold py-2 px-4 w-96 rounded hover:bg-tan-background"
         >
           Login
         </button>

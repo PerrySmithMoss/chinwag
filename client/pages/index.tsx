@@ -46,12 +46,14 @@ const Home: NextPage<UserData> = ({ user }) => {
       if (userJson.error) {
         setLoginError(userJson.error);
       } else {
-        setLoginError(null);
+        setLoginError("An unexpected error occurred.");
         refetchCurrentUser();
       }
     } catch (e: unknown) {
       console.error(e);
       setLoginError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
