@@ -110,7 +110,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
       return alert("Please login");
     }
 
-    socket.emit("join-room", roomId, selectedUserId, userData.id);
+    socket?.emit("join-room", roomId, selectedUserId, userData.id);
 
     // dispatch for notifications
     // dispatch(resetNotifications(roomId));
@@ -156,7 +156,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   function sendMessage(senderId: number, receiverId: number, message: string) {
-    socket.emit("send-message", roomName, senderId, receiverId, message);
+    socket?.emit("send-message", roomName, senderId, receiverId, message);
   }
 
   const handleChangeRecipientInput = (
@@ -230,7 +230,9 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
       setSocket(newSocket);
 
-      return () => newSocket.close();
+      return () => {
+        newSocket.close();
+      };
     }
 
     if (socket !== undefined) {

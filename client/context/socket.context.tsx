@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState, createContext } from "react";
-import io from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 
 type SocketProps = {
-  socket: any;
-  setSocket: React.Dispatch<React.SetStateAction<any>>;
+  socket: Socket | undefined;
+  setSocket: React.Dispatch<React.SetStateAction<Socket | undefined>>;
 };
 
 const SocketContext = createContext<SocketProps>({
@@ -11,16 +11,17 @@ const SocketContext = createContext<SocketProps>({
   setSocket: () => {},
 });
 
-
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const [socket, setSocket] = useState<any>();
+  const [socket, setSocket] = useState<Socket>();
 
   useEffect(() => {
     const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string);
 
     setSocket(newSocket);
 
-    return () => newSocket.close() as any;
+    return () => {
+      newSocket.close();
+    };
   }, []);
 
   return (

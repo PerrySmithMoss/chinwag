@@ -73,7 +73,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       return alert("Please login");
     }
 
-    socket.emit("join-room", roomId, selectedUserId, userData.id);
+    socket?.emit("join-room", roomId, selectedUserId, userData.id);
 
     // dispatch for notifications
     // dispatch(resetNotifications(room));
@@ -293,15 +293,15 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           message.senderId
                         )
                       }
-                      className="cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
+                      className="w-full cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-xl p-2"
                     >
-                      <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center px-1">
                         {message.receiverId === userData.id ? (
                           <Image
                             alt="Message sender Avatar"
                             className="rounded-full"
                             src={
-                              message?.sender_avatar ??
+                              message?.senderAvatar ??
                               "/assets/images/default-avatar.jpg"
                             }
                             height={40}
@@ -312,7 +312,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                             alt="Message receiver avatar"
                             className="rounded-full"
                             src={
-                              message?.receiver_avatar ??
+                              message?.receiverAvatar ??
                               "/assets/images/default-avatar.jpg"
                             }
                             height={40}
@@ -320,19 +320,20 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           />
                         )}
                       </div>
-                      <div className="ml-2 flex flex-col items-start">
+                      <div className="w-full ml-2 flex flex-col items-start px-1">
                         {message.receiverId === userData.id ? (
-                          <div>
-                            <p className="text-sMd text-left font-semibold">
-                              {message.sender_firstName}{" "}
-                              {message.sender_lastName}
-                            </p>
-                            <div className="flex items-center space-x-2">
-                              <p className="text-xsS text-left">
+                          <div className="w-full flex justify-center items-center">
+                            <div className="w-full flex-col items-center justify-between space-x-1">
+                              <p className="text-sm text-left font-semibold">
+                                {message.senderFirstName}{" "}
+                                {message.senderLastName}
+                              </p>
+                              <p className="text-sm text-left">
                                 {truncateString(message.message, 23)}
                               </p>
-                              <p className="text-xsS text-left">·</p>
-                              <p className="text-xsS text-left">
+                            </div>
+                            <div className="flex items-center justify-between space-x-1">
+                              <p className="text-xs text-right">
                                 {timeSince(
                                   new Date(Date.parse(message.createdAt))
                                 )}
@@ -341,20 +342,23 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           </div>
                         ) : (
                           <div>
-                            <p className="text-sMd font-semibold text-left">
-                              {message.receiver_firstName}{" "}
-                              {message.receiver_lastName}
-                            </p>
-                            <div className="flex items-center space-x-2">
-                              <p className="text-xsS text-left">
-                                {truncateString(message.message, 23)}
-                              </p>
-                              <p className="text-xsS text-left">·</p>
-                              <p className="text-xsS text-left">
-                                {timeSince(
-                                  new Date(Date.parse(message.createdAt))
-                                )}
-                              </p>
+                            <div className="w-full flex justify-center items-center">
+                              <div className="w-full flex-col items-center justify-between space-x-1">
+                                <p className="text-sm text-left font-semibold">
+                                  {message.receiverFirstName}{" "}
+                                  {message.receiverLastName}
+                                </p>
+                                <p className="text-sm text-left">
+                                  {truncateString(message.message, 23)}
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-between space-x-1">
+                                <p className="text-xs text-right">
+                                  {timeSince(
+                                    new Date(Date.parse(message.createdAt))
+                                  )}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -378,9 +382,9 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         <div className="mt-auto">
           <button
             onClick={() => handleLogoutUser()}
-            className="cursor-pointer bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded inline-flex items-center"
+            className="w-full flex justify-center cursor-pointer bg-gray-200 hover:bg-gray-300 text-grey-darkest font-bold py-2 px-4 rounded items-center"
           >
-            <span>Logout</span>
+            Logout
           </button>
         </div>
       </div>

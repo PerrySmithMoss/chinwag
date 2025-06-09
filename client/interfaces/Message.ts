@@ -20,12 +20,12 @@ export interface UniqueMessage {
   receiver: User;
   senderId: number;
   receiverId: number;
-  receiver_firstName: string;
-  receiver_lastName: string;
-  receiver_username: string;
-  sender_firstName: string;
-  sender_lastName: string;
-  sender_username: string;
-  sender_avatar: string;
-  receiver_avatar: string;
+  receiverFirstName: string;
+  receiverLastName: string;
+  receiverUsername: string;
+  senderFirstName: string;
+  senderLastName: string;
+  senderUsername: string;
+  senderAvatar: string;
+  receiverAvatar: string;
 }

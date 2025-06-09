@@ -174,15 +174,15 @@ export async function getMessagesBetweenTwoUsers(
 export async function getUsersMessages(userId: number) {
   const messages = await prisma.$queryRawUnsafe(`
     SELECT
-      m.*,     
-      s."firstName" AS sender_firstName, 
-      s."lastName" AS sender_lastName,
-      s.username AS sender_username,
-      r."firstName" AS receiver_firstName, 
-      r."lastName" AS receiver_lastName,
-      r.username AS receiver_username,
-      sp.avatar AS sender_avatar,
-      rp.avatar AS receiver_avatar
+      m.*,
+      s."firstName" AS "senderFirstName",
+      s."lastName" AS "senderLastName",
+      s.username AS "senderUsername",
+      r."firstName" AS "receiverFirstName",
+      r."lastName" AS "receiverLastName",
+      r.username AS "receiverUsername",
+      sp.avatar AS "senderAvatar",
+      rp.avatar AS "receiverAvatar"
     FROM "Message" m
     INNER JOIN "User" s ON s.id = m."senderId"
     INNER JOIN "User" r ON r.id = m."receiverId"
