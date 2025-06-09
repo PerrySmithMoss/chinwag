@@ -37,7 +37,7 @@ const createUserSchema = object({
       })
     ),
   password: string({ required_error: "Password is required" })
-    .min(6, "Password too short - should be 6 chars minimum")
+    .min(6, "Password too short - should be 6 characters minimum")
     .max(256, {
       message: "Password must be 256 characters or less.",
     }),
@@ -267,7 +267,7 @@ export const SignUp: React.FC = () => {
                 {errors.email?.message}
               </p>
             </div>
-            <div className="grid xl:grid-cols-2 xl:gap-6 mt-4">
+            <div className="mt-4">
               <div className="w-full">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Username
@@ -282,25 +282,25 @@ export const SignUp: React.FC = () => {
                   {errors.username?.message}
                 </p>
               </div>
-              <div className="mt-4 xl:mt-0 w-full">
-                <div className="flex justify-between">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Password
-                  </label>
-                  {/* <a href="#" className="text-xs text-gray-500">
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-between">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Password
+                </label>
+                {/* <a href="#" className="text-xs text-gray-500">
               Forgot Password?
             </a> */}
-                </div>
-                <input
-                  autoComplete="password"
-                  {...register("password")}
-                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                  type="password"
-                />
-                <p className="text-red-400 font-bold text-sm">
-                  {errors.password?.message}
-                </p>
               </div>
+              <input
+                autoComplete="password"
+                {...register("password")}
+                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                type="password"
+              />
+              <p className="text-red-400 font-bold text-sm">
+                {errors.password?.message}
+              </p>
             </div>
             <div className="flex">
               <div className="ml-1 mt-2">

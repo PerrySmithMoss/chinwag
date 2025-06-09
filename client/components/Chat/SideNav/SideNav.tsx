@@ -173,12 +173,15 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
           <div className="flex flex-col items-center bg-indigo-100 border border-gray-200 mt-4 w-full py-6 px-4 rounded-lg">
             <div className="relative">
               <Image
-                src={userData.profile.avatar}
+                src={
+                  userData?.profile?.avatar ??
+                  "/assets/images/default-avatar.jpg"
+                }
                 alt="Avatar"
-                width={80}
-                height={80}
+                width={65}
+                height={65}
                 onClick={() => setIsUpdateUserAvatarModalOpen(true)}
-                className={`${styles.avatar} h-20 w-20 rounded-full cursor-pointer relative`}
+                className={`${styles.avatar} h-[65px] w-[65px] rounded-full cursor-pointer relative`}
               />
               <div
                 style={{ transform: "translate(50%, 0%)" }}
@@ -275,7 +278,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
             <div className="mb-3 flex flex-row items-center justify-between">
               <span className="font-bold">Messages</span>
               <span className="flex items-center justify-center text-sm bg-gray-300 h-5 w-5 rounded-full">
-                {userMessages?.length}
+                {userMessages?.length ?? 0}
               </span>
             </div>
             {Array.isArray(userMessages) && userMessages.length > 0 ? (
