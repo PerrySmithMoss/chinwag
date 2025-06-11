@@ -9,11 +9,32 @@ on:
       - "docker-stack.yaml"
 
 jobs:
-  #   run-tests:
-  #     runs-on: ubuntu-latest
-  #     steps:
-  #         - uses: actions/checkout@v4
-  #         # TODO...
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cache Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('server/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        working-directory: ./server
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        working-directory: ./server
+        run: yarn test
 
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -21,8 +42,8 @@ jobs:
       contents: write
       packages: write
 
-    # needs:
-    #     - run-tests
+    needs:
+      - run-tests
 
     env:
       IMAGE_NAME: ghcr.io/perrysmithmoss/chinwag:${{ github.sha }}
