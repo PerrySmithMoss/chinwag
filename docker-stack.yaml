@@ -17,7 +17,7 @@ services:
       - chinwag_cloudinary_api_secret
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.chinwag-api.loadbalancer.server.port=5500"
+      - "traefik.http.services.chinwag-api.loadbalancer.server.port=5560"
       - "traefik.http.routers.chinwag-api.rule=Host(`chinwag-api.perrysmithmoss.com`)"
       - "traefik.http.routers.chinwag-api.entrypoints=websecure"
       - "traefik.http.routers.chinwag-api.tls.certresolver=myresolver"
