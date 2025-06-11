@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsc -p .",
+    "build": "rm -rf dist && tsc --project tsconfig.build.json",
     "build:production": "npx prisma generate && npx prisma migrate deploy && tsc -p .",
     "test": "jest",
     "test:watch": "jest --watch",
