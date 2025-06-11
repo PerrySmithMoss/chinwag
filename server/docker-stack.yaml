@@ -1,0 +1,42 @@
+services:
+  chinwag-api:
+    image: ghcr.io/perrysmithmoss/chinwag:${GIT_COMMIT_HASH:-latest}
+    env_file:
+      - ./server/.env.production
+    environment:
+      - DATABASE_URL=/run/secrets/chinwag_database_url
+      - GOOGLE_CLIENT_ID=/run/secrets/chinwag_google_client_id
+      - GOOGLE_CLIENT_SECRET=/run/secrets/chinwag_google_client_secret
+      - JWT_SECRET=/run/secrets/chinwag_jwt_secret
+    secrets:
+      - chinwag_database_url
+      - chinwag_google_client_id
+      - chinwag_google_client_secret
+      - chinwag_jwt_secret
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.chinwag-api.loadbalancer.server.port=5500"
+      - "traefik.http.routers.chinwag-api.rule=Host(`chinwag-api.perrysmithmoss.com`)"
+      - "traefik.http.routers.chinwag-api.entrypoints=websecure"
+      - "traefik.http.routers.chinwag-api.tls.certresolver=myresolver"
+    networks:
+      - portfolio_network
+    deploy:
+      update_config:
+        order: start-first
+    depends_on:
+      - postgres
+
+networks:
+  portfolio_network:
+    external: true
+
+secrets:
+  chinwag_database_url:
+    external: true
+  chinwag_google_client_id:
+    external: true
+  chinwag_google_client_secret:
+    external: true
+  chinwag_jwt_secret:
+    external: true
