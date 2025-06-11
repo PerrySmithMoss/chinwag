@@ -3,19 +3,24 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc -p .",
-    "build:production": "npx prisma generate && npx prisma migrate deploy && tsc -p ."
+    "build:production": "npx prisma generate && npx prisma migrate deploy && tsc -p .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
-    "@types/express": "^5.0.2",
-    "@types/jsonwebtoken": "^9.0.2",
     "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.2",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/ws": "^8.18.1",
+    "jest": "^30.0.0",
+    "ts-jest": "^29.3.4",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   },
