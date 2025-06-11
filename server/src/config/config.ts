@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { loadSecret } from "../utils/loadSecret";
 
 dotenv.config();
 
@@ -15,11 +16,20 @@ export const config = {
   refreshTokenCookieName:
     process.env.REFRESH_TOKEN_COOKIE_NAME || "refreshToken",
 
-  databaseURL: process.env.DATABASE_URL,
+  databaseURL: loadSecret("/run/secrets/chinwag_database_url", "DATABASE_URL"),
 
-  jwtSecret: process.env.JWT_SECRET || "",
+  jwtSecret: loadSecret("/run/secrets/chinwag_jwt_secret", "JWT_SECRET"),
 
-  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
-  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
-  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
+  cloudinaryCloudName: loadSecret(
+    "/run/secrets/chinwag_cloudinary_cloud_name",
+    "CLOUDINARY_CLOUD_NAME"
+  ),
+  cloudinaryApiKey: loadSecret(
+    "/run/secrets/chinwag_cloudinary_api_key",
+    "CLOUDINARY_API_KEY"
+  ),
+  cloudinaryApiSecret: loadSecret(
+    "/run/secrets/chinwag_cloudinary_api_secret",
+    "CLOUDINARY_API_SECRET"
+  ),
 };

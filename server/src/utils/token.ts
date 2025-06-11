@@ -11,14 +11,17 @@ export type VerifiedJWT = {
   decoded: SessionPayload | null;
 };
 
-export function signJwt(object: Object, options?: jwt.SignOptions | undefined) {
+export const signJwt = (
+  object: Object,
+  options?: jwt.SignOptions | undefined
+): string => {
   return jwt.sign(object, config.jwtSecret, {
     ...(options && options),
     algorithm: "HS256",
   });
-}
+};
 
-export function verifyJwt(token: string): VerifiedJWT {
+export const verifyJwt = (token: string): VerifiedJWT => {
   try {
     const decoded = jwt.verify(token, config.jwtSecret) as SessionPayload;
     return {
@@ -35,4 +38,4 @@ export function verifyJwt(token: string): VerifiedJWT {
       decoded: null,
     };
   }
-}
+};
