@@ -96,7 +96,7 @@ jobs:
           NODE_ENV=production
           PORT=5560
           SERVER_DOMAIN=.perrysmithmoss.com
-          SERVER_URL=https://chinwag.perrysmithmoss.com
+          SERVER_URL=https://chinwag-api.perrysmithmoss.com
           CLIENT_URL=https://chinwag.vercel.app
           ACCESS_TOKEN_COOKIE_NAME=chinwag_access_token
           ACCESS_TOKEN_TTL=${{ secrets.ACCESS_TOKEN_TTL }}
