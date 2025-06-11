@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { config } from "../config/config";
 import { signAccessToken } from "../services/auth.service";
 import { findUserById } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { verifyJwt } from "../utils/token";
+import { accessTokenCookieOptions } from "../constants/cookies";
 
 export async function isAuthenticated(
   req: Request,
@@ -57,14 +57,7 @@ export async function isAuthenticated(
       // Set cookie & header with new access token
       res.setHeader("x-access-token", newAccessToken);
 
-      res.cookie("accessToken", newAccessToken, {
-        maxAge: 900000, // 15 mins
-        httpOnly: true,
-        domain: config.serverDomain,
-        path: "/",
-        sameSite: "none",
-        secure: true,
-      });
+      res.cookie("accessToken", newAccessToken, accessTokenCookieOptions);
     }
 
     const result = verifyJwt(newAccessToken);

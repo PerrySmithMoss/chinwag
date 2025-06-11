@@ -11,6 +11,10 @@ import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../config/config";
 import { CreateUserInput, LoginUserInput } from "../schema/Auth.schema";
 import { Prisma } from "@prisma/client";
+import {
+  accessTokenCookieOptions,
+  refreshTokenCookieOptions,
+} from "../constants/cookies";
 
 // Register user
 export async function registerSessionHandler(
@@ -41,23 +45,9 @@ export async function registerSessionHandler(
     const refreshToken = await signRefreshToken(userWithFieldsRemoved.id);
 
     // Set tokens as cookies
-    res.cookie("accessToken", accessToken, {
-      maxAge: 900000, // 15 mins
-      httpOnly: true,
-      domain: config.serverDomain,
-      path: "/",
-      sameSite: "none",
-      secure: true,
-    });
+    res.cookie("accessToken", accessToken, accessTokenCookieOptions);
 
-    res.cookie("refreshToken", refreshToken, {
-      maxAge: 6.048e8, // 1 year
-      httpOnly: true,
-      domain: config.serverDomain,
-      path: "/",
-      sameSite: "none",
-      secure: true,
-    });
+    res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
     // send the tokens
     res.status(200).send({
@@ -116,23 +106,9 @@ export async function createSessionHandler(
     const refreshToken = await signRefreshToken(user.id);
 
     // Set tokens as cookies
-    res.cookie("accessToken", accessToken, {
-      maxAge: 900000, // 15 mins
-      httpOnly: true,
-      domain: config.serverDomain,
-      path: "/",
-      sameSite: "none",
-      secure: true,
-    });
+    res.cookie("accessToken", accessToken, accessTokenCookieOptions);
 
-    res.cookie("refreshToken", refreshToken, {
-      maxAge: 6.048e8, // 1 year
-      httpOnly: true,
-      domain: config.serverDomain,
-      path: "/",
-      sameSite: "none",
-      secure: true,
-    });
+    res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
     // send the tokens
     res.status(200).send({
