@@ -16,6 +16,7 @@ RUN apt-get update && \
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 COPY tsconfig.json .
+COPY tsconfig.build.json .
 
 # ------------------------------------------------
 # Development stage
