@@ -5,14 +5,16 @@ services:
       - ./server/.env.production
     environment:
       - DATABASE_URL=/run/secrets/chinwag_database_url
-      - GOOGLE_CLIENT_ID=/run/secrets/chinwag_google_client_id
-      - GOOGLE_CLIENT_SECRET=/run/secrets/chinwag_google_client_secret
       - JWT_SECRET=/run/secrets/chinwag_jwt_secret
+      - CLOUDINARY_CLOUD_NAME=/run/secrets/chinwag_cloudinary_cloud_name
+      - CLOUDINARY_API_KEY=/run/secrets/chinwag_cloudinary_api_key
+      - CLOUDINARY_API_SECRET=/run/secrets/chinwag_cloudinary_api_secret
     secrets:
       - chinwag_database_url
-      - chinwag_google_client_id
-      - chinwag_google_client_secret
       - chinwag_jwt_secret
+      - chinwag_cloudinary_cloud_name
+      - chinwag_cloudinary_api_key
+      - chinwag_cloudinary_api_secret
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.chinwag-api.loadbalancer.server.port=5500"
@@ -34,9 +36,11 @@ networks:
 secrets:
   chinwag_database_url:
     external: true
-  chinwag_google_client_id:
-    external: true
-  chinwag_google_client_secret:
-    external: true
   chinwag_jwt_secret:
+    external: true
+  chinwag_cloudinary_cloud_name:
+    external: true
+  chinwag_cloudinary_api_key:
+    external: true
+  chinwag_cloudinary_api_secret:
     external: true
