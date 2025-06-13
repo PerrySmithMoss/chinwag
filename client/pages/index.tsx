@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { User } from "../interfaces/User";
 import { UserContext } from "../context/user-context";
-import fetcher from "../utils/fetcher";
 import { useCurrentUser } from "../hooks/queries/useCurrentUser";
 import { ChatLayout } from "../components/Chat/ChatLayout/ChatLayout";
 import { LoginForm } from "../components/LoginForm/LoginForm";
 import Image from "next/image";
 import { Login as LoginIcon } from "../components/Icons/Login";
+import { fetcher } from "../utils/fetcher";
 
 type UserData = {
   user: User | null;
@@ -30,21 +30,13 @@ const Home: NextPage<UserData> = ({ user }) => {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/create`,
-        {
-          method: "POST",
-          body: JSON.stringify(values),
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const userJson = await res.json();
+      const res = await fetcher<null | { error: string }>("sessions/create", {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
 
-      if (userJson.error) {
-        setLoginError(userJson.error);
+      if (res?.error) {
+        setLoginError(res.error);
       } else {
         setLoginError("An unexpected error occurred.");
         refetchCurrentUser();
@@ -133,9 +125,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   if (context.req.headers.cookie) {
     try {
-      user = await fetcher(`/users/me`, context.req.headers);
+      const headers = {
+        cookie: context.req.headers.cookie || "",
+      };
+      user = await fetcher<UserData>(`/users/me`, { headers });
     } catch (e) {
-      console.error("Error while trying to fetch current user", e);
+      console.error("Error fetching user:", e);
     }
   }
 

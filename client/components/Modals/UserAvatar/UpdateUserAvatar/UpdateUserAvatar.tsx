@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 
 import { UserContext } from "../../../../context/user-context";
 import { useCurrentUser } from "../../../../hooks/queries/useCurrentUser";
+import { fetcher } from "../../../../utils/fetcher";
 
 interface UpdateUserAvatarProps {
   open: boolean;
@@ -85,21 +86,18 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         return;
       }
 
-      const signatureResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/signature?avatarId=${avatarId}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      const signatureResponseJSON = await signatureResponse.json();
+      const signatureResponseJSON = await fetcher<{
+        timestamp: number;
+        signature: string;
+      }>(`/images/signature?avatarId=${avatarId}`, {
+        method: "GET",
+      });
 
       const data = new FormData();
       data.append("file", selectedFile);
       data.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "");
       data.append("signature", signatureResponseJSON.signature);
-      data.append("timestamp", signatureResponseJSON.timestamp);
+      data.append("timestamp", signatureResponseJSON.timestamp.toString());
       // If the user already has an avatar then we need to tell cloudinary to overwrite that image
       if (avatarId) {
         data.append("invalidate", "true");
@@ -108,14 +106,18 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       }
       data.append("folder", "chinwag/avatars");
 
-      const cloudinaryResponse = await fetch(
+      const cloudinaryResponseJSON = await fetcher<{
+        public_id: string;
+        version: number;
+        signature: string;
+        secure_url: string;
+      }>(
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
         {
           method: "POST",
           body: data,
         }
       );
-      const cloudinaryResponseJSON = await cloudinaryResponse.json();
 
       // send the image info back to our server
       const photoData = {
@@ -125,17 +127,10 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         image_url: cloudinaryResponseJSON.secure_url,
       };
 
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/avatar/${userState.user.id}`,
-        {
-          method: "POST",
-          body: JSON.stringify(photoData),
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await fetcher(`/users/avatar/${userState.user.id}`, {
+        method: "POST",
+        body: JSON.stringify(photoData),
+      });
 
       // close the modal
       // reset the setFileInputState, setPreviewSource, setSelectedFile

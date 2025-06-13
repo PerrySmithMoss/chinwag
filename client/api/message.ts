@@ -1,38 +1,26 @@
 import { Message, UniqueMessage } from "../interfaces/Message";
+import { fetcher } from "../utils/fetcher";
 
 export const fetchAllMessagesWithUser = async (
   senderId: number,
   receiverId: number,
   cursor?: string
 ): Promise<Message[]> => {
-  const cursorFormatted = {
-    cursor: cursor,
-  };
+  // TODO: add error handling here and anywhere which uses this fetch req
+  const endpoint = cursor
+    ? `/messages/${senderId}/${receiverId}?cursor=${cursor}`
+    : `/messages/${senderId}/${receiverId}`;
 
-  if (cursor) {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${senderId}/${receiverId}?cursor=${cursor}`
-    );
-    const json: Message[] = await res.json();
+  const res = await fetcher<Message[]>(endpoint);
 
-    return json;
-  } else {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${senderId}/${receiverId}`
-    );
-    const json: Message[] = await res.json();
-
-    return json;
-  }
+  return res;
 };
 
 export const getAllUserMessages = async (
   userID: number
 ): Promise<UniqueMessage[]> => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages/${userID}`
-  );
-  const json: UniqueMessage[] = await res.json();
+  // TODO: add error handling here and anywhere which uses this fetch req
+  const res = await fetcher<UniqueMessage[]>(`/messages/${userID}`);
 
-  return json;
+  return res;
 };

@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { object, string, TypeOf } from "zod";
 import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
+import { fetcher } from "../../../utils/fetcher";
 
 const createUserSchema = object({
   firstName: string({ required_error: "First name is required" })
@@ -95,20 +96,12 @@ export const SignUp: React.FC = () => {
 
   async function onSubmit(values: CreateUserInput) {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/register`,
-        {
-          method: "POST",
-          body: JSON.stringify(values),
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const userJson = await fetcher<{ error: string }>(`/sessions/register`, {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
 
-      const userJson = await res.json();
-      if (userJson.error !== undefined) {
+      if (userJson?.error !== undefined) {
         setRegisterError(userJson.error);
       } else {
         refetchCurrentUser();

@@ -12,6 +12,7 @@ import { timeSince } from "../../../utils/dateTime";
 import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
+import { fetcher } from "../../../utils/fetcher";
 
 interface SideNavProps {
   user: User | null;
@@ -100,16 +101,11 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
   const handleLogoutUser = async () => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions/`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-      if (res.status === 204) {
-        refetchCurrentUser();
-      }
+      await fetcher(`/sessions`, {
+        method: "DELETE",
+      });
+
+      refetchCurrentUser();
     } catch (err: unknown) {
       console.log("Login error: ", err);
 
