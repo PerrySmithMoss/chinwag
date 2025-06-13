@@ -98,7 +98,7 @@ export const SignUp: React.FC = () => {
     try {
       const userJson = await fetcher<{ error: string }>(`/sessions/register`, {
         method: "POST",
-        body: JSON.stringify(values),
+        body: values,
       });
 
       if (userJson?.error !== undefined) {

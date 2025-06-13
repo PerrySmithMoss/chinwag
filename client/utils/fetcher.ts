@@ -7,8 +7,9 @@ interface FetchOptions<T> {
 }
 
 const isServer = typeof window === "undefined";
-// TODO: will any server side requests work seen as it will not proxy
-// through the app rewrites if we use NEXT_PUBLIC_API_BASE_URL?
+// TODO: will server side requests work seen as it will not proxy
+// through the app rewrites if we use NEXT_PUBLIC_API_BASE_URL? If we
+// request without proxying I don't think our auth cookies will work
 const baseUrl = isServer ? process.env.NEXT_PUBLIC_API_BASE_URL : "/api";
 
 export const fetcher = async <TResponse = unknown, TRequest = unknown>(

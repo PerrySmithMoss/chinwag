@@ -32,7 +32,7 @@ const Home: NextPage<UserData> = ({ user }) => {
     try {
       const res = await fetcher<null | { error: string }>("/sessions/create", {
         method: "POST",
-        body: JSON.stringify(values),
+        body: values,
       });
 
       if (res?.error) {

@@ -129,7 +129,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
 
       await fetcher(`/users/avatar/${userState.user.id}`, {
         method: "POST",
-        body: JSON.stringify(photoData),
+        body: photoData,
       });
 
       // close the modal
