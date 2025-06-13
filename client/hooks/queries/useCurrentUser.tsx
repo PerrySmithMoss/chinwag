@@ -1,6 +1,6 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { User } from "../../interfaces/User";
-import fetcher from "../../utils/fetcher";
+import { fetcher } from "../../utils/fetcher";
 
 const QUERY_KEY = ["me"] as const;
 
