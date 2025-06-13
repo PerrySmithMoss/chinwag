@@ -30,7 +30,7 @@ const Home: NextPage<UserData> = ({ user }) => {
     setLoading(true);
 
     try {
-      const res = await fetcher<null | { error: string }>("sessions/create", {
+      const res = await fetcher<null | { error: string }>("/sessions/create", {
         method: "POST",
         body: JSON.stringify(values),
       });
