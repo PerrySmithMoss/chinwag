@@ -11,18 +11,29 @@ const SocketContext = createContext<SocketProps>({
   setSocket: () => {},
 });
 
-export function SocketProvider({ children }: { children: React.ReactNode }) {
+export function SocketProvider({
+  children,
+  userId,
+}: {
+  children: React.ReactNode;
+  userId: number;
+}) {
   const [socket, setSocket] = useState<Socket>();
 
   useEffect(() => {
     const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string);
-
     setSocket(newSocket);
+
+    if (userId) {
+      newSocket.on("connect", () => {
+        newSocket.emit("join-user-room", userId);
+      });
+    }
 
     return () => {
       newSocket.close();
     };
-  }, []);
+  }, [userId]);
 
   return (
     <SocketContext.Provider value={{ socket, setSocket }}>

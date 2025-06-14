@@ -13,6 +13,7 @@ import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 import { fetcher } from "../../../utils/fetcher";
+import { Message } from "../../../interfaces/Message";
 
 interface SideNavProps {
   user: User | null;
@@ -135,6 +136,32 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   //     setIsLoadingMessages(false);
   //   }
   // }, [userMessages, setIsLoadingMessages]);
+
+  useEffect(() => {
+    if (socket && userData?.id) {
+      socket.emit("join-user-room", userData.id);
+    }
+  }, [socket, userData?.id]);
+
+  useEffect(() => {
+    if (!socket || !userData?.id) return;
+
+    const handleReceiveMessage = (newMessage: Message) => {
+      // Check if this message involves the current user
+      if (
+        newMessage.receiverId === userData.id ||
+        newMessage.senderId === userData.id
+      ) {
+        refetchMessages(); // Updates the sidebar
+      }
+    };
+
+    socket.on("receive-message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive-message", handleReceiveMessage);
+    };
+  }, [socket, userData?.id, refetchMessages]);
 
   if (!userData) return null;
   return (

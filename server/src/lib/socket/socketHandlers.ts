@@ -5,6 +5,10 @@ import {
 } from "../../services/message.service";
 
 export const handleConnection = (io: Server, socket: Socket) => {
+  socket.on("join-user-room", (userId: number) => {
+    socket.join(String(userId));
+  });
+
   socket.on(
     "join-room",
     async (newRoom: string, receiverId: number, senderId: number) => {
@@ -37,6 +41,8 @@ export const handleConnection = (io: Server, socket: Socket) => {
 
         // emit to all clients in the room, including the sender
         io.to(room).emit("receive-message", newMessage);
+        io.to(String(senderId)).emit("receive-message", newMessage);
+        io.to(String(receiverId)).emit("receive-message", newMessage);
       } catch (error) {
         console.error("Error sending message:", error);
         socket.emit("error", { message: "Failed to send message" });

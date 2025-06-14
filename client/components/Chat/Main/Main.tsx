@@ -20,6 +20,7 @@ import { formatDate } from "../../../utils/dateTime";
 import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { EmojiClickData } from "emoji-picker-react";
+import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 
 interface MainProps {
   user: User | null;
@@ -71,7 +72,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     }
   );
 
-  const { refetch: refetchMessages } = useCurrentUser({
+  const { refetch: refetchMessages } = useAllUserMessages(userData?.id, {
     refetchOnWindowFocus: false,
     enabled: false,
   });
@@ -84,7 +85,6 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   } = useQuery({
     queryKey: ["recipientSearchResults"],
     queryFn: () => fetchUsersByEmail(recipientInput),
-
     enabled: false,
     refetchOnWindowFocus: false,
     retry: 1,

@@ -4,7 +4,7 @@ import { User } from "../../../interfaces/User";
 import { Chat } from "../../Containers/Chat/Chat";
 
 export const ChatLayout: React.FC<{ user: User }> = ({ user }) => (
-  <SocketProvider>
+  <SocketProvider userId={user.id}>
     <div>
       <Head>
         <title>Chat | Chinwag</title>
