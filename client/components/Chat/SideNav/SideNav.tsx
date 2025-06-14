@@ -13,13 +13,24 @@ import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 import { fetcher } from "../../../utils/fetcher";
-import { Message } from "../../../interfaces/Message";
+import { UniqueMessage } from "../../../interfaces/Message";
 
 interface SideNavProps {
   user: User | null;
 }
 
 export const SideNav: React.FC<SideNavProps> = ({ user }) => {
+  const [isActive, setIsActive] = useState(true);
+  // const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
+    useState(false);
+  const [threadMessages, setThreadMessages] = useState<
+    Record<string, UniqueMessage>
+  >({});
+  const sortedMessages = Object.values(threadMessages).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  console.log("sortedMessages: ", sortedMessages);
   const { userDispatch } = useContext(UserContext);
 
   const {
@@ -30,11 +41,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   } = useAppContext();
 
   const { socket } = useSocket();
-
-  const [isActive, setIsActive] = useState(true);
-  // const [isLoadingMessages, setIsLoadingMessages] = useState(true);
-  const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
-    useState(false);
 
   const { refetch: refetchCurrentUser, data: userData } = useCurrentUser({
     initialData: user,
@@ -119,6 +125,27 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   };
 
   useEffect(() => {
+    if (userMessages && userMessages.length > 0) {
+      const map: Record<string, UniqueMessage> = {};
+
+      userMessages.forEach((msg) => {
+        const threadId = orderIds(msg.senderId, msg.receiverId);
+        const existing = map[threadId];
+
+        // Only keep the most recent message
+        if (
+          !existing ||
+          new Date(msg.createdAt) > new Date(existing.createdAt)
+        ) {
+          map[threadId] = msg;
+        }
+      });
+
+      setThreadMessages(map);
+    }
+  }, [userMessages]);
+
+  useEffect(() => {
     if (selectedUserId) {
       refetchUserDetails();
       refetchMessages();
@@ -144,24 +171,37 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   }, [socket, userData?.id]);
 
   useEffect(() => {
-    if (!socket || !userData?.id) return;
+    const handleReceiveMessage = (newMessage: UniqueMessage) => {
+      if (!newMessage?.createdAt) return;
 
-    const handleReceiveMessage = (newMessage: Message) => {
-      // Check if this message involves the current user
-      if (
-        newMessage.receiverId === userData.id ||
-        newMessage.senderId === userData.id
-      ) {
-        refetchMessages(); // Updates the sidebar
-      }
+      const involved =
+        newMessage.receiverId === userData?.id ||
+        newMessage.senderId === userData?.id;
+      if (!involved) return;
+
+      const threadId = orderIds(newMessage.receiverId, newMessage.senderId);
+
+      setThreadMessages((prev) => {
+        const current = prev[threadId];
+        if (
+          !current ||
+          new Date(newMessage.createdAt) > new Date(current.createdAt)
+        ) {
+          return { ...prev, [threadId]: newMessage };
+        }
+        return prev;
+      });
     };
 
-    socket.on("receive-message", handleReceiveMessage);
+    if (socket && userData?.id) {
+      socket.on("receive-message", handleReceiveMessage);
+      return () => {
+        socket.off("receive-message", handleReceiveMessage);
+      };
+    }
 
-    return () => {
-      socket.off("receive-message", handleReceiveMessage);
-    };
-  }, [socket, userData?.id, refetchMessages]);
+    // No return needed when condition is false - useEffect will return undefined
+  }, [socket, userData?.id]);
 
   if (!userData) return null;
   return (
@@ -299,12 +339,12 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
             <div className="mb-3 flex flex-row items-center justify-between">
               <span className="font-bold">Messages</span>
               <span className="flex items-center justify-center text-sm bg-gray-300 h-5 w-5 rounded-full">
-                {userMessages?.length ?? 0}
+                {sortedMessages?.length ?? 0}
               </span>
             </div>
-            {Array.isArray(userMessages) && userMessages.length > 0 ? (
+            {Array.isArray(sortedMessages) && sortedMessages.length > 0 ? (
               <div className="max-h-96 overflow-y-auto overflow-x-hidden">
-                {userMessages?.map((message) => (
+                {sortedMessages?.map((message) => (
                   <div
                     key={message.id}
                     className="flex flex-col space-y-1 -mx-2"
