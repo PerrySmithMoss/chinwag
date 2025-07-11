@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 import dynamic from "next/dynamic";
 const Picker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
-import { UserContext } from "../../../context/user-context";
+import { useUser } from "../../../context/user-context";
 import { fetchAllMessagesWithUser } from "../../../api/message";
 import { Message } from "../../../interfaces/Message";
 import { fetchUsersByEmail } from "../../../api/user";
@@ -27,7 +27,7 @@ interface MainProps {
 
 export const Main: React.FC<MainProps> = ({ user }) => {
   const { socket, setSocket } = useSocket();
-  const { userDispatch } = useContext(UserContext);
+  const { userDispatch } = useUser();
   const {
     setMessages,
     messages,

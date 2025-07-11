@@ -30,3 +30,9 @@ export const UserContextProvider = ({ children }: IUserStateProvider) => {
 };
 
 export const useUser = () => useContext(UserContext);
+
+export const useRequiredUser = () => {
+  const { userState } = useContext(UserContext);
+  if (!userState.user) throw new Error("User not found in context");
+  return userState.user;
+};

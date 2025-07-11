@@ -21,7 +21,7 @@ const baseUrl = isServer ? process.env.NEXT_PUBLIC_API_BASE_URL : "/api";
 export const fetcher = async <TResponse = unknown, TRequest = unknown>(
   endpoint: string,
   options: FetchOptions<TRequest> = {}
-): Promise<TResponse | null> => {
+): Promise<TResponse> => {
   const { method = "GET", body, headers = {} } = options;
   const fullUrl = `${baseUrl}${endpoint}`;
   const res = await fetch(fullUrl, {
@@ -35,16 +35,10 @@ export const fetcher = async <TResponse = unknown, TRequest = unknown>(
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(errorText || `API error: ${res.status}`);
+    const errorBody = await res.json().catch(() => null);
+    const message = errorBody?.error || `API error: ${res.status}`;
+    throw new Error(message);
   }
 
-  const contentType = res.headers.get("content-type");
-
-  if (contentType?.includes("application/json")) {
-    return await res.json();
-  }
-
-  // Safely return null if no JSON
-  return null;
+  return res.json();
 };

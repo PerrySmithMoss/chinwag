@@ -1,9 +1,9 @@
 import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "../interfaces/User";
-import { UserContext } from "../context/user-context";
+import { useUser } from "../context/user-context";
 import { useCurrentUser } from "../hooks/queries/useCurrentUser";
 import { ChatLayout } from "../components/Chat/ChatLayout/ChatLayout";
 import { LoginForm } from "../components/LoginForm/LoginForm";
@@ -16,7 +16,7 @@ type UserData = {
 };
 
 const Home: NextPage<UserData> = ({ user }) => {
-  const { userDispatch, userState } = useContext(UserContext);
+  const { userDispatch, userState } = useUser();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,11 @@ const Home: NextPage<UserData> = ({ user }) => {
     data,
     refetch: refetchCurrentUser,
     isFetching,
-  } = useCurrentUser({ initialData: user, refetchOnWindowFocus: true });
+  } = useCurrentUser({
+    initialData: user,
+    refetchOnWindowFocus: true,
+    retry: false,
+  });
 
   const onSubmit = async (values: { email: string; password: string }) => {
     setLoading(true);
@@ -37,10 +41,9 @@ const Home: NextPage<UserData> = ({ user }) => {
 
       if (res?.error) {
         setLoginError(res.error);
-      } else {
-        setLoginError("An unexpected error occurred.");
-        refetchCurrentUser();
       }
+
+      refetchCurrentUser();
     } catch (e: unknown) {
       console.error(e);
       setLoginError("An unexpected error occurred.");
@@ -65,8 +68,8 @@ const Home: NextPage<UserData> = ({ user }) => {
     return null;
   }
 
-  return data && userState?.user ? (
-    <ChatLayout user={data} />
+  return userState.user ? (
+    <ChatLayout user={userState.user} />
   ) : (
     <div>
       <Head>

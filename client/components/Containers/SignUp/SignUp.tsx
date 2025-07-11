@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Login } from "../../Icons/Login";
-import { UserContext } from "../../../context/user-context";
+import { useUser } from "../../../context/user-context";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,7 +77,7 @@ type CreateUserInput = TypeOf<typeof createUserSchema>;
 
 export const SignUp: React.FC = () => {
   const router = useRouter();
-  const { userDispatch } = useContext(UserContext);
+  const { userDispatch } = useUser();
 
   const {
     register,

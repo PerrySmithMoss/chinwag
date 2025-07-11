@@ -1,5 +1,5 @@
-import { useContext, useEffect } from "react";
-import { UserContext } from "../../../context/user-context";
+import { useEffect } from "react";
+import { useUser } from "../../../context/user-context";
 import { SideNav } from "../../Chat/SideNav/SideNav";
 import { Main } from "../../Chat/Main/Main";
 import { User } from "../../../interfaces/User";
@@ -13,7 +13,7 @@ interface ChatProps {
 }
 
 export const Chat: React.FC<ChatProps> = ({ user }) => {
-  const { userDispatch } = useContext(UserContext);
+  const { userDispatch } = useUser();
 
   const { data } = useCurrentUser({ initialData: user });
 

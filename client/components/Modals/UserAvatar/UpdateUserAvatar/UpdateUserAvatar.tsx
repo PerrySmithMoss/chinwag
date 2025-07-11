@@ -1,9 +1,9 @@
 import Image from "next/image";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 
-import { UserContext } from "../../../../context/user-context";
+import { useRequiredUser, useUser } from "../../../../context/user-context";
 import { useCurrentUser } from "../../../../hooks/queries/useCurrentUser";
 import { fetcher } from "../../../../utils/fetcher";
 
@@ -18,7 +18,8 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
   onClose,
   selector,
 }) => {
-  const { userState, userDispatch } = useContext(UserContext);
+  const { userDispatch } = useUser();
+  const user = useRequiredUser();
 
   const ref = useRef<Element | DocumentFragment | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +72,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     const reader = new FileReader();
     reader.readAsDataURL(selectedFile);
     reader.onloadend = () => {
-      uploadImageToCloudinary(userState.user.profile.avatarId);
+      uploadImageToCloudinary(user.profile.avatarId);
     };
     reader.onerror = () => {
       console.error("AHHHHHHHH!!");
@@ -127,7 +128,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         image_url: cloudinaryResponseJSON.secure_url,
       };
 
-      await fetcher(`/users/avatar/${userState.user.id}`, {
+      await fetcher(`/users/avatar/${user.id}`, {
         method: "POST",
         body: photoData,
       });
