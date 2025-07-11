@@ -46,6 +46,7 @@ export const AppContextProvider = ({
   const [isRecipientSearchResultsOpen, setIsRecipientSearchResultsOpen] =
     useState<boolean>(false);
   const [roomName, setRoomName] = useState<string | undefined>(undefined);
+
   return (
     <AppContext.Provider
       value={{

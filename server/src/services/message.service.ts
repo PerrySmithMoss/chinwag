@@ -172,7 +172,7 @@ export async function getMessagesBetweenTwoUsers(
 }
 
 export async function getUsersMessages(userId: number) {
-  const messages = await prisma.$queryRawUnsafe(`
+  const messages = await prisma.$queryRawUnsafe<any[]>(`
     SELECT
       m.*,
       s."firstName" AS "senderFirstName",
@@ -205,5 +205,27 @@ export async function getUsersMessages(userId: number) {
     ORDER BY m."createdAt" DESC
   `);
 
-  return messages;
+  // transform flat fields into nested objects
+  return messages.map((msg) => ({
+    id: msg.id,
+    message: msg.message,
+    senderId: msg.senderId,
+    receiverId: msg.receiverId,
+    createdAt: msg.createdAt,
+    updatedAt: msg.updatedAt,
+    sender: {
+      id: msg.senderId,
+      firstName: msg.senderFirstName,
+      lastName: msg.senderLastName,
+      username: msg.senderUsername,
+      avatar: msg.senderAvatar,
+    },
+    receiver: {
+      id: msg.receiverId,
+      firstName: msg.receiverFirstName,
+      lastName: msg.receiverLastName,
+      username: msg.receiverUsername,
+      avatar: msg.receiverAvatar,
+    },
+  }));
 }

@@ -20,7 +20,6 @@ import { formatDate } from "../../../utils/dateTime";
 import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { EmojiClickData } from "emoji-picker-react";
-import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 
 interface MainProps {
   user: User | null;
@@ -71,11 +70,6 @@ export const Main: React.FC<MainProps> = ({ user }) => {
       enabled: false,
     }
   );
-
-  const { refetch: refetchMessages } = useAllUserMessages(userData?.id, {
-    refetchOnWindowFocus: false,
-    enabled: false,
-  });
 
   const {
     data: recipientSearchResults,
@@ -236,24 +230,27 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     }
 
     if (socket !== undefined) {
-      socket.on("receive-message", (newMessage: Message) => {
-        // Re-fetch the user's messages in sidebar when a message has been sent or received
-        refetchMessages();
+      const handleReceiveMessage = (newMessage: Message) => {
+        const threadId = orderIds(newMessage.receiverId, newMessage.senderId);
 
-        const { receiverId, senderId } = newMessage;
+        if (threadId === roomName) {
+          setMessages((prevMessages) => {
+            if (prevMessages.some((msg) => msg.id === newMessage.id)) {
+              return prevMessages;
+            }
 
-        // Only overwrite the messages state if the receiver has a chat open with the user sending the message
-        if (orderIds(receiverId, senderId) === roomName) {
-          setMessages((prevMessages: Message[]) => [
-            newMessage,
-            ...prevMessages,
-          ]);
+            return [newMessage, ...prevMessages];
+          });
         }
-      });
+      };
 
-      return () => socket.off("receive-message");
+      socket.on("receive-message", handleReceiveMessage);
+
+      return () => {
+        socket.off("receive-message", handleReceiveMessage);
+      };
     }
-  }, [socket, roomName, refetchMessages, setMessages, setSocket]);
+  }, [socket, roomName, setMessages, setSocket]);
 
   const searchForUserByEmail = useCallback(async () => {
     await refetchRecipientSearchResults();
@@ -381,7 +378,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 className="rounded-full h-9 w-9"
                                 alt="User Avatar"
                                 src={
-                                  message?.sender?.profile?.avatar ??
+                                  message.sender.profile?.avatar ??
                                   "/assets/images/default-avatar.jpg"
                                 }
                                 height={36}

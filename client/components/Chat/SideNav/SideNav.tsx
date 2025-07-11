@@ -13,7 +13,7 @@ import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 import { fetcher } from "../../../utils/fetcher";
-import { UniqueMessage } from "../../../interfaces/Message";
+import { Message, ThreadMessage } from "../../../interfaces/Message";
 
 interface SideNavProps {
   user: User | null;
@@ -25,12 +25,12 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const [isUpdateUserAvatarModalOpen, setIsUpdateUserAvatarModalOpen] =
     useState(false);
   const [threadMessages, setThreadMessages] = useState<
-    Record<string, UniqueMessage>
+    Record<string, ThreadMessage>
   >({});
   const sortedMessages = Object.values(threadMessages).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
-  console.log("sortedMessages: ", sortedMessages);
+
   const { userDispatch } = useContext(UserContext);
 
   const {
@@ -126,18 +126,40 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
   useEffect(() => {
     if (userMessages && userMessages.length > 0) {
-      const map: Record<string, UniqueMessage> = {};
+      const map: Record<string, ThreadMessage> = {};
 
       userMessages.forEach((msg) => {
         const threadId = orderIds(msg.senderId, msg.receiverId);
         const existing = map[threadId];
 
-        // Only keep the most recent message
+        const formatted: ThreadMessage = {
+          id: msg.id,
+          message: msg.message,
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+          createdAt: msg.createdAt,
+          updatedAt: msg.updatedAt,
+          sender: {
+            id: msg.senderId,
+            firstName: msg.senderFirstName,
+            lastName: msg.senderLastName,
+            username: msg.senderUsername,
+            avatar: msg.senderAvatar,
+          },
+          receiver: {
+            id: msg.receiverId,
+            firstName: msg.receiverFirstName,
+            lastName: msg.receiverLastName,
+            username: msg.receiverUsername,
+            avatar: msg.receiverAvatar,
+          },
+        };
+
         if (
           !existing ||
-          new Date(msg.createdAt) > new Date(existing.createdAt)
+          new Date(formatted.createdAt) > new Date(existing.createdAt)
         ) {
-          map[threadId] = msg;
+          map[threadId] = formatted;
         }
       });
 
@@ -158,12 +180,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     }
   }, [userData, userDispatch]);
 
-  // useEffect(() => {
-  //   if (userMessages) {
-  //     setIsLoadingMessages(false);
-  //   }
-  // }, [userMessages, setIsLoadingMessages]);
-
   useEffect(() => {
     if (socket && userData?.id) {
       socket.emit("join-user-room", userData.id);
@@ -171,7 +187,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   }, [socket, userData?.id]);
 
   useEffect(() => {
-    const handleReceiveMessage = (newMessage: UniqueMessage) => {
+    const handleReceiveMessage = (newMessage: Message) => {
       if (!newMessage?.createdAt) return;
 
       const involved =
@@ -181,13 +197,37 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
       const threadId = orderIds(newMessage.receiverId, newMessage.senderId);
 
+      // Format into ThreadMessage shape
+      const formatted: ThreadMessage = {
+        id: newMessage.id,
+        createdAt: newMessage.createdAt,
+        updatedAt: newMessage.updatedAt,
+        message: newMessage.message,
+        senderId: newMessage.senderId,
+        receiverId: newMessage.receiverId,
+        sender: {
+          id: newMessage.sender.id,
+          firstName: newMessage.sender.firstName,
+          lastName: newMessage.sender.lastName,
+          username: newMessage.sender.username,
+          avatar: newMessage.sender.profile.avatar,
+        },
+        receiver: {
+          id: newMessage.receiver.id,
+          firstName: newMessage.receiver.firstName,
+          lastName: newMessage.receiver.lastName,
+          username: newMessage.receiver.username,
+          avatar: newMessage.receiver.profile.avatar,
+        },
+      };
+
       setThreadMessages((prev) => {
         const current = prev[threadId];
         if (
           !current ||
-          new Date(newMessage.createdAt) > new Date(current.createdAt)
+          new Date(formatted.createdAt) > new Date(current.createdAt)
         ) {
-          return { ...prev, [threadId]: newMessage };
+          return { ...prev, [threadId]: formatted };
         }
         return prev;
       });
@@ -199,11 +239,10 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         socket.off("receive-message", handleReceiveMessage);
       };
     }
-
-    // No return needed when condition is false - useEffect will return undefined
   }, [socket, userData?.id]);
 
   if (!userData) return null;
+
   return (
     <aside className="hidden sm:flex flex-col py-3 pl-0 sm:pl-6 pr-2 w-64 bg-white flex-shrink-0 h-full">
       <div className="flex flex-col justify-between flex-1">
@@ -364,7 +403,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                             alt="Message sender Avatar"
                             className="rounded-full"
                             src={
-                              message?.senderAvatar ??
+                              message.sender.avatar ??
                               "/assets/images/default-avatar.jpg"
                             }
                             height={40}
@@ -375,7 +414,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                             alt="Message receiver avatar"
                             className="rounded-full"
                             src={
-                              message?.receiverAvatar ??
+                              message.receiver.avatar ??
                               "/assets/images/default-avatar.jpg"
                             }
                             height={40}
@@ -388,8 +427,8 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           <div className="w-full flex justify-center items-center">
                             <div className="w-full flex-col items-center justify-between space-x-1">
                               <p className="text-sm text-left font-semibold">
-                                {message.senderFirstName}{" "}
-                                {message.senderLastName}
+                                {message.sender.firstName}{" "}
+                                {message.sender.lastName}
                               </p>
                               <p className="text-sm text-left">
                                 {truncateString(message.message, 23)}
@@ -407,8 +446,8 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
                           <div className="w-full flex justify-center items-center">
                             <div className="w-full flex-col items-center justify-between space-x-1">
                               <p className="text-sm text-left font-semibold">
-                                {message.receiverFirstName}{" "}
-                                {message.receiverLastName}
+                                {message.receiver.firstName}{" "}
+                                {message.receiver.lastName}
                               </p>
                               <p className="text-sm text-left">
                                 {truncateString(message.message, 23)}
