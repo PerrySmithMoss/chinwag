@@ -1,35 +1,34 @@
 import { User } from "../interfaces/User";
 
-export interface initialStateI {
-  user: User;
-}
-
-export interface IUserActions {
-  type: "SET_USER";
-  payload: User;
-}
-
+// --- Types ---
 export interface IUserState {
-  user: User;
+  user: User | null;
 }
 
 export const initialState: IUserState = {
-  user: {} as User,
+  user: null,
 };
 
+export type UserDispatchTypes =
+  | { type: "SET_USER"; payload: User }
+  | { type: "REMOVE_USER" };
+
+// --- Action Types ---
 export const actionTypes = {
-  SET_USER: "SET_USER",
+  SET_USER: "SET_USER" as const,
+  REMOVE_USER: "REMOVE_USER" as const,
 };
 
-export type UserDispatchTypes = IUserActions;
-
+// --- Reducer ---
 const userReducer = (
-  state: initialStateI = initialState,
+  state: IUserState = initialState,
   action: UserDispatchTypes
-) => {
+): IUserState => {
   switch (action.type) {
     case actionTypes.SET_USER:
       return { ...state, user: action.payload };
+    case actionTypes.REMOVE_USER:
+      return { ...state, user: null };
     default:
       return state;
   }

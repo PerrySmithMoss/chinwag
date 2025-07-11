@@ -24,7 +24,7 @@ const Home: NextPage<UserData> = ({ user }) => {
     data,
     refetch: refetchCurrentUser,
     isFetching,
-  } = useCurrentUser({ initialData: user, refetchOnWindowFocus: false });
+  } = useCurrentUser({ initialData: user, refetchOnWindowFocus: true });
 
   const onSubmit = async (values: { email: string; password: string }) => {
     setLoading(true);
@@ -64,7 +64,8 @@ const Home: NextPage<UserData> = ({ user }) => {
   if (loading) {
     return null;
   }
-  return data && userState ? (
+
+  return data && userState?.user ? (
     <ChatLayout user={data} />
   ) : (
     <div>

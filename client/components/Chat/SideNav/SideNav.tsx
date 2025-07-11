@@ -1,8 +1,8 @@
 import Image from "next/image";
 import styles from "./SidebarNav.module.css";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "../../../interfaces/User";
-import { UserContext } from "../../../context/user-context";
+import { useUser } from "../../../context/user-context";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
@@ -31,7 +31,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const { userDispatch } = useContext(UserContext);
+  const { userDispatch } = useUser();
 
   const {
     selectedUserId,
@@ -42,7 +42,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
 
   const { socket } = useSocket();
 
-  const { refetch: refetchCurrentUser, data: userData } = useCurrentUser({
+  const { data: userData } = useCurrentUser({
     initialData: user,
     refetchOnWindowFocus: false,
   });
@@ -112,7 +112,7 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         method: "DELETE",
       });
 
-      refetchCurrentUser();
+      userDispatch({ type: "REMOVE_USER" });
     } catch (err: unknown) {
       console.log("Login error: ", err);
 

@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useReducer } from "react";
 import userReducer, {
   initialState,
-  IUserActions,
   IUserState,
+  UserDispatchTypes,
 } from "./user-reducer";
 
 export interface IUserContextProps {
   userState: IUserState;
-  userDispatch: React.Dispatch<IUserActions>;
+  userDispatch: React.Dispatch<UserDispatchTypes>;
 }
 
 export const UserContext = createContext<IUserContextProps>({
@@ -29,4 +29,4 @@ export const UserContextProvider = ({ children }: IUserStateProvider) => {
   );
 };
 
-export const useUserValue = () => useContext(UserContext);
+export const useUser = () => useContext(UserContext);
