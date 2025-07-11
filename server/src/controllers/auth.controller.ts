@@ -50,10 +50,7 @@ export async function registerSessionHandler(
     res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
     // send the tokens
-    res.status(200).send({
-      accessToken,
-      refreshToken,
-    });
+    res.status(200).json({ success: true });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       // The .code property can be accessed in a type-safe manner
@@ -107,14 +104,9 @@ export async function createSessionHandler(
 
     // Set tokens as cookies
     res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-
     res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
-    // send the tokens
-    res.status(200).send({
-      accessToken,
-      refreshToken,
-    });
+    res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json(err);
     console.log(err);
@@ -152,7 +144,7 @@ export async function refreshAccessTokenHandler(req: Request, res: Response) {
 
     const accessToken = signAccessToken(userWithFieldsRemoved);
 
-    res.send({ accessToken });
+    res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json(err);
     console.log(err);
@@ -179,7 +171,7 @@ export const deleteUserSessionHandler = async (req: Request, res: Response) => {
 
     res.removeHeader("x-access-token");
 
-    res.sendStatus(204);
+    res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json(err);
   }
