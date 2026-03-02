@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - "server/**"
+      - "client/**"
       - ".github/workflows/**"
       - "docker-stack.yaml"
 

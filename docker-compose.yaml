@@ -15,7 +15,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - chinwag_net
+      - portfolio_network
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -37,13 +37,13 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - chinwag_net
+      - portfolio_network
     volumes:
       - ./server/src:/app/src:cached
       - /app/node_modules
 
 networks:
-  chinwag_net:
+  portfolio_network:
     driver: bridge
 
 volumes:
