@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   chinwag-api:
     image: ghcr.io/perrysmithmoss/chinwag:${GIT_COMMIT_HASH:-latest}
@@ -15,15 +17,15 @@ services:
       - chinwag_cloudinary_cloud_name
       - chinwag_cloudinary_api_key
       - chinwag_cloudinary_api_secret
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.chinwag-api.loadbalancer.server.port=5560"
-      - "traefik.http.routers.chinwag-api.rule=Host(`chinwag-api.perrysmithmoss.com`)"
-      - "traefik.http.routers.chinwag-api.entrypoints=websecure"
-      - "traefik.http.routers.chinwag-api.tls.certresolver=myresolver"
     networks:
       - portfolio_network
     deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.chinwag-api.loadbalancer.server.port=5560"
+        - "traefik.http.routers.chinwag-api.rule=Host(`chinwag-api.perrysmithmoss.com`)"
+        - "traefik.http.routers.chinwag-api.entrypoints=websecure"
+        - "traefik.http.routers.chinwag-api.tls.certresolver=myresolver"
       update_config:
         order: start-first
     depends_on:
