@@ -12,7 +12,8 @@ services:
       - CLOUDINARY_API_KEY=/run/secrets/chinwag_cloudinary_api_key
       - CLOUDINARY_API_SECRET=/run/secrets/chinwag_cloudinary_api_secret
     secrets:
-      - chinwag_database_url
+      - source: chinwag_database_url_v2
+        target: chinwag_database_url
       - chinwag_jwt_secret
       - chinwag_cloudinary_cloud_name
       - chinwag_cloudinary_api_key
@@ -36,7 +37,7 @@ networks:
     external: true
 
 secrets:
-  chinwag_database_url:
+  chinwag_database_url_v2:
     external: true
   chinwag_jwt_secret:
     external: true

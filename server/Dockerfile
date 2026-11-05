@@ -1,7 +1,7 @@
 # ------------------------------------------------
 # Base stage: installs system deps and copies base files
 # ------------------------------------------------
-ARG NODE_IMAGE=node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d
+ARG NODE_IMAGE=node:22.23.4-trixie-slim@sha256:be1e2a3dc2c4fd68cdfadad2a696a280e0d2749098bee509230174d72fb768c6
 FROM ${NODE_IMAGE} AS base
 
 WORKDIR /app
@@ -65,6 +65,11 @@ FROM ${NODE_IMAGE} AS production
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates openssl tini && \
     rm -rf /var/lib/apt/lists/*
+
+# Runtime and Prisma migrations only need Node, not package installers.
+RUN rm -rf /usr/local/lib/node_modules /opt/yarn-* \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 WORKDIR /app
 
