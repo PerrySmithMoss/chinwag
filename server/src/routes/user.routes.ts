@@ -13,6 +13,7 @@ import {
   searchForUserByEmailHandler,
 } from "../controllers/user.controller";
 import { requireUser } from "../middleware/requireUser";
+import { requireAccountOwner } from "../middleware/requireAccountOwner";
 
 const userRouter = Router();
 
@@ -35,10 +36,10 @@ userRouter.get("/friends/:id", getUserFriendsHandler);
 userRouter.get("/:id", getUserHandler);
 
 // Update user details
-userRouter.patch("/:id", updateUserHandler);
+userRouter.patch("/:id", requireUser, requireAccountOwner, updateUserHandler);
 
-// Delete a specifc user
-userRouter.delete("/:id", deleteUserHandler);
+// Delete the signed-in user's account
+userRouter.delete("/:id", requireUser, requireAccountOwner, deleteUserHandler);
 
 // Search for a user by username
 userRouter.get("/search/username/:username", searchForUserByUsernameHandler);

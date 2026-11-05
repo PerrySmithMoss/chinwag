@@ -26,3 +26,8 @@ export type CreateUserInput = Omit<
   TypeOf<typeof createUserSchema>,
   "body.passwordConfirmation"
 >;
+
+export const updateProfileSchema = createUserSchema.shape.body
+  .pick({ firstName: true, lastName: true, username: true })
+  .partial()
+  .strict();
