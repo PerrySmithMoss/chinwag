@@ -16,6 +16,8 @@ on:
       - "client/**"
       - ".github/workflows/**"
       - "docker-stack.yaml"
+  pull_request:
+    branches: [master]
 
 permissions:
   contents: read
@@ -25,6 +27,41 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  validate-rollback-inputs:
+    if: github.event_name == 'workflow_dispatch' && (inputs.rollback_digest != '' || inputs.rollback_revision != '')
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require a valid digest and revision together
+        shell: bash
+        env:
+          ROLLBACK_DIGEST: ${{ inputs.rollback_digest }}
+          ROLLBACK_REVISION: ${{ inputs.rollback_revision }}
+        run: |
+          if [[ ! "$ROLLBACK_DIGEST" =~ ^sha256:[a-f0-9]{64}$ || ! "$ROLLBACK_REVISION" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "::error::Provide both a sha256 digest and its 40-character commit SHA."
+            exit 1
+          fi
+
+  build-client:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    env:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:5560/api
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:5560
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: yarn
+          cache-dependency-path: client/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+
   run-tests:
     runs-on: ubuntu-latest
     steps:
@@ -55,7 +92,7 @@ jobs:
   build-and-push-image:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
-    if: github.ref == 'refs/heads/master' && inputs.rollback_digest == '' && inputs.rollback_revision == ''
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master' && inputs.rollback_digest == '' && inputs.rollback_revision == ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,12 +155,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
-    needs: [build-and-push-image]
+    needs: [build-and-push-image, validate-rollback-inputs]
     if: |
       !cancelled() && github.ref == 'refs/heads/master' &&
       (needs.build-and-push-image.result == 'success' ||
-       (github.event_name == 'workflow_dispatch' && needs.build-and-push-image.result == 'skipped' &&
-        inputs.rollback_digest != '' && inputs.rollback_revision != ''))
+       (needs.build-and-push-image.result == 'skipped' && needs.validate-rollback-inputs.result == 'success'))
     environment: VPS Production
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -142,7 +178,7 @@ jobs:
           [[ "$RELEASE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
           [[ "$RELEASE_REVISION" =~ ^[a-f0-9]{40}$ ]]
           [[ "$VPS_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
-          test -n "$VPS_KNOWN_HOSTS" && test -n "$APP_RELEASE_KEY"
+          [[ -n "$VPS_KNOWN_HOSTS" && -n "$APP_RELEASE_KEY" ]]
           umask 077
           ssh_dir=$(mktemp -d)
           trap 'rm -rf -- "$ssh_dir"' EXIT
