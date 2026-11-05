@@ -8,8 +8,8 @@ type CreateUserInput = Pick<
   "email" | "password" | "firstName" | "lastName" | "username"
 >;
 
-export async function createUser(userInput: CreateUserInput) {
-  const hashedPassword = await hash(userInput.password, {
+export async function createUser({ email, password, firstName, lastName, username }: CreateUserInput) {
+  const hashedPassword = await hash(password, {
     type: argon2id,
     memoryCost: 2 ** 16,
     timeCost: 3,
@@ -18,7 +18,10 @@ export async function createUser(userInput: CreateUserInput) {
 
   const user = await prisma.user.create({
     data: {
-      ...userInput,
+      email,
+      firstName,
+      lastName,
+      username,
       password: hashedPassword,
       profile: {
         create: {},
@@ -228,20 +231,8 @@ export async function deleteUserProfile(userId: number, async: boolean) {
   }
 }
 
-export async function deleteUser(userId: number, async: boolean) {
-  if (async === true) {
-    return await prisma.user.delete({
-      where: {
-        id: userId,
-      },
-    });
-  } else {
-    return prisma.user.delete({
-      where: {
-        id: userId,
-      },
-    });
-  }
+export function deleteUser(userId: number) {
+  return prisma.user.delete({ where: { id: userId } });
 }
 
 export async function updateUsersAvatar(

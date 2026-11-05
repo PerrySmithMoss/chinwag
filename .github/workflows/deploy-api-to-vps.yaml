@@ -170,6 +170,11 @@ jobs:
           name: api-image-vulnerabilities
           path: ${{ runner.temp }}/image-scan
 
+      - name: Test the scanned release image
+        env:
+          RELEASE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: sh server/scripts/test-image.sh "ghcr.io/perrysmithmoss/chinwag@$RELEASE_DIGEST"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         if: github.ref == 'refs/heads/master'

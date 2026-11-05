@@ -33,7 +33,8 @@ for attempt in $(seq 1 40); do
   fi
   sleep 1
 done
-if ! SMOKE_API_ORIGIN="$origin" node "$(dirname "$0")/smoke-api.mjs"; then
+export SMOKE_API_ORIGIN="$origin"
+if ! node "$(dirname "$0")/smoke-api.mjs" || ! node "$(dirname "$0")/test-account-management.mjs"; then
   docker logs "$api" >&2
   exit 1
 fi

@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 import { Request, Response } from "express";
 import {
   createUser,
@@ -15,7 +15,7 @@ import {
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../config/config";
 import * as Cloudinary from "cloudinary";
-import { CreateUserInput } from "../schema/User.schema";
+import { CreateUserInput, updateProfileSchema } from "../schema/User.schema";
 import { removeCharsFromString } from "../utils/removeCharsFromString";
 
 export const createUserHandler = async (
@@ -127,117 +127,36 @@ export const getUserFriendsHandler = async (req: Request, res: Response) => {
 };
 
 export const updateUserHandler = async (req: Request, res: Response) => {
-  const body = req.body;
+  const profile = updateProfileSchema.safeParse(req.body);
+  if (!profile.success) {
+    res.status(400).json({ message: "Invalid profile fields." });
+    return;
+  }
+
   try {
-    const userId = parseInt(req.params.id);
-
-    // First identify whether the user exists or not
-    const validUser = await findUserById(userId, false);
-
-    if (!validUser) {
-      res.status(400).json({
-        message: "Could not find a user matching the given ID.",
-      });
+    const updatedUser = await updateUserWithSpecifiedData(res.locals.user.id, profile.data);
+    const publicUser = removeFieldsFromObject(updatedUser, ["password", "email"]);
+    res.status(201).json(publicUser);
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      res.status(400).json({ message: "No user was found with the given ID." });
       return;
     }
-
-    const updatedUser = await updateUserWithSpecifiedData(userId, body);
-
-    const userWithFieldsRemoved = removeFieldsFromObject(updatedUser, [
-      "password",
-      "email",
-    ]);
-
-    res.status(201).json(userWithFieldsRemoved);
-  } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: "Could not update the account." });
   }
 };
 
-export const deleteUserHandler = async (req: Request, res: Response) => {
+export const deleteUserHandler = async (_req: Request, res: Response) => {
+  const userId = res.locals.user.id;
   try {
-    const userId = parseInt(req.params.id);
-
-    // First identify whether the user exists or not
-    const validUser = await findUserById(userId, false);
-
-    if (!validUser) {
-      res.status(400).json({
-        message: "Could not find a user matching the given ID.",
-      });
-      return;
-    }
-
-    // // delete the user's profile
-    // const userProfile = prisma.profile.delete({
-    //   where: { id: userId },
-    // });
-
-    // if (!userProfile) {
-    //   res
-    //     .status(400)
-    //     .json({ message: "No profile was found with the given user ID" });
-    //   return;
-    // }
-
-    // // delete the user's posts
-    // const userPosts: any = prisma.post.deleteMany({
-    //   where: {
-    //     authorId: userId,
-    //   },
-    // });
-
-    // if (!userPosts) {
-    //   res
-    //     .status(400)
-    //     .json({ message: "No posts were found with the given user ID" });
-    //   return;
-    // }
-
-    // // Delete the users messages
-    // const messages = prisma.message.deleteMany({
-    //   where: {
-    //     OR: [
-    //       {
-    //         senderId: userId,
-    //         receiverId: userId,
-    //       },
-    //     ],
-    //   },
-    // });
-
-    // if (!messages) {
-    //   res
-    //     .status(400)
-    //     .json({ message: "No messages were found with the given user ID" });
-    //   return;
-    // }
-
-    // Delete the user
-    const user = deleteUser(userId, false);
-
-    if (!user) {
-      res.status(400).json({ message: "No user was found with the given ID" });
-      return;
-    }
-
-    const transaction = await prisma.$transaction(async (prisma) => {
-      return user;
-    });
-
-    if (!transaction) {
-      res.status(400).json({
-        message: "There was a problem while attempting to delete the user.",
-      });
-      return;
-    }
-
-    res
-      .status(201)
-      .json({ message: `User ${userId} has successfully been deleted.` });
+    await deleteUser(userId);
+    res.status(201).json({ message: `User ${userId} has successfully been deleted.` });
   } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      res.status(400).json({ message: "No user was found with the given ID." });
+      return;
+    }
+    res.status(500).json({ message: "Could not delete the account." });
   }
 };
 
