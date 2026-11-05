@@ -62,6 +62,13 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
 
+  build-api-image:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --platform linux/amd64 ./server
+
   run-tests:
     runs-on: ubuntu-latest
     steps:

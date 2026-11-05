@@ -1,13 +1,14 @@
 # ------------------------------------------------
 # Base stage: installs system deps and copies base files
 # ------------------------------------------------
-FROM node:22.14.0-bullseye-slim AS base
+ARG NODE_IMAGE=node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d
+FROM ${NODE_IMAGE} AS base
 
 WORKDIR /app
 
 # Install system dependencies once
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 make g++ && \
+    apt-get install -y --no-install-recommends ca-certificates openssl python3 make g++ && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     npm install -g node-gyp && \
     rm -rf /var/lib/apt/lists/*
@@ -58,10 +59,12 @@ RUN yarn install --production --frozen-lockfile --prefer-offline
 # ------------------------------------------------
 # Final production image: minimal, no build tools
 # ------------------------------------------------
-FROM node:22.14.0-bullseye-slim AS production
+FROM ${NODE_IMAGE} AS production
 
 # Install tini as init system for signal handling
-RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates openssl tini && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
