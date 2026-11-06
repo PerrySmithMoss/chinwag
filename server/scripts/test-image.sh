@@ -29,11 +29,18 @@ docker run -d --name "$api" --network "$fixture" -p 127.0.0.1::5560 \
   -e NODE_ENV=production "$image" >/dev/null
 origin="http://$(docker port "$api" 5560/tcp)"
 for _ in $(seq 1 40); do
-  if curl -sS --max-time 2 -o /dev/null "$origin" 2>/dev/null; then
-    break
-  fi
-  sleep 1
+  health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$api")
+  case "$health" in
+    healthy) break ;;
+    starting) sleep 1 ;;
+    *) break ;;
+  esac
 done
+if [ "$health" != healthy ]; then
+  echo "API container did not become healthy (status: ${health:-missing})" >&2
+  docker logs "$api" >&2
+  exit 1
+fi
 export SMOKE_API_ORIGIN="$origin"
 if ! node "$(dirname "$0")/smoke-api.mjs" ||
    ! node "$(dirname "$0")/test-account-management.mjs" ||
