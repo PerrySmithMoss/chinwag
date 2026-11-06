@@ -89,4 +89,8 @@ ENTRYPOINT ["/sbin/tini", "--"]
 
 EXPOSE 5560
 
+# /api/users/me returns 403 without credentials once the API is accepting requests.
+HEALTHCHECK --interval=5s --timeout=2s --start-period=30s --start-interval=1s --retries=3 \
+    CMD ["node", "-e", "fetch('http://127.0.0.1:' + (Number(process.env.PORT) || 5560) + '/api/users/me').then(response => process.exit(response.status === 403 ? 0 : 1), () => process.exit(1))"]
+
 CMD ["/production-entry.sh"]
