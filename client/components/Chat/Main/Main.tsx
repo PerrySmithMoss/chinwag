@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 import dynamic from "next/dynamic";
@@ -12,7 +12,6 @@ import { fetchUsersByEmail } from "../../../api/user";
 import { useAppContext } from "../../../context/global.context";
 import { useSocket } from "../../../context/socket.context";
 import { orderIds } from "../../../utils/orderIds";
-import { io } from "socket.io-client";
 import useDebounce from "../../../hooks/useDebounce";
 import ClipLoader from "react-spinners/ClipLoader";
 import { User } from "../../../interfaces/User";
@@ -26,11 +25,9 @@ interface MainProps {
 }
 
 export const Main: React.FC<MainProps> = ({ user }) => {
-  const { socket, setSocket } = useSocket();
+  const socket = useSocket();
   const { userDispatch } = useUser();
   const {
-    setMessages,
-    messages,
     selectedUserId,
     setSelectedUserId,
     roomName,
@@ -41,9 +38,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     setIsRecipientSearchResultsOpen,
   } = useAppContext();
 
+  const [messages, setMessages] = useState<Message[]>([]);
   const [recipientInput, setRecipientInput] = useState<string>("");
   const debouncedSearchTerm = useDebounce(recipientInput, 1500);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const searchEmail = submittedEmail || debouncedSearchTerm;
 
   const [
     earlierMessagesPaginationHasMore,
@@ -73,15 +72,14 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
   const {
     data: recipientSearchResults,
-    refetch: refetchRecipientSearchResults,
     isError: recipientSearchResultsError,
     isFetching: isRecipientSearchResultsFetching,
   } = useQuery({
-    queryKey: ["recipientSearchResults"],
-    queryFn: () => fetchUsersByEmail(recipientInput),
-    enabled: false,
+    queryKey: ["recipientSearchResults", userData?.id, searchEmail],
+    queryFn: () => fetchUsersByEmail(searchEmail),
+    enabled: !!searchEmail && searchEmail === recipientInput,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: false,
   });
 
   const handleShowEmojis = () => {
@@ -89,26 +87,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     setShowEmojis(!showEmojis);
   };
 
-  const handleSendMessage = async () => {
-    if (!userData || !selectedUserId) {
-      console.warn("Missing user data or selected user");
-      return;
-    }
-
-    sendMessage(userData.id, selectedUserId as number, newMessage);
+  const handleSendMessage = () => {
+    if (!socket?.connected || !userData || !selectedUserId || !newMessage.trim()) return;
+    socket.emit("send-message", roomName, userData.id, selectedUserId, newMessage);
     setNewMessage("");
   };
-
-  function joinRoom(roomId: string, selectedUserId: number) {
-    if (!userData?.id) {
-      return alert("Please login");
-    }
-
-    socket?.emit("join-room", roomId, selectedUserId, userData.id);
-
-    // dispatch for notifications
-    // dispatch(resetNotifications(roomId));
-  }
 
   const onEmojiClick = (emojiObject: EmojiClickData) => {
     if (!emojiRef.current) return;
@@ -133,36 +116,21 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     }, 0);
   };
 
-  const handleKeyPress = (ev: React.KeyboardEvent) => {
-    if (ev.key === "Enter") {
-      if (newMessage === "") {
-        console.log("Please enter a message");
-      } else {
-        if (!userData || !selectedUserId) {
-          console.warn("Missing user data or selected user");
-          return;
-        }
-
-        sendMessage(userData.id, selectedUserId as number, newMessage);
-        setNewMessage("");
-      }
-    }
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSendMessage();
   };
-
-  function sendMessage(senderId: number, receiverId: number, message: string) {
-    socket?.emit("send-message", roomName, senderId, receiverId, message);
-  }
 
   const handleChangeRecipientInput = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRecipientInput(event.target.value);
+    setSubmittedEmail("");
     setIsRecipientSearchResultsOpen(true);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
-      searchForUserByEmail();
+      setSubmittedEmail(recipientInput);
     }
   };
 
@@ -176,7 +144,6 @@ export const Main: React.FC<MainProps> = ({ user }) => {
 
     const roomId = orderIds(userData.id, userId);
     setRoomName(roomId);
-    joinRoom(roomId, userId);
 
     setCreateNewMessage(false);
     setIsRecipientSearchResultsOpen(false);
@@ -204,79 +171,56 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   useEffect(() => {
-    if (selectedUserId && userData?.id) {
-      refetchUserDetails();
-      fetchAllMessagesWithUser(selectedUserId, userData.id).then((json) =>
-        setMessages(json)
-      );
+    if (!selectedUserId || !userData?.id) return;
+
+    const userId = userData.id;
+    const recipientId = selectedUserId;
+    let active = true;
+    function loadThread() {
+      fetchAllMessagesWithUser(recipientId, userId)
+        .then((thread) => {
+          if (!active) return;
+          setMessages((previous) => {
+            const byId = new Map([...previous, ...thread].map((message) => [message.id, message]));
+            return [...byId.values()].sort((a, b) =>
+              Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id - a.id
+            );
+          });
+        })
+        .catch((error) => { if (active) console.error("Could not load conversation:", error); });
     }
-  }, [selectedUserId, refetchUserDetails, userData?.id, setMessages]);
+
+    refetchUserDetails();
+    loadThread();
+    socket?.on("connect", loadThread);
+    return () => {
+      active = false;
+      socket?.off("connect", loadThread);
+    };
+  }, [selectedUserId, refetchUserDetails, userData?.id, socket]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (socket === null) return;
+    if (!socket) return;
 
-    if (socket === undefined) {
-      const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string);
+    const handleReceiveMessage = (newMessage: Message) => {
+      const threadId = orderIds(newMessage.receiverId, newMessage.senderId);
+      if (threadId === roomName) {
+        setMessages((previous) => previous.some(({ id }) => id === newMessage.id)
+          ? previous
+          : [newMessage, ...previous]);
+      }
+    };
 
-      setSocket(newSocket);
+    socket.on("receive-message", handleReceiveMessage);
+    return () => { socket.off("receive-message", handleReceiveMessage); };
+  }, [socket, roomName, setMessages]);
 
-      return () => {
-        newSocket.close();
-      };
-    }
-
-    if (socket !== undefined) {
-      const handleReceiveMessage = (newMessage: Message) => {
-        const threadId = orderIds(newMessage.receiverId, newMessage.senderId);
-
-        if (threadId === roomName) {
-          setMessages((prevMessages) => {
-            if (prevMessages.some((msg) => msg.id === newMessage.id)) {
-              return prevMessages;
-            }
-
-            return [newMessage, ...prevMessages];
-          });
-        }
-      };
-
-      socket.on("receive-message", handleReceiveMessage);
-
-      return () => {
-        socket.off("receive-message", handleReceiveMessage);
-      };
-    }
-  }, [socket, roomName, setMessages, setSocket]);
-
-  const searchForUserByEmail = useCallback(async () => {
-    await refetchRecipientSearchResults();
-    setIsSearching(false);
-  }, [refetchRecipientSearchResults, setIsSearching]);
-
-  useEffect(() => {
-    if (debouncedSearchTerm.length === 0) {
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
-
-    searchForUserByEmail();
-  }, [debouncedSearchTerm, setIsSearching, searchForUserByEmail]);
-
-  useEffect(() => {
-    if (recipientInput.length === 0) {
-      setIsSearching(false);
-
-      return;
-    }
-
-    setIsSearching(true);
-  }, [recipientInput]);
+  const isSearching = !!recipientInput &&
+    (recipientInput !== searchEmail || isRecipientSearchResultsFetching);
 
   useEffect(() => {
     if (userData) {
@@ -427,6 +371,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                     ref={emojiRef}
                     name="newMessage"
                     value={newMessage}
+                    maxLength={4000}
                     onKeyDown={handleKeyPress}
                     onChange={(event) => {
                       setNewMessage(event.target.value);
@@ -632,7 +577,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           <div className="flex justify-center flex-col items-center h-full">
                             <ClipLoader color={"#9B9B9B"} size={50} />
                           </div>
-                        ) : debouncedSearchTerm.length > 0 &&
+                        ) : recipientInput.length > 0 &&
                           recipientSearchResultsError === false &&
                           recipientSearchResults &&
                           Object.keys(recipientSearchResults).length > 0 ? (
@@ -665,7 +610,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                               </p>
                             </div>
                           </div>
-                        ) : debouncedSearchTerm.length > 0 ? (
+                        ) : recipientInput.length > 0 ? (
                           <div>
                             No user was found with the specified email. Be sure
                             to double check if the email you have entered is

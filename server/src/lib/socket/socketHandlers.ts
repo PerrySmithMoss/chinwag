@@ -1,52 +1,41 @@
 import { Server, Socket } from "socket.io";
-import {
-  createMessage,
-  getMessagesBetweenTwoUsers,
-} from "../../services/message.service";
+import { createMessage, getMessagesBetweenTwoUsers } from "../../services/message.service";
+import { isUserId } from "../../utils/userId";
 
-export const handleConnection = (io: Server, socket: Socket) => {
-  socket.on("join-user-room", (userId: number) => {
-    socket.join(String(userId));
+const userRoom = (userId: number) => `user:${userId}`;
+
+export const handleConnection = (io: Server, socket: Socket, userId: number) => {
+  socket.join(userRoom(userId));
+
+  socket.on("join-room", async (_room: unknown, receiverId: unknown, senderId: unknown) => {
+    if (senderId !== userId || !isUserId(receiverId)) {
+      socket.emit("error", { message: "Invalid conversation" });
+      return;
+    }
+
+    try {
+      socket.emit("room-messages", await getMessagesBetweenTwoUsers(userId, receiverId));
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+      socket.emit("error", { message: "Failed to load conversation" });
+    }
   });
 
-  socket.on(
-    "join-room",
-    async (newRoom: string, receiverId: number, senderId: number) => {
-      try {
-        socket.join(newRoom);
-
-        const roomMessages = await getMessagesBetweenTwoUsers(
-          receiverId,
-          senderId
-        );
-
-        socket.emit("room-messages", roomMessages);
-      } catch (error) {
-        console.error("Error joining room:", error);
-        socket.emit("error", { message: "Failed to join room" });
-      }
+  socket.on("send-message", async (
+    _room: unknown, senderId: unknown, receiverId: unknown, message: unknown
+  ) => {
+    if (senderId !== userId || !isUserId(receiverId)
+        || typeof message !== "string" || !message.trim() || message.length > 4_000) {
+      socket.emit("error", { message: "Invalid message" });
+      return;
     }
-  );
 
-  socket.on(
-    "send-message",
-    async (
-      room: string,
-      senderId: number,
-      receiverId: number,
-      message: string
-    ) => {
-      try {
-        const newMessage = await createMessage(message, senderId, receiverId);
-
-        // emit to all clients in the room, including the sender
-        io.to(room).emit("receive-message", newMessage);
-        io.to(String(senderId)).emit("receive-message", newMessage);
-        io.to(String(receiverId)).emit("receive-message", newMessage);
-      } catch (error) {
-        console.error("Error sending message:", error);
-        socket.emit("error", { message: "Failed to send message" });
-      }
+    try {
+      const newMessage = await createMessage(message, userId, receiverId);
+      io.to([userRoom(userId), userRoom(receiverId)]).emit("receive-message", newMessage);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      socket.emit("error", { message: "Failed to send message" });
     }
-  );
+  });
 };

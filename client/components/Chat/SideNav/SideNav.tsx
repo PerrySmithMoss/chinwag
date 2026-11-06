@@ -1,6 +1,8 @@
 import Image from "next/image";
 import styles from "./SidebarNav.module.css";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import { User } from "../../../interfaces/User";
 import { useUser } from "../../../context/user-context";
 import { useAppContext } from "../../../context/global.context";
@@ -9,7 +11,7 @@ import { orderIds } from "../../../utils/orderIds";
 import { UpdateUserAvatar } from "../../Modals/UserAvatar/UpdateUserAvatar/UpdateUserAvatar";
 import { truncateString } from "../../../utils/string";
 import { timeSince } from "../../../utils/dateTime";
-import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
+import { currentUserQueryKey, useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { useUserDetails } from "../../../hooks/queries/useUserDetails";
 import { useAllUserMessages } from "../../../hooks/queries/useAllUserMessages";
 import { fetcher } from "../../../utils/fetcher";
@@ -27,10 +29,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
   const [threadMessages, setThreadMessages] = useState<
     Record<string, ThreadMessage>
   >({});
-  const sortedMessages = Object.values(threadMessages).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
   const { userDispatch } = useUser();
 
   const {
@@ -40,7 +38,8 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     setCreateNewMessage,
   } = useAppContext();
 
-  const { socket } = useSocket();
+  const socket = useSocket();
+  const queryClient = useQueryClient();
 
   const { data: userData } = useCurrentUser({
     initialData: user,
@@ -72,21 +71,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
     setCreateNewMessage(true);
   };
 
-  //   socket.off("notifications").on("notifications", (room) => {
-  //     if (currentRoom !== room) dispatch(addNotifications(room));
-  // });
-
-  function joinRoom(roomId: string, selectedUserId: number) {
-    if (!userData?.id) {
-      return alert("Please login");
-    }
-
-    socket?.emit("join-room", roomId, selectedUserId, userData.id);
-
-    // dispatch for notifications
-    // dispatch(resetNotifications(room));
-  }
-
   function handlePrivateMemberMsg(receiverId: number, senderId: number) {
     // Determine who the other user is
     if (userData?.id === receiverId) {
@@ -95,14 +79,12 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       const roomId = orderIds(userData.id, senderId);
 
       setRoomName(roomId);
-      joinRoom(roomId, senderId);
     } else if (userData?.id === senderId) {
       setSelectedUserId(receiverId);
 
       const roomId = orderIds(userData.id, receiverId);
 
       setRoomName(roomId);
-      joinRoom(roomId, receiverId);
     }
   }
 
@@ -112,60 +94,24 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
         method: "DELETE",
       });
 
+      await queryClient.cancelQueries({ queryKey: currentUserQueryKey });
+      queryClient.setQueryData(currentUserQueryKey, null);
       userDispatch({ type: "REMOVE_USER" });
-    } catch (err: unknown) {
-      console.log("Login error: ", err);
-
-      if (err instanceof Error) {
-        throw Error(err.message);
-      } else {
-        throw Error("An unexpected error occurred.");
-      }
+    } catch {
+      toast.error("Could not sign out. Please try again.");
     }
   };
 
-  useEffect(() => {
-    if (userMessages && userMessages.length > 0) {
-      const map: Record<string, ThreadMessage> = {};
-
-      userMessages.forEach((msg) => {
-        const threadId = orderIds(msg.senderId, msg.receiverId);
-        const existing = map[threadId];
-
-        const formatted: ThreadMessage = {
-          id: msg.id,
-          message: msg.message,
-          senderId: msg.senderId,
-          receiverId: msg.receiverId,
-          createdAt: msg.createdAt,
-          updatedAt: msg.updatedAt,
-          sender: {
-            id: msg.senderId,
-            firstName: msg.senderFirstName,
-            lastName: msg.senderLastName,
-            username: msg.senderUsername,
-            avatar: msg.senderAvatar,
-          },
-          receiver: {
-            id: msg.receiverId,
-            firstName: msg.receiverFirstName,
-            lastName: msg.receiverLastName,
-            username: msg.receiverUsername,
-            avatar: msg.receiverAvatar,
-          },
-        };
-
-        if (
-          !existing ||
-          new Date(formatted.createdAt) > new Date(existing.createdAt)
-        ) {
-          map[threadId] = formatted;
-        }
-      });
-
-      setThreadMessages(map);
+  const threads = { ...threadMessages };
+  for (const message of userMessages ?? []) {
+    const id = orderIds(message.senderId, message.receiverId);
+    if (!threads[id] || Date.parse(message.createdAt) >= Date.parse(threads[id].createdAt)) {
+      threads[id] = message;
     }
-  }, [userMessages]);
+  }
+  const sortedMessages = Object.values(threads).sort(
+    (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id - a.id
+  );
 
   useEffect(() => {
     if (selectedUserId) {
@@ -179,12 +125,6 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
       userDispatch({ type: "SET_USER", payload: userData });
     }
   }, [userData, userDispatch]);
-
-  useEffect(() => {
-    if (socket && userData?.id) {
-      socket.emit("join-user-room", userData.id);
-    }
-  }, [socket, userData?.id]);
 
   useEffect(() => {
     const handleReceiveMessage = (newMessage: Message) => {
@@ -210,14 +150,14 @@ export const SideNav: React.FC<SideNavProps> = ({ user }) => {
           firstName: newMessage.sender.firstName,
           lastName: newMessage.sender.lastName,
           username: newMessage.sender.username,
-          avatar: newMessage.sender.profile.avatar,
+          avatar: newMessage.sender.profile?.avatar ?? null,
         },
         receiver: {
           id: newMessage.receiver.id,
           firstName: newMessage.receiver.firstName,
           lastName: newMessage.receiver.lastName,
           username: newMessage.receiver.username,
-          avatar: newMessage.receiver.profile.avatar,
+          avatar: newMessage.receiver.profile?.avatar ?? null,
         },
       };
 

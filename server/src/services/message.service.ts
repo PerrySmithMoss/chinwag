@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma";
+import type { Message } from "../generated/prisma/client";
 
 // Saves a message between 2 users in database
 export async function createMessage(
@@ -172,7 +173,17 @@ export async function getMessagesBetweenTwoUsers(
 }
 
 export async function getUsersMessages(userId: number) {
-  const messages = await prisma.$queryRawUnsafe<any[]>(`
+  type Conversation = Message & {
+    senderFirstName: string;
+    senderLastName: string;
+    senderUsername: string;
+    senderAvatar: string | null;
+    receiverFirstName: string;
+    receiverLastName: string;
+    receiverUsername: string;
+    receiverAvatar: string | null;
+  };
+  const messages = await prisma.$queryRaw<Conversation[]>`
     SELECT
       m.*,
       s."firstName" AS "senderFirstName",
@@ -203,7 +214,7 @@ export async function getUsersMessages(userId: number) {
       (m."receiverId" = ${userId} AND m."senderId" = sub.other)
     ) AND m."createdAt" = sub.latest
     ORDER BY m."createdAt" DESC
-  `);
+  `;
 
   // transform flat fields into nested objects
   return messages.map((msg) => ({

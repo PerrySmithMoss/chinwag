@@ -1,45 +1,50 @@
-import React, { useContext, useEffect, useState, createContext } from "react";
-import io, { Socket } from "socket.io-client";
+import { createContext, useContext, useEffect, useMemo } from "react";
+import { io, Socket } from "socket.io-client";
+import { fetcher } from "../utils/fetcher";
 
-type SocketProps = {
-  socket: Socket | undefined;
-  setSocket: React.Dispatch<React.SetStateAction<Socket | undefined>>;
-};
+const SocketContext = createContext<Socket | undefined>(undefined);
 
-const SocketContext = createContext<SocketProps>({
-  socket: undefined,
-  setSocket: () => {},
-});
+export function SocketProvider({ children }: React.PropsWithChildren) {
+  const socket = useMemo(() => {
+    const url = process.env.NEXT_PUBLIC_SOCKET_URL;
+    if (!url) return undefined;
 
-export function SocketProvider({
-  children,
-  userId,
-}: {
-  children: React.ReactNode;
-  userId: number;
-}) {
-  const [socket, setSocket] = useState<Socket>();
+    return io(url, {
+      autoConnect: false,
+      forceNew: true,
+      auth: (callback) => {
+        fetcher<{ ticket: string }>("/sessions/socket-ticket", { method: "POST" })
+          .then(({ ticket }) => callback({ ticket }))
+          .catch(() => callback({}));
+      },
+    });
+  }, []);
 
   useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL as string);
-    setSocket(newSocket);
+    if (!socket) return;
 
-    if (userId) {
-      newSocket.on("connect", () => {
-        newSocket.emit("join-user-room", userId);
-      });
-    }
-
-    return () => {
-      newSocket.close();
+    let retries = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const resetRetries = () => { retries = 0; };
+    const retryRejectedConnection = () => {
+      // Socket.IO handles transport failures itself, but not rejected handshakes.
+      if (socket.active || retries >= 6) return;
+      const delay = Math.min(5_000 * 2 ** retries++, 60_000);
+      retryTimer = setTimeout(() => socket.connect(), delay);
     };
-  }, [userId]);
 
-  return (
-    <SocketContext.Provider value={{ socket, setSocket }}>
-      {children}
-    </SocketContext.Provider>
-  );
+    socket.on("connect", resetRetries);
+    socket.on("connect_error", retryRejectedConnection);
+    socket.connect();
+    return () => {
+      clearTimeout(retryTimer);
+      socket.off("connect", resetRetries);
+      socket.off("connect_error", retryRejectedConnection);
+      socket.disconnect();
+    };
+  }, [socket]);
+
+  return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>;
 }
 
 export function useSocket() {

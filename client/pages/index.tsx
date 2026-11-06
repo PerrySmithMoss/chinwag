@@ -23,7 +23,6 @@ const Home: NextPage<UserData> = ({ user }) => {
   const {
     data,
     refetch: refetchCurrentUser,
-    isFetching,
   } = useCurrentUser({
     initialData: user,
     refetchOnWindowFocus: true,
@@ -32,21 +31,16 @@ const Home: NextPage<UserData> = ({ user }) => {
 
   const onSubmit = async (values: { email: string; password: string }) => {
     setLoading(true);
+    setLoginError(null);
 
     try {
-      const res = await fetcher<null | { error: string }>("/sessions/create", {
+      await fetcher("/sessions/create", {
         method: "POST",
         body: values,
       });
-
-      if (res?.error) {
-        setLoginError(res.error);
-      }
-
-      refetchCurrentUser();
-    } catch (e: unknown) {
-      console.error(e);
-      setLoginError("An unexpected error occurred.");
+      await refetchCurrentUser({ throwOnError: true });
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "Could not sign in.");
     } finally {
       setLoading(false);
     }
@@ -57,16 +51,6 @@ const Home: NextPage<UserData> = ({ user }) => {
       userDispatch({ type: "SET_USER", payload: data });
     }
   }, [data, userDispatch]);
-
-  useEffect(() => {
-    if (!isFetching) {
-      setLoading(false);
-    }
-  }, [isFetching]);
-
-  if (loading) {
-    return null;
-  }
 
   return userState.user ? (
     <ChatLayout user={userState.user} />
@@ -116,7 +100,7 @@ const Home: NextPage<UserData> = ({ user }) => {
                 </Link>
               </div>
             </div>
-            <LoginForm onSubmit={onSubmit} loginError={loginError} />
+            <LoginForm onSubmit={onSubmit} loginError={loginError} pending={loading} />
           </div>
         </div>
       </main>
@@ -125,14 +109,14 @@ const Home: NextPage<UserData> = ({ user }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  let user: null | UserData = null;
+  let user: User | null = null;
 
   if (context.req.headers.cookie) {
     try {
       const headers = {
         cookie: context.req.headers.cookie || "",
       };
-      user = await fetcher<UserData>(`/users/me`, { headers });
+      user = await fetcher<User>(`/users/me/v2`, { headers });
     } catch (e) {
       console.error("Error fetching user:", e);
     }

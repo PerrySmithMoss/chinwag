@@ -2,18 +2,23 @@ import { Request, Response, NextFunction } from "express";
 import { isDevelopment } from "../utils/env";
 
 export const errorHandler = (
-  err: Error,
+  err: Error & { status?: number },
   _req: Request,
   res: Response,
-  _next: NextFunction
+  next: NextFunction
 ) => {
-  console.error("Error:", err);
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
 
-  const status = res.statusCode !== 200 ? res.statusCode : 500;
+  const status = err.status && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (status === 500) console.error("Request failed:", err);
 
   res.status(status).json({
-    message: err.message || "Internal Server Error",
-    // optionally, include stack trace in dev mode
-    stack: isDevelopment ? err.stack : undefined,
+    message: status === 413 ? "Request body is too large."
+      : status === 400 ? "Invalid request body."
+      : "Request failed.",
+    stack: isDevelopment && status === 500 ? err.stack : undefined,
   });
 };

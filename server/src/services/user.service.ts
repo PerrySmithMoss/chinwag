@@ -1,7 +1,7 @@
 import prisma from "../lib/prisma";
 import { hash, verify, argon2id } from "argon2";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
-import { User as PrismaUser } from "@prisma/client";
+import { User as PrismaUser } from "../generated/prisma/client";
 
 type CreateUserInput = Pick<
   PrismaUser,

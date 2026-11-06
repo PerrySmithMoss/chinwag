@@ -1,45 +1,38 @@
 import { Request, Response } from "express";
-import {
-  getMessagesBetweenTwoUsers,
-  getUsersMessages,
-} from "../services/message.service";
+import { iso } from "zod";
+import { getMessagesBetweenTwoUsers, getUsersMessages } from "../services/message.service";
+import { parseUserId } from "../utils/userId";
 
-// Returns all conversations for a specifc user
-export const getUserConversationsHandler = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const userID = parseInt(req.params.userID);
-
-    const messages = await getUsersMessages(userID);
-
-    res.status(200).json(messages);
-  } catch (err) {
-    res.status(500).json(err);
+export async function getUserConversationsHandler(req: Request, res: Response) {
+  const userId = parseUserId(req.params.userID);
+  if (userId === null) {
+    res.status(400).json({ message: "Invalid user ID." });
+    return;
   }
-};
 
-// Returns all messages between two specifc users
-export const getAllMessagesBetweenTwoUsersHandler = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const senderId = parseInt(req.params.senderId);
-    const receiverId = parseInt(req.params.receiverId);
-    
-    // const { cursor } = req.body;
-    const { cursor } = req.query;
-
-    const messages = await getMessagesBetweenTwoUsers(
-      senderId,
-      receiverId,
-      cursor as string
-    );
-
-    res.status(200).json(messages);
-  } catch (err) {
-    res.status(500).json(err);
+  if (userId !== res.locals.user.id) {
+    res.sendStatus(403);
+    return;
   }
-};
+
+  res.json(await getUsersMessages(userId));
+}
+
+export async function getAllMessagesBetweenTwoUsersHandler(req: Request, res: Response) {
+  const senderId = parseUserId(req.params.senderId);
+  const receiverId = parseUserId(req.params.receiverId);
+  const { cursor } = req.query;
+  const page = iso.datetime({ offset: true }).optional().safeParse(cursor);
+  if (senderId === null || receiverId === null || !page.success) {
+    res.status(400).json({ message: "Invalid conversation or cursor." });
+    return;
+  }
+
+  const userId = res.locals.user.id;
+  if (userId !== senderId && userId !== receiverId) {
+    res.sendStatus(403);
+    return;
+  }
+
+  res.json(await getMessagesBetweenTwoUsers(senderId, receiverId, page.data));
+}

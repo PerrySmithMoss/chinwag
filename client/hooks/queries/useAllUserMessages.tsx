@@ -1,28 +1,28 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { getAllUserMessages } from "../../api/message";
-import { UniqueMessage } from "../../interfaces/Message";
+import { ThreadMessage } from "../../interfaces/Message";
 
-const QUERY_KEY = ["allUserMessages"] as const;
+const queryKey = (userId?: number) => ["allUserMessages", userId] as const;
 
 export const useAllUserMessages = (
   userId?: number,
   options?: Omit<
     UseQueryOptions<
-      UniqueMessage[] | null,
+      ThreadMessage[] | null,
       Error,
-      UniqueMessage[] | null,
-      typeof QUERY_KEY
+      ThreadMessage[] | null,
+      ReturnType<typeof queryKey>
     >,
     "queryKey"
   >
 ) => {
   return useQuery<
-    UniqueMessage[] | null,
+    ThreadMessage[] | null,
     Error,
-    UniqueMessage[] | null,
-    typeof QUERY_KEY
+    ThreadMessage[] | null,
+    ReturnType<typeof queryKey>
   >({
-    queryKey: QUERY_KEY,
+    queryKey: queryKey(userId),
     queryFn: () => {
       if (userId === undefined) {
         // Should never call if no userId

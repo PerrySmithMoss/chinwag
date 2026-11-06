@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useAppContext } from "../../../context/global.context";
 import { useUser } from "../../../context/user-context";
 import { SideNav } from "../../Chat/SideNav/SideNav";
 import { Main } from "../../Chat/Main/Main";
@@ -14,6 +15,7 @@ interface ChatProps {
 
 export const Chat: React.FC<ChatProps> = ({ user }) => {
   const { userDispatch } = useUser();
+  const { selectedUserId } = useAppContext();
 
   const { data } = useCurrentUser({ initialData: user });
 
@@ -29,7 +31,7 @@ export const Chat: React.FC<ChatProps> = ({ user }) => {
       <div className="flex h-screen antialiased text-gray-800">
         <div className="flex flex-row h-full w-full overflow-x-hidden">
           <SideNav user={data} />
-          <Main user={data} />
+          <Main key={selectedUserId} user={data} />
           <ToastContainer
             position="top-right"
             autoClose={5000}

@@ -2,16 +2,16 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { User } from "../../interfaces/User";
 import { fetcher } from "../../utils/fetcher";
 
-const QUERY_KEY = ["me"] as const;
+export const currentUserQueryKey = ["me"] as const;
 
 export const useCurrentUser = (
   options?: Omit<
-    UseQueryOptions<User | null, Error, User | null, typeof QUERY_KEY>,
+    UseQueryOptions<User | null, Error, User | null, typeof currentUserQueryKey>,
     "queryKey"
   >
 ) => {
-  return useQuery<User | null, Error, User | null, typeof QUERY_KEY>({
-    queryKey: QUERY_KEY,
+  return useQuery<User | null, Error, User | null, typeof currentUserQueryKey>({
+    queryKey: currentUserQueryKey,
     queryFn: () => fetcher(`/users/me/v2`),
     ...options,
   });

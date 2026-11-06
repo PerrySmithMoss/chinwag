@@ -1,14 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-import { isProduction } from "../utils/env";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
+import { config } from "../config/config";
 
-let prisma: PrismaClient;
-
-if (isProduction) {
-  prisma = new PrismaClient();
-} else {
-  if (!(global as any).prisma) {
-    (global as any).prisma = new PrismaClient();
-  }
-  prisma = (global as any).prisma;
-}
-export default prisma;
+export default new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString: config.databaseURL,
+    connectionTimeoutMillis: 5_000,
+  }),
+});

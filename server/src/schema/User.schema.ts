@@ -1,33 +1,14 @@
-import { object, string, TypeOf } from "zod";
+import { email, object, string } from "zod";
 
 export const createUserSchema = object({
-  body: object({
-    firstName: string().min(1, {
-      message: "First name is required",
-    }),
-    lastName: string().min(1, {
-      message: "Last name is required",
-    }),
-    password: string().min(6, "Password too short - should be 6 chars minimum"),
-    email: string({
-      required_error: "Email is required",
-    })
-      .email("Not a valid email")
-      .min(5, {
-        message: "Email is required",
-      }),
-    username: string().min(1, {
-      message: "Username is required",
-    }),
-  }),
+  firstName: string().min(1).max(100),
+  lastName: string().min(1).max(100),
+  username: string().min(1).max(100),
+  email: email().max(256),
+  password: string().min(6).max(256),
 });
 
-export type CreateUserInput = Omit<
-  TypeOf<typeof createUserSchema>,
-  "body.passwordConfirmation"
->;
-
-export const updateProfileSchema = createUserSchema.shape.body
+export const updateProfileSchema = createUserSchema
   .pick({ firstName: true, lastName: true, username: true })
   .partial()
   .strict();
