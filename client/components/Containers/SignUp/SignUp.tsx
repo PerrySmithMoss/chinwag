@@ -6,12 +6,12 @@ import { useUser } from "../../../context/user-context";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { object, string, TypeOf } from "zod";
+import { object, string, infer as Infer } from "zod";
 import { useCurrentUser } from "../../../hooks/queries/useCurrentUser";
 import { fetcher } from "../../../utils/fetcher";
 
 const createUserSchema = object({
-  firstName: string({ required_error: "First name is required" })
+  firstName: string({ error: "First name is required" })
     .min(1, {
       message: "First name is required",
     })
@@ -20,11 +20,11 @@ const createUserSchema = object({
     })
     .refine(
       (val) => /^\S+$/.test(val),
-      () => ({
+      ({
         message: `First name must not include white space. Please remove any whitespace.`,
       })
     ),
-  lastName: string({ required_error: "Last name is required" })
+  lastName: string({ error: "Last name is required" })
     .min(1, {
       message: "Last name is required",
     })
@@ -33,17 +33,17 @@ const createUserSchema = object({
     })
     .refine(
       (val) => /^\S+$/.test(val),
-      () => ({
+      ({
         message: `Last name must not include white space. Please remove any whitespace.`,
       })
     ),
-  password: string({ required_error: "Password is required" })
+  password: string({ error: "Password is required" })
     .min(6, "Password too short - should be 6 characters minimum")
     .max(256, {
       message: "Password must be 256 characters or less.",
     }),
   email: string({
-    required_error: "Email is required",
+    error: "Email is required",
   })
     .email("Not a valid email")
     .min(5, {
@@ -54,11 +54,11 @@ const createUserSchema = object({
     })
     .refine(
       (val) => /^\S+$/.test(val),
-      () => ({
+      ({
         message: `Email must not include white space. Please remove any whitespace.`,
       })
     ),
-  username: string({ required_error: "Username is required" })
+  username: string({ error: "Username is required" })
     .min(1, {
       message: "Username is required",
     })
@@ -67,13 +67,13 @@ const createUserSchema = object({
     })
     .refine(
       (val) => /^\S+$/.test(val),
-      () => ({
+      ({
         message: `Username must not include white space. Please remove any whitespace.`,
       })
     ),
 });
 
-type CreateUserInput = TypeOf<typeof createUserSchema>;
+type CreateUserInput = Infer<typeof createUserSchema>;
 
 export const SignUp: React.FC = () => {
   const router = useRouter();
@@ -316,7 +316,7 @@ export const SignUp: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="ml-1 mt-2 text-sm text-gray-400">&</p>
+                <p className="ml-1 mt-2 text-sm text-gray-400">&amp;</p>
               </div>
               <div>
                 <p className="ml-1 mt-2 cursor-pointer text-tan-background-accent text-sm">

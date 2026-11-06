@@ -1,20 +1,21 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { object, string, TypeOf } from "zod";
+import { object, string, infer as Infer } from "zod";
 
 const loginSchema = object({
   email: string().min(1, { message: "Email is required" }),
   password: string().min(1, { message: "Password is required" }),
 });
 
-type LoginInput = TypeOf<typeof loginSchema>;
+type LoginInput = Infer<typeof loginSchema>;
 
 type Props = {
   onSubmit: (values: LoginInput) => void;
   loginError: string | null;
+  pending: boolean;
 };
 
-export const LoginForm: React.FC<Props> = ({ onSubmit, loginError }) => {
+export const LoginForm: React.FC<Props> = ({ onSubmit, loginError, pending }) => {
   const {
     register,
     handleSubmit,
@@ -120,9 +121,10 @@ export const LoginForm: React.FC<Props> = ({ onSubmit, loginError }) => {
       <div className="mt-5">
         <button
           type="submit"
+          disabled={pending}
           className="bg-tan-background-accent cursor-pointer text-white font-bold py-2 px-4 w-96 rounded hover:bg-tan-background"
         >
-          Login
+          {pending ? "Signing in…" : "Login"}
         </button>
       </div>
     </form>

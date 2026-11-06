@@ -1,10 +1,7 @@
 import { createContext, useContext, useState } from "react";
-import { Message } from "../interfaces/Message";
 import { User } from "../interfaces/User";
 
 type GlobalUIProps = {
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   members: User[];
   setMembers: React.Dispatch<React.SetStateAction<User[]>>;
   selectedUserId: number | undefined;
@@ -20,8 +17,6 @@ type GlobalUIProps = {
 };
 
 const AppContext = createContext<GlobalUIProps>({
-  messages: [],
-  setMessages: () => {},
   members: [],
   setMembers: () => {},
   selectedUserId: undefined,
@@ -37,7 +32,6 @@ const AppContext = createContext<GlobalUIProps>({
 export const AppContextProvider = ({
   children,
 }: React.PropsWithChildren<unknown>) => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(
     undefined
@@ -50,8 +44,6 @@ export const AppContextProvider = ({
   return (
     <AppContext.Provider
       value={{
-        messages,
-        setMessages,
         members,
         setMembers,
         selectedUserId,

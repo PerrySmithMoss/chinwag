@@ -1,46 +1,17 @@
 import { Request, Response } from "express";
 import { config } from "../config/config";
-import * as Cloudinary from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
-interface CreateSignatureQuery {
-  avatarId?: string;
+export function avatarPublicId(userId: number) {
+  return `chinwag/avatars/user-${userId}`;
 }
 
-// Create a cloudinary signature
-// @TODO: Tag each image which a user ID
-// if that user ID has already uploaded 5 images in the last 24 hours
-// then do not allow them to generate a new signature
-export async function createSignatureHandler(
-  req: Request<{}, {}, {}, CreateSignatureQuery>,
-  res: Response
-) {
-  try {
-    let { avatarId } = req.query;
-    const parsedAvatarId = avatarId === "null" ? null : avatarId;
-
-    const timestamp = Math.floor(Date.now() / 1000);
-
-    const params: Record<string, any> = {
-      timestamp,
-      folder: "chinwag/avatars",
-    };
-
-    if (parsedAvatarId) {
-      Object.assign(params, {
-        public_id: parsedAvatarId,
-        invalidate: true,
-        overwrite: true,
-      });
-    }
-
-    const signature = Cloudinary.v2.utils.api_sign_request(
-      params,
-      config.cloudinaryApiSecret as string
-    );
-
-    res.json({ timestamp, signature });
-  } catch (err) {
-    console.error("Cloudinary signature error:", err);
-    res.status(500).json({ error: "Failed to generate Cloudinary signature" });
-  }
+export function createSignatureHandler(_req: Request, res: Response) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const publicId = avatarPublicId(res.locals.user.id);
+  const signature = cloudinary.utils.api_sign_request(
+    { timestamp, public_id: publicId, invalidate: true, overwrite: true },
+    config.cloudinaryApiSecret
+  );
+  res.json({ timestamp, publicId, signature });
 }

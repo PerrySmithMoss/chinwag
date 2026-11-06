@@ -1,11 +1,8 @@
-export const removeFieldsFromObject = (object: any, fields: string[]) => {
-  let newObj = { ...object };
-
-  Object.keys(newObj).forEach((key) => {
-    if (fields.includes(key)) {
-      delete newObj[key as keyof object];
-    }
-  });
-
-  return newObj;
-};
+export function removeFieldsFromObject<T extends object, K extends keyof T>(
+  object: T,
+  fields: readonly K[]
+): Omit<T, K> {
+  const copy = { ...object };
+  for (const field of fields) delete copy[field];
+  return copy;
+}

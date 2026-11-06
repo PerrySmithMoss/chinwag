@@ -16,7 +16,7 @@ interface ThreadMessageUser {
   firstName: string;
   lastName: string;
   username: string;
-  avatar: string;
+  avatar: string | null;
 }
 
 export interface ThreadMessage {
@@ -28,23 +28,4 @@ export interface ThreadMessage {
   receiver: ThreadMessageUser;
   senderId: number;
   receiverId: number;
-}
-
-export interface UniqueMessage {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  message: string;
-  sender: User;
-  receiver: User;
-  senderId: number;
-  receiverId: number;
-  receiverFirstName: string;
-  receiverLastName: string;
-  receiverUsername: string;
-  senderFirstName: string;
-  senderLastName: string;
-  senderUsername: string;
-  senderAvatar: string;
-  receiverAvatar: string;
 }

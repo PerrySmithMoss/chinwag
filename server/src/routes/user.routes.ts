@@ -45,9 +45,9 @@ userRouter.delete("/:id", requireUser, requireAccountOwner, deleteUserHandler);
 userRouter.get("/search/username/:username", searchForUserByUsernameHandler);
 
 // Search for a user by email
-userRouter.get("/search/email/:email", searchForUserByEmailHandler);
+userRouter.get("/search/email/:email", requireUser, searchForUserByEmailHandler);
 
 // Upload a user avatar
-userRouter.post("/avatar/:id", requireUser, uploadUserAvatarHandler);
+userRouter.post("/avatar/:id", requireUser, requireAccountOwner, uploadUserAvatarHandler);
 
 export default userRouter;

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../generated/prisma/client";
 import { Request, Response } from "express";
 import {
   createUser,
@@ -10,72 +10,34 @@ import {
   getAllUsersExceptSpecifiedUser,
   updateUsersAvatar,
   updateUserWithSpecifiedData,
-  validatePassword,
 } from "../services/user.service";
 import { removeFieldsFromObject } from "../utils/removeFieldsFromObject";
 import { config } from "../config/config";
-import * as Cloudinary from "cloudinary";
-import { CreateUserInput, updateProfileSchema } from "../schema/User.schema";
-import { removeCharsFromString } from "../utils/removeCharsFromString";
+import { v2 as cloudinary } from "cloudinary";
+import { number, object, string } from "zod";
+import { createUserSchema, updateProfileSchema } from "../schema/User.schema";
+import { parseUserId } from "../utils/userId";
+import { avatarPublicId } from "./images.controller";
 
-export const createUserHandler = async (
-  req: Request<{}, {}, CreateUserInput["body"]>,
-  res: Response
-) => {
-  const body = req.body;
-  try {
-    const registeredUser = await createUser(body);
-
-    // Remove email and password fields before sending user back
-    const userWithFieldsRemoved = removeFieldsFromObject(registeredUser, [
-      "password",
-      "email",
-    ]);
-
-    res.status(200).json(userWithFieldsRemoved);
-  } catch (err: any) {
-    if (err.code === 11000) {
-      res.status(409).send("Account already exists");
-      return;
-    }
-    res.status(409).json(err);
+export async function createUserHandler(req: Request, res: Response) {
+  const body = createUserSchema.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "Invalid registration fields." });
+    return;
   }
-};
 
-export const loginUserHandler = async (req: Request, res: Response) => {
-  const body = req.body;
   try {
-    const user = await findUserByEmail(body.email, true);
-
-    if (!user) {
-      res
-        .status(400)
-        .json({ message: "The email or password provided is incorrect." });
+    const user = await createUser(body.data);
+    res.json(removeFieldsFromObject(user, ["password", "email"]));
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      res.status(409).json({ error: "An account already exists with that email or username." });
       return;
     }
 
-    const isValidUser = await validatePassword(user.password, body.password);
-
-    if (!isValidUser) {
-      res
-        .status(400)
-        .json({ message: "The email or password provided is incorrect." });
-    }
-
-    // Remove email and password fields before sending user back
-    const userWithFieldsRemoved = removeFieldsFromObject(user, [
-      "password",
-      "email",
-    ]);
-
-    // ctx.req.session.userId = user.id;
-
-    return res.status(200).json(userWithFieldsRemoved);
-  } catch (err) {
-    res.status(500).json(err);
-    console.log(err);
+    throw error;
   }
-};
+}
 
 export const allUsersHandler = async (req: Request, res: Response) => {
   try {
@@ -85,14 +47,18 @@ export const allUsersHandler = async (req: Request, res: Response) => {
 
     res.status(200).json(users);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
 export const getUserHandler = async (req: Request, res: Response) => {
   const params = req.params;
   try {
-    const userId = parseInt(params.id);
+    const userId = parseUserId(params.id);
+    if (userId === null) {
+      res.sendStatus(400);
+      return;
+    }
 
     const user = await findUserById(userId, true);
 
@@ -110,19 +76,23 @@ export const getUserHandler = async (req: Request, res: Response) => {
 
     res.status(200).json(userWithFieldsRemoved);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
 export const getUserFriendsHandler = async (req: Request, res: Response) => {
   const params = req.params;
   try {
-    const userId = parseInt(params.id);
+    const userId = parseUserId(params.id);
+    if (userId === null) {
+      res.sendStatus(400);
+      return;
+    }
 
     const users = await getAllUsersExceptSpecifiedUser(userId);
     res.status(200).json(users);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
@@ -169,7 +139,7 @@ export const getCurrentUserHandler = async (_req: Request, res: Response) => {
 
     res.send(res.locals.user);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
@@ -196,7 +166,7 @@ export const getCurrentLoggedInUserHandler = async (
 
     res.status(200).json(userWithFieldsRemoved);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
@@ -206,6 +176,10 @@ export const searchForUserByUsernameHandler = async (
 ) => {
   try {
     const username = req.params.username;
+    if (typeof username !== "string" || username.length > 100) {
+      res.sendStatus(400);
+      return;
+    }
 
     const { cursor } = req.query;
 
@@ -220,7 +194,7 @@ export const searchForUserByUsernameHandler = async (
 
     res.status(200).json(users);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
@@ -230,6 +204,10 @@ export const searchForUserByEmailHandler = async (
 ) => {
   try {
     const email = req.params.email;
+    if (typeof email !== "string" || email.length > 256) {
+      res.sendStatus(400);
+      return;
+    }
 
     const user = await findUserByEmail(email, true);
 
@@ -245,67 +223,49 @@ export const searchForUserByEmailHandler = async (
     const userWithFieldsRemoved = removeFieldsFromObject(user, [
       "password",
       "email",
-      "posts",
       "createdAt",
       "updatedAt",
     ]);
 
     res.status(200).json(userWithFieldsRemoved);
   } catch (err) {
-    res.status(500).json(err);
+    throw err;
   }
 };
 
-export const uploadUserAvatarHandler = async (req: Request, res: Response) => {
-  try {
-    const { signature, public_id, image_url, version } = req.body;
-    // based on the public_id and the version that the (potentially malicious) user is submitting...
-    // we can combine those values along with our SECRET key to see what we would expect the signature
-    // to be if it was innocent / valid / actually coming from Cloudinary
-    const expectedSignature = Cloudinary.v2.utils.api_sign_request(
-      { public_id: public_id, version: version },
-      config.cloudinaryApiSecret as string
-    );
+const avatarUploadSchema = object({
+  public_id: string(),
+  signature: string(),
+  image_url: string(),
+  version: number().int().positive(),
+});
 
-    // We can trust the visitor's data if their signature is what we'd expect it to be...
-    // Because without the SECRET key there's no way for someone to know what the signature should be...
-    if (expectedSignature === signature) {
-      const userId = parseInt(req.params.id);
-
-      // First identify whether the user exists or not
-      const validUser = await findUserById(userId, false);
-
-      if (!validUser) {
-        res.status(400).json({
-          message: "Could not find a user matching the given ID.",
-        });
-        return;
-      }
-
-      const imageUrl = image_url;
-
-      const publicImageId = removeCharsFromString(
-        public_id,
-        "chinwag/avatars/"
-      );
-
-      // Store the users avatar url in database
-      const updatedUser = await updateUsersAvatar(
-        userId,
-        imageUrl,
-        publicImageId
-      );
-
-      const userWithFieldsRemoved = removeFieldsFromObject(updatedUser, [
-        "password",
-        "email",
-      ]);
-
-      res.status(200).json(userWithFieldsRemoved);
-    } else {
-      res.status(401).json({ error: "Unauthorised signature." });
-    }
-  } catch (err) {
-    res.status(500).json(err);
+export async function uploadUserAvatarHandler(req: Request, res: Response) {
+  const userId = res.locals.user.id;
+  const upload = avatarUploadSchema.safeParse(req.body);
+  if (!upload.success) {
+    res.status(400).json({ error: "Invalid avatar upload." });
+    return;
   }
-};
+
+  const { public_id, version, signature, image_url } = upload.data;
+  const publicId = avatarPublicId(userId);
+  const imagePrefix = `https://res.cloudinary.com/${config.cloudinaryCloudName}/image/upload/v${version}/${publicId}.`;
+  if (public_id !== publicId || !image_url.startsWith(imagePrefix)
+      || !/^[a-z0-9]+$/i.test(image_url.slice(imagePrefix.length))) {
+    res.status(400).json({ error: "Invalid avatar upload." });
+    return;
+  }
+
+  const expectedSignature = cloudinary.utils.api_sign_request(
+    { public_id, version },
+    config.cloudinaryApiSecret
+  );
+  if (expectedSignature !== signature) {
+    res.status(401).json({ error: "Unauthorised signature." });
+    return;
+  }
+
+  const user = await updateUsersAvatar(userId, image_url, `user-${userId}`);
+  res.json(removeFieldsFromObject(user, ["password", "email"]));
+}

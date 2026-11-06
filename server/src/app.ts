@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/errorHandler";
 
 export const createApp = (): Application => {
   const app: Application = express();
+  app.disable("x-powered-by");
 
   app.use(
     cors({
@@ -15,8 +16,18 @@ export const createApp = (): Application => {
       credentials: true,
     })
   );
+  app.use((req, res, next) => {
+    const origin = req.get("origin");
+    if (origin && !["GET", "HEAD", "OPTIONS"].includes(req.method)
+        && origin !== config.clientURL && origin !== config.serverURL) {
+      res.sendStatus(403);
+      return;
+    }
+    res.set("Cache-Control", "no-store");
+    next();
+  });
   app.use(cookieParser());
-  app.use(express.json({ limit: "50mb" }));
+  app.use(express.json({ limit: "16kb" }));
 
   app.use(isAuthenticated);
 

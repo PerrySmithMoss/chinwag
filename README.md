@@ -21,7 +21,7 @@
   <li>Node.js & Express</li>
   <li>JWT</li>
   <li>Prisma ORM</li>
-  <li>MySQL</li>
+  <li>PostgreSQL</li>
 </ul>
 </div>
 
@@ -40,7 +40,35 @@
 
 </div>
 
+### Local development
+
+Use Node.js 24 and Yarn Classic. From the repository root, create the local
+configuration once and generate a signing key for the API.
+
+```sh
+cp client/.env.example client/.env.local
+(umask 077; sed "s/^JWT_SECRET=.*/JWT_SECRET=$(openssl rand -hex 32)/" server/.env.example > server/.env)
+docker compose up -d --build
+cd client
+yarn install --frozen-lockfile
+yarn dev
+```
+
+Open [Chinwag locally](http://localhost:3000). The API listens on loopback port
+5560. Set `POSTGRES_PORT` before starting Compose if host port 5432 is already
+in use. Compose applies the committed database migrations at startup.
+The example Cloudinary values let the app start locally. For avatar uploads,
+replace them with the credentials for your Cloudinary account and set the
+matching public values in `client/.env.local`.
+
+Run `yarn lint` and `yarn build` in `client`, and `yarn test` and
+`yarn build` in `server`. Run `yarn audit` in both directories.
+
 ### VPS API releases
+
+Deploy the matching client and API together when rolling out authenticated
+Socket.IO. The client requests a short-lived socket ticket from the API before
+connecting.
 
 The API workflow deploys an immutable image through its own restricted SSH
 account and the `VPS Production` environment. It cannot apply the Docker stack

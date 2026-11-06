@@ -1,23 +1,18 @@
 import type { NextConfig } from "next";
 
+const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "**",
-      },
-    ],
+    maximumRedirects: 0,
+    remotePatterns: cloudName
+      ? [{ protocol: "https", hostname: "res.cloudinary.com", pathname: `/${cloudName}/image/upload/**` }]
+      : [],
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
-      },
-    ];
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    return apiUrl ? [{ source: "/api/:path*", destination: `${apiUrl}/:path*` }] : [];
   },
 };
 

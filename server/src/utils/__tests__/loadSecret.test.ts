@@ -1,68 +1,51 @@
-import fs from "fs";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import { afterEach, describe, it } from "node:test";
 import { loadSecret } from "../loadSecret";
 
-jest.mock("fs");
-
 describe("loadSecret", () => {
-  const mockExistsSync = fs.existsSync as jest.Mock;
-  const mockReadFileSync = fs.readFileSync as jest.Mock;
-
   const filePath = "/fake/path/secret.txt";
   const envVarName = "SECRET_ENV";
 
-  beforeEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+  afterEach(() => {
     delete process.env[envVarName];
   });
 
-  it("should return secret from file if it exists", () => {
-    mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue("  fileSecret  ");
+  it("returns the trimmed secret from the file if it exists", ({ mock }) => {
+    mock.method(fs, "existsSync", () => true);
+    const read = mock.method(fs, "readFileSync", () => "  fileSecret  ");
 
-    const secret = loadSecret(filePath, envVarName);
-    expect(secret).toBe("fileSecret");
-    expect(fs.readFileSync).toHaveBeenCalledWith(filePath, "utf8");
+    assert.equal(loadSecret(filePath, envVarName), "fileSecret");
+    assert.deepEqual(read.mock.calls[0].arguments, [filePath, "utf8"]);
   });
 
-  it("should return env var if file read fails", () => {
-    mockExistsSync.mockReturnValue(true);
+  it("falls back to the environment variable when reading the file fails", ({ mock }) => {
     const error = new Error("Failed to read file");
-    mockReadFileSync.mockImplementation(() => {
-      throw error;
-    });
+    mock.method(fs, "existsSync", () => true);
+    mock.method(fs, "readFileSync", () => { throw error; });
+    const log = mock.method(console, "error", () => {});
     process.env[envVarName] = "envSecret";
 
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    const secret = loadSecret(filePath, envVarName);
-    expect(secret).toBe("envSecret");
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      `Error reading secret file at ${filePath}:`,
-      error
-    );
-
-    consoleErrorSpy.mockRestore();
+    assert.equal(loadSecret(filePath, envVarName), "envSecret");
+    assert.deepEqual(log.mock.calls[0].arguments, [
+      `Error reading secret file at ${filePath}:`, error,
+    ]);
   });
 
-  it("should return env var if file does not exist", () => {
-    mockExistsSync.mockReturnValue(false);
+  it("returns the environment variable if the file is missing", ({ mock }) => {
+    mock.method(fs, "existsSync", () => false);
     process.env[envVarName] = "envSecret";
 
-    const secret = loadSecret(filePath, envVarName);
-    expect(secret).toBe("envSecret");
+    assert.equal(loadSecret(filePath, envVarName), "envSecret");
   });
 
-  it("should return empty string and warn if no secret found", () => {
-    console.warn = jest.fn();
-    mockExistsSync.mockReturnValue(false);
+  it("warns and returns an empty string if the secret is missing", ({ mock }) => {
+    mock.method(fs, "existsSync", () => false);
+    const warn = mock.method(console, "warn", () => {});
 
-    const secret = loadSecret(filePath, envVarName);
-    expect(secret).toBe("");
-    expect(console.warn).toHaveBeenCalledWith(
-      `Warning: Secret not found for ${envVarName}`
-    );
+    assert.equal(loadSecret(filePath, envVarName), "");
+    assert.deepEqual(warn.mock.calls[0].arguments, [
+      `Warning: Secret not found for ${envVarName}`,
+    ]);
   });
 });

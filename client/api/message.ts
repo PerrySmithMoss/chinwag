@@ -1,4 +1,4 @@
-import { Message, UniqueMessage } from "../interfaces/Message";
+import { Message, ThreadMessage } from "../interfaces/Message";
 import { fetcher } from "../utils/fetcher";
 
 export const fetchAllMessagesWithUser = async (
@@ -8,7 +8,7 @@ export const fetchAllMessagesWithUser = async (
 ): Promise<Message[]> => {
   // TODO: add error handling here and anywhere which uses this fetch req
   const endpoint = cursor
-    ? `/messages/${senderId}/${receiverId}?cursor=${cursor}`
+    ? `/messages/${senderId}/${receiverId}?cursor=${encodeURIComponent(cursor)}`
     : `/messages/${senderId}/${receiverId}`;
 
   const res = await fetcher<Message[]>(endpoint);
@@ -18,9 +18,9 @@ export const fetchAllMessagesWithUser = async (
 
 export const getAllUserMessages = async (
   userID: number
-): Promise<UniqueMessage[]> => {
+): Promise<ThreadMessage[]> => {
   // TODO: add error handling here and anywhere which uses this fetch req
-  const res = await fetcher<UniqueMessage[]>(`/messages/${userID}`);
+  const res = await fetcher<ThreadMessage[]>(`/messages/${userID}`);
 
   return res;
 };

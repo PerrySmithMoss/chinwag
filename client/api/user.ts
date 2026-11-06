@@ -14,9 +14,9 @@ export const fetchAllFriends = async (userId: number): Promise<User[]> => {
 export const fetchUsersByUsername = async (
   username: string
 ): Promise<User[]> => {
-  return await fetcher(`/users/search/username/${username}`);
+  return await fetcher(`/users/search/username/${encodeURIComponent(username)}`);
 };
 
 export const fetchUsersByEmail = async (email: string): Promise<User> => {
-  return await fetcher(`/users/search/email/${email}`);
+  return await fetcher(`/users/search/email/${encodeURIComponent(email)}`);
 };
