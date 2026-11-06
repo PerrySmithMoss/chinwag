@@ -1,7 +1,7 @@
 # ------------------------------------------------
 # Base stage: installs system deps and copies base files
 # ------------------------------------------------
-ARG NODE_IMAGE=node:24.20.0-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+ARG NODE_IMAGE=node:24.22.2-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
 FROM ${NODE_IMAGE} AS base
 
 WORKDIR /app
