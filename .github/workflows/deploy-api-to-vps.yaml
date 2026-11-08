@@ -244,11 +244,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for _ in {1..6}; do
-            if (
-              status=$(curl --silent --show-error --max-time 10 --output /dev/null --write-out '%{http_code}' https://chinwag-api.perrysmithmoss.com/api/users/me)
-              [[ "$status" == 403 ]]
-            ); then
+          format='%{http_code} dns=%{time_namelookup}s tcp=%{time_connect}s tls=%{time_appconnect}s first_byte=%{time_starttransfer}s total=%{time_total}s'
+          for attempt in {1..6}; do
+            curl_exit=0
+            result=$(curl --silent --show-error --max-time 10 --output /dev/null --write-out "$format" https://chinwag-api.perrysmithmoss.com/api/users/me) || curl_exit=$?
+            printf 'API probe %d: curl_exit=%d HTTP %s\n' "$attempt" "$curl_exit" "$result"
+            if [[ "$curl_exit" == 0 && "$result" == '403 '* ]]; then
               exit 0
             fi
             sleep 5

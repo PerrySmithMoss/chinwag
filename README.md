@@ -76,3 +76,8 @@ from this repository. An administrator owns the existing Swarm service
 configuration. See the
 [portfolio release runbook](https://github.com/PerrySmithMoss/perry-infra/blob/main/deploy/portfolio/README.md)
 for installation, production checks and rollback by digest and revision.
+
+The production image reports healthy once it accepts API requests. With the
+stack's Traefik label, Traefik uses the Swarm service's stable virtual IP during
+task replacement. On an existing service, an administrator must apply the
+routing label and record the updated Chinwag policy before resuming releases.
