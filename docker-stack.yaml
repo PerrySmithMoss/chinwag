@@ -23,6 +23,8 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
+        # Keep the proxy upstream stable when Swarm replaces individual tasks.
+        - "traefik.swarm.lbswarm=true"
         - "traefik.http.services.chinwag-api.loadbalancer.server.port=5560"
         - "traefik.http.routers.chinwag-api.rule=Host(`chinwag-api.perrysmithmoss.com`)"
         - "traefik.http.routers.chinwag-api.entrypoints=websecure"
