@@ -59,7 +59,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version-file: .node-version
           cache: yarn
           cache-dependency-path: client/yarn.lock
       - run: yarn install --frozen-lockfile
@@ -76,7 +76,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version-file: .node-version
       - run: docker build --platform linux/amd64 -t portfolio-api-test ./server
       - name: Test migrations and authenticated API flows in the built image
         run: sh server/scripts/test-image.sh portfolio-api-test
@@ -92,7 +92,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version-file: .node-version
           cache: yarn
           cache-dependency-path: server/yarn.lock
 
@@ -184,7 +184,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version-file: .node-version
       - name: Test the scanned release image
         env:
           RELEASE_DIGEST: ${{ steps.build.outputs.digest }}

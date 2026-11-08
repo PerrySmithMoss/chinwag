@@ -42,7 +42,7 @@
 
 ### Local development
 
-Use Node.js 24 and Yarn Classic. From the repository root, create the local
+Use Node.js 26.13.0 (see `.node-version`) and Yarn Classic. From the repository root, create the local
 configuration once and generate a signing key for the API.
 
 ```sh
