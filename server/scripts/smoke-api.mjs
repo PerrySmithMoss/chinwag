@@ -16,6 +16,26 @@ async function post(path, body) {
   });
 }
 
+// Health checks must work without credentials or redirects, including with a
+// stale cookie, and must not issue a session or expose application internals.
+for (const headers of [{}, { cookie: 'accessToken=invalid; refreshToken=invalid' }]) {
+  const health = await fetch(new URL('/healthz', origin), {
+    headers, redirect: 'manual', signal: AbortSignal.timeout(10000),
+  });
+  assert.equal(health.status, 200);
+  assert.match(health.headers.get('content-type'), /^application\/json/);
+  assert.equal(health.headers.get('cache-control'), 'no-store');
+  assert.equal(health.headers.get('set-cookie'), null);
+  assert.deepEqual(await health.json(), { status: 'ok' });
+}
+const head = await fetch(new URL('/healthz', origin), {
+  method: 'HEAD', redirect: 'manual', signal: AbortSignal.timeout(10000),
+});
+assert.equal(head.status, 200);
+assert.equal(head.headers.get('cache-control'), 'no-store');
+assert.equal(await head.text(), '');
+console.log('Public GET/HEAD health checks passed');
+
 assert.equal((await fetch(new URL('/api/users/me', origin))).status, 403);
 const register = await post('/api/sessions/register', {
   email, username, password, firstName: 'Release', lastName: 'Smoke',

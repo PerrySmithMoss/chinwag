@@ -255,3 +255,13 @@ jobs:
             sleep 5
           done
           exit 1
+
+      - name: Verify public GET and HEAD health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          url=https://chinwag-api.perrysmithmoss.com/healthz
+          curl --fail --silent --show-error --max-time 10 "$url" |
+            jq -e '. == {"status":"ok"}' >/dev/null
+          status=$(curl --head --silent --show-error --max-time 10 --output /dev/null --write-out '%{http_code}' "$url")
+          test "$status" = 200
