@@ -81,3 +81,14 @@ The production image reports healthy once it accepts API requests. With the
 stack's Traefik label, Traefik uses the Swarm service's stable virtual IP during
 task replacement. On an existing service, an administrator must apply the
 routing label and record the updated Chinwag policy before resuming releases.
+
+### Public health endpoint
+
+`GET /healthz` returns `200` with `{ "status": "ok" }`. `HEAD /healthz` returns
+the same status without a body. Both use `Cache-Control: no-store`, require no
+cookies or credentials, and perform no database queries. This is process liveness,
+not a continuous database-readiness check. The existing Docker probe and
+authentication on application routes remain in place.
+
+Use `https://chinwag-api.perrysmithmoss.com/healthz` for the five-minute
+UptimeRobot Free HTTP check, with owner email alerts.
