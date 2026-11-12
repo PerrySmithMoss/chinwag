@@ -65,7 +65,6 @@ export const Main: React.FC<MainProps> = ({ user, onCreateMessage }) => {
   const { data: userDetails, refetch: refetchUserDetails } = useUserDetails(
     selectedUserId,
     {
-      initialData: user,
       refetchOnWindowFocus: false,
       enabled: false,
     },
@@ -287,13 +286,18 @@ export const Main: React.FC<MainProps> = ({ user, onCreateMessage }) => {
                     <h1
                       id="conversation-heading"
                       tabIndex={-1}
+                      aria-live="polite"
                       className="truncate font-bold focus:outline-none"
                     >
-                      {userDetails?.firstName} {userDetails?.lastName}
+                      {userDetails
+                        ? `${userDetails.firstName} ${userDetails.lastName}`
+                        : "Conversation"}
                     </h1>
-                    <div className="truncate text-sm">
-                      @{userDetails?.username}
-                    </div>
+                    {userDetails && (
+                      <div className="truncate text-sm">
+                        @{userDetails.username}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex mr-4 mt-2">
