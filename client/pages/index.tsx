@@ -1,14 +1,12 @@
 import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { User } from "../interfaces/User";
 import { useUser } from "../context/user-context";
 import { useCurrentUser } from "../hooks/queries/useCurrentUser";
 import { ChatLayout } from "../components/Chat/ChatLayout/ChatLayout";
 import { LoginForm } from "../components/LoginForm/LoginForm";
-import Image from "next/image";
-import { Login as LoginIcon } from "../components/Icons/Login";
+import { AuthLayout } from "../components/AuthLayout/AuthLayout";
 import { fetcher } from "../utils/fetcher";
 
 type UserData = {
@@ -20,10 +18,7 @@ const Home: NextPage<UserData> = ({ user }) => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const {
-    data,
-    refetch: refetchCurrentUser,
-  } = useCurrentUser({
+  const { data, refetch: refetchCurrentUser } = useCurrentUser({
     initialData: user,
     refetchOnWindowFocus: true,
     retry: false,
@@ -40,7 +35,9 @@ const Home: NextPage<UserData> = ({ user }) => {
       });
       await refetchCurrentUser({ throwOnError: true });
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Could not sign in.");
+      setLoginError(
+        error instanceof Error ? error.message : "Could not sign in.",
+      );
     } finally {
       setLoading(false);
     }
@@ -65,45 +62,17 @@ const Home: NextPage<UserData> = ({ user }) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <div className="grid grid-cols-2 h-screen antialiased">
-          <div className="bg-tan-background flex flex-col justify-center items-center h-full p-10">
-            <div className="flex items-center space-x-2 mb-8">
-              <Image
-                src="/assets/images/logo.png"
-                height={50}
-                width={50}
-                alt="Logo"
-              />
-              <h1 className="text-brand-green text-2xl font-bold">Chinwag</h1>
-            </div>
-            <LoginIcon width="550px" />
-            <h1 className="text-white text-3xl font-bold mt-6">
-              Chat with anyone, anywhere.
-            </h1>
-          </div>
-          <div className="ml-24 mt-80">
-            <div className="flex">
-              <h2 className="text-3xl font-bold">Chat Now.</h2>
-            </div>
-            <div className="flex">
-              <div>
-                <p className="mt-1 text-sm text-gray-400">
-                  Don&apos;t have an account?
-                </p>
-              </div>
-              <div>
-                <Link href="/sign-up">
-                  <p className="cursor-pointer ml-1 mt-1 text-tan-background-accent hover:text-red-500 text-sm tracking-wide">
-                    Sign up
-                  </p>
-                </Link>
-              </div>
-            </div>
-            <LoginForm onSubmit={onSubmit} loginError={loginError} pending={loading} />
-          </div>
-        </div>
-      </main>
+      <AuthLayout
+        accountPrompt="Don't have an account?"
+        accountLink="/sign-up"
+        accountLinkText="Sign up"
+      >
+        <LoginForm
+          onSubmit={onSubmit}
+          loginError={loginError}
+          pending={loading}
+        />
+      </AuthLayout>
     </div>
   );
 };
