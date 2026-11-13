@@ -22,9 +22,10 @@ import { EmojiClickData } from "emoji-picker-react";
 
 interface MainProps {
   user: User | null;
+  onCreateMessage: () => void;
 }
 
-export const Main: React.FC<MainProps> = ({ user }) => {
+export const Main: React.FC<MainProps> = ({ user, onCreateMessage }) => {
   const socket = useSocket();
   const { userDispatch } = useUser();
   const {
@@ -64,10 +65,9 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   const { data: userDetails, refetch: refetchUserDetails } = useUserDetails(
     selectedUserId,
     {
-      initialData: user,
       refetchOnWindowFocus: false,
       enabled: false,
-    }
+    },
   );
 
   const {
@@ -88,8 +88,20 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   const handleSendMessage = () => {
-    if (!socket?.connected || !userData || !selectedUserId || !newMessage.trim()) return;
-    socket.emit("send-message", roomName, userData.id, selectedUserId, newMessage);
+    if (
+      !socket?.connected ||
+      !userData ||
+      !selectedUserId ||
+      !newMessage.trim()
+    )
+      return;
+    socket.emit(
+      "send-message",
+      roomName,
+      userData.id,
+      selectedUserId,
+      newMessage,
+    );
     setNewMessage("");
   };
 
@@ -117,11 +129,12 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSendMessage();
+    if (event.key === "Enter" && !event.nativeEvent.isComposing)
+      handleSendMessage();
   };
 
   const handleChangeRecipientInput = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setRecipientInput(event.target.value);
     setSubmittedEmail("");
@@ -158,7 +171,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     const earlierMessagesRes = await fetchAllMessagesWithUser(
       selectedUserId as number,
       userData.id as number,
-      messages[messages.length - 1].createdAt
+      messages[messages.length - 1].createdAt,
     );
 
     if (earlierMessagesRes.length < 20) {
@@ -181,13 +194,19 @@ export const Main: React.FC<MainProps> = ({ user }) => {
         .then((thread) => {
           if (!active) return;
           setMessages((previous) => {
-            const byId = new Map([...previous, ...thread].map((message) => [message.id, message]));
-            return [...byId.values()].sort((a, b) =>
-              Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id - a.id
+            const byId = new Map(
+              [...previous, ...thread].map((message) => [message.id, message]),
+            );
+            return [...byId.values()].sort(
+              (a, b) =>
+                Date.parse(b.createdAt) - Date.parse(a.createdAt) ||
+                b.id - a.id,
             );
           });
         })
-        .catch((error) => { if (active) console.error("Could not load conversation:", error); });
+        .catch((error) => {
+          if (active) console.error("Could not load conversation:", error);
+        });
     }
 
     refetchUserDetails();
@@ -209,17 +228,22 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     const handleReceiveMessage = (newMessage: Message) => {
       const threadId = orderIds(newMessage.receiverId, newMessage.senderId);
       if (threadId === roomName) {
-        setMessages((previous) => previous.some(({ id }) => id === newMessage.id)
-          ? previous
-          : [newMessage, ...previous]);
+        setMessages((previous) =>
+          previous.some(({ id }) => id === newMessage.id)
+            ? previous
+            : [newMessage, ...previous],
+        );
       }
     };
 
     socket.on("receive-message", handleReceiveMessage);
-    return () => { socket.off("receive-message", handleReceiveMessage); };
+    return () => {
+      socket.off("receive-message", handleReceiveMessage);
+    };
   }, [socket, roomName, setMessages]);
 
-  const isSearching = !!recipientInput &&
+  const isSearching =
+    !!recipientInput &&
     (recipientInput !== searchEmail || isRecipientSearchResultsFetching);
 
   useEffect(() => {
@@ -228,6 +252,12 @@ export const Main: React.FC<MainProps> = ({ user }) => {
     }
   }, [userData, userDispatch]);
 
+  useEffect(() => {
+    if (selectedUserId !== undefined && !createNewMessage) {
+      document.getElementById("conversation-heading")?.focus();
+    }
+  }, [selectedUserId, createNewMessage]);
+
   // useEffect(() => {
   //   emojiRef.current.selectionEnd = cursorPosition;
   // }, [cursorPosition]);
@@ -235,11 +265,11 @@ export const Main: React.FC<MainProps> = ({ user }) => {
   return (
     <>
       {selectedUserId !== undefined && createNewMessage === false ? (
-        <div className="flex flex-col flex-auto h-full sm:pl-6">
-          <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-3">
-            <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
-              <div className="flex justify-between ml-3 rounded-lg">
-                <div className="flex flex-row items-center">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col md:pl-6">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-gray-100 p-3">
+            <div className="flex shrink-0 flex-col border-b bg-gray-100">
+              <div className="flex min-w-0 justify-between rounded-lg">
+                <div className="flex min-w-0 flex-row items-center">
                   <div className="flex items-center justify-center h-10 w-10 rounded-full flex-shrink-0">
                     <Image
                       className="rounded-full h-10 w-10"
@@ -252,11 +282,22 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                       }
                     />
                   </div>
-                  <div className="relative py-2 pl-2.5 pr-4">
-                    <div className="font-bold">
-                      {userDetails?.firstName} {userDetails?.lastName}
-                    </div>
-                    <div className="text-sm">@{userDetails?.username}</div>
+                  <div className="relative min-w-0 py-2 pl-2.5 pr-4">
+                    <h1
+                      id="conversation-heading"
+                      tabIndex={-1}
+                      aria-live="polite"
+                      className="truncate font-bold focus:outline-none"
+                    >
+                      {userDetails
+                        ? `${userDetails.firstName} ${userDetails.lastName}`
+                        : "Conversation"}
+                    </h1>
+                    {userDetails && (
+                      <div className="truncate text-sm">
+                        @{userDetails.username}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex mr-4 mt-2">
@@ -271,7 +312,7 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                 </div>
               </div>
             </div>
-            <div className="h-full overflow-x-auto ">
+            <div className="min-h-0 flex-1 overflow-y-auto ">
               {earlierMessagesPaginationHasMore && messages.length >= 20 && (
                 <div className="mt-4 flex justify-center">
                   <button
@@ -295,8 +336,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                           key={message.id}
                           className={
                             message.receiverId === userData?.id
-                              ? `col-start-1 col-end-8 p-3 rounded-lg`
-                              : `col-start-6 col-end-13 p-3 rounded-lg`
+                              ? `col-start-1 col-end-12 min-w-0 rounded-lg p-2 md:col-end-8 md:p-3`
+                              : `col-start-2 col-end-13 min-w-0 rounded-lg p-2 md:col-start-6 md:p-3`
                           }
                         >
                           <div
@@ -307,13 +348,13 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                             }`}
                           >
                             {formatDate(
-                              new Date(Date.parse(message.createdAt))
+                              new Date(Date.parse(message.createdAt)),
                             )}
                           </div>
                           <div
                             className={
                               message.receiverId === userData?.id
-                                ? `flex flex-row items-center`
+                                ? `flex min-w-0 flex-row items-center`
                                 : `flex items-center justify-start flex-row-reverse`
                             }
                           >
@@ -333,8 +374,8 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                             <div
                               className={
                                 message.receiverId === userData?.id
-                                  ? `relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl`
-                                  : `relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl`
+                                  ? `relative ml-3 min-w-0 whitespace-pre-wrap rounded-xl bg-white px-4 py-2 text-sm shadow [overflow-wrap:anywhere]`
+                                  : `relative mr-3 min-w-0 whitespace-pre-wrap rounded-xl bg-indigo-100 px-4 py-2 text-sm shadow [overflow-wrap:anywhere]`
                               }
                             >
                               <div>{message.message}</div>
@@ -346,7 +387,16 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
+            <div className="relative flex h-16 w-full min-w-0 shrink-0 flex-row items-center gap-2 rounded-xl bg-white px-2 sm:gap-4 sm:px-4">
+              {showEmojis && (
+                <div className="absolute right-0 bottom-full z-20 mb-2 w-[min(350px,calc(100vw-1.5rem))] overflow-hidden rounded-lg shadow-lg">
+                  <Picker
+                    onEmojiClick={onEmojiClick}
+                    width="100%"
+                    height="min(420px,60dvh)"
+                  />
+                </div>
+              )}
               {/* <div>
                 <button className="cursor-pointer flex items-center justify-center text-gray-400 hover:text-gray-600">
                   <svg
@@ -365,11 +415,12 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                   </svg>
                 </button>
               </div> */}
-              <div className="flex-grow ">
+              <div className="min-w-0 flex-1">
                 <div className="relative w-full">
                   <input
                     ref={emojiRef}
                     name="newMessage"
+                    aria-label="Message"
                     value={newMessage}
                     maxLength={4000}
                     onKeyDown={handleKeyPress}
@@ -377,18 +428,15 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                       setNewMessage(event.target.value);
                     }}
                     type="text"
-                    className="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
+                    className="flex min-h-11 w-full min-w-0 rounded-xl border pr-12 pl-3 text-base focus:border-brand-green focus:outline-none"
                   />
 
                   <button
                     onClick={handleShowEmojis}
+                    aria-label="Choose emoji"
+                    aria-expanded={showEmojis}
                     className="cursor-pointer absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600"
                   >
-                    {showEmojis ? (
-                      <div className="overflow-y-auto absolute bottom-14">
-                        <Picker onEmojiClick={onEmojiClick} />
-                      </div>
-                    ) : null}
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -406,10 +454,10 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                   </button>
                 </div>
               </div>
-              <div className="ml-4">
+              <div className="shrink-0">
                 <button
                   onClick={handleSendMessage}
-                  className="cursor-pointer flex items-center justify-center bg-brand-green hover:bg-brand-green_hover rounded text-white px-4 py-1 flex-shrink-0"
+                  className="flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded bg-brand-green-strong px-3 py-2 text-white hover:bg-brand-green-strong-hover sm:px-4"
                 >
                   <span>Send</span>
                   <span className="ml-2">
@@ -434,18 +482,20 @@ export const Main: React.FC<MainProps> = ({ user }) => {
           </div>
         </div>
       ) : createNewMessage ? (
-        <div className="flex flex-col flex-auto h-full pl-6">
-          <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-3">
-            <div className="flex flex-col flex-auto flex-shrink-0 border-b bg-gray-100 ">
-              <div className="flex justify-between ml-3 pt-2 pb-4 rounded-lg">
-                <div className="flex flex-row items-center">
-                  <div>To:</div>
-                  <div className=" relative flex items-center space-x-2">
-                    <div className="relative">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col md:pl-6">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-gray-100 p-3">
+            <div className="flex shrink-0 flex-col border-b bg-gray-100">
+              <div className="flex min-w-0 justify-between rounded-lg pt-2 pb-4">
+                <div className="flex w-full min-w-0 flex-row items-center">
+                  <label htmlFor="recipientInput" className="shrink-0">
+                    To:
+                  </label>
+                  <div className="relative ml-2 flex min-w-0 flex-1 items-center">
+                    <div className="relative w-full min-w-0">
                       <input
                         onKeyDown={handleKeyDown}
                         onChange={(e) => handleChangeRecipientInput(e)}
-                        className="ml-2 w-96 p-1"
+                        className="min-h-11 w-full min-w-0 rounded bg-white py-2 pr-10 pl-3 text-base"
                         type="text"
                         name="recipientInput"
                         placeholder="Enter the user's full email"
@@ -571,23 +621,24 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                       <div
                         id="tooltip-bottom"
                         role="tooltip"
-                        className="tooltip top-9 left-0 w-96 h-96 bg-white absolute z-10 overflow-y-auto  border inline-block  shadow-md py-2 px-3 text-sm rounded-lg"
+                        className="absolute top-full right-0 left-0 z-10 mt-2 max-h-[min(24rem,60dvh)] overflow-y-auto rounded-lg border bg-white px-3 py-2 text-sm shadow-md"
                       >
                         {isSearching ? (
-                          <div className="flex justify-center flex-col items-center h-full">
+                          <div className="flex h-24 flex-col items-center justify-center">
                             <ClipLoader color={"#9B9B9B"} size={50} />
                           </div>
                         ) : recipientInput.length > 0 &&
                           recipientSearchResultsError === false &&
                           recipientSearchResults &&
                           Object.keys(recipientSearchResults).length > 0 ? (
-                          <div
+                          <button
+                            type="button"
                             onClick={() =>
                               handleCreateNewConversationWithUser(
-                                recipientSearchResults.id
+                                recipientSearchResults.id,
                               )
                             }
-                            className="flex items-center space-x-1 cursor-pointer hover:bg-gray-200 rounded-md"
+                            className="flex w-full min-w-0 cursor-pointer items-center gap-1 rounded-md text-left hover:bg-gray-200"
                           >
                             <div className="p-2  max-w-full">
                               <div className="relative w-9 h-9 overflow-hidden rounded-full">
@@ -603,13 +654,13 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                                 />
                               </div>
                             </div>
-                            <div>
-                              <p className="whitespace-nowrap  text-sMd text-black overflow-ellipsis">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm text-black">
                                 {recipientSearchResults.firstName}{" "}
                                 {recipientSearchResults.lastName}
                               </p>
                             </div>
-                          </div>
+                          </button>
                         ) : recipientInput.length > 0 ? (
                           <div>
                             No user was found with the specified email. Be sure
@@ -623,20 +674,27 @@ export const Main: React.FC<MainProps> = ({ user }) => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col h-full overflow-x-auto mb-4"></div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto mb-4"></div>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col flex-auto h-full p-6">
-          <div className="flex flex-col flex-auto flex-shrink-0  bg-gray-100 h-full p-4">
-            <div className="flex flex-col h-full overflow-x-auto mb-4">
-              <div className="flex flex-col h-full justify-center items-center">
-                <h2 className="text-2xl font-bold">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col p-3 md:p-6">
+          <div className="flex min-h-0 flex-1 flex-col bg-gray-100 p-4">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto mb-4">
+              <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+                <h1 className="text-2xl font-bold">
                   No message has been selected.
-                </h2>
-                <h2 className="text-xl">
-                  Please open a chat to view the messages.
-                </h2>
+                </h1>
+                <p className="text-lg">
+                  Choose a conversation from your chats or start a new one.
+                </p>
+                <button
+                  type="button"
+                  onClick={onCreateMessage}
+                  className="mt-4 min-h-11 cursor-pointer rounded-lg bg-brand-green-strong px-5 py-3 font-bold text-white hover:bg-brand-green-strong-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+                >
+                  New chat
+                </button>
               </div>
             </div>
           </div>

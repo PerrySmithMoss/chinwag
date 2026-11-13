@@ -22,6 +22,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
   const user = useRequiredUser();
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   // const [fileInputState, setFileInputState] = useState("");
   const [previewSource, setPreviewSource] = useState("");
@@ -52,7 +53,9 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleSubmitFile = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmitFile = async (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
     event.preventDefault();
     if (!selectedFile) return;
 
@@ -81,7 +84,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`,
-        { method: "POST", body: data }
+        { method: "POST", body: data },
       );
       if (!response.ok) throw new Error("Cloudinary upload failed.");
 
@@ -124,6 +127,46 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
     }
   }, [data, userDispatch]);
 
+  useEffect(() => {
+    if (!open || !dialogRef.current) return;
+
+    const trigger = document.activeElement;
+    const app = document.getElementById("__next");
+    const wasInert = app?.inert ?? false;
+    const previousOverflow = document.body.style.overflow;
+    if (app) app.inert = true;
+    document.body.style.overflow = "hidden";
+    dialogRef.current.querySelector("button")?.focus();
+
+    return () => {
+      if (app) app.inert = wasInert;
+      document.body.style.overflow = previousOverflow;
+      if (trigger instanceof HTMLElement) trigger.focus();
+    };
+  }, [open]);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onClose();
+    } else if (event.key === "Tab" && dialogRef.current) {
+      const controls = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          "button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex='-1'])",
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+  };
+
   if (!open || typeof document === "undefined") return null;
   const target = document.getElementById(selector);
   if (!target) return null;
@@ -136,8 +179,13 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         style={{ backgroundColor: "rgba(0, 0, 0, .7)" }}
       />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Update profile avatar"
+        onKeyDown={handleDialogKeyDown}
         onClick={(e) => e.stopPropagation()}
-        className="fixed top-2/4 left-2/4 container mx-auto w-11/12 md:w-2/3 max-w-lg z-50 p-4"
+        className="fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-lg p-4"
         style={{
           transform: "translate(-50%, -50%)",
           backgroundColor: "#FFF",
@@ -145,14 +193,14 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
       >
         <article
           aria-label="File Upload Modal"
-          className="relative h-full flex flex-col bg-white  rounded-md"
+          className="relative flex min-w-0 flex-col rounded-md bg-white"
           // onDrop={() => {}}
           // onDragOver={() => {}}
           // onDragLeave={() => {}}
           // onDragEnter={() => {}}
         >
-          <section className="h-full overflow-auto p-8 w-full flex flex-col">
-            <header className="border-dashed border-2 border-gray-400 py-12 flex flex-col justify-center items-center">
+          <section className="flex w-full min-w-0 flex-col p-2 sm:p-6">
+            <header className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-400 px-3 py-6 sm:py-12">
               {/* <p className="mb-3 font-semibold text-gray-900 flex flex-wrap justify-center">
                 <span>Drag and drop your</span>&nbsp;
                 <span>files anywhere or</span>
@@ -168,7 +216,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
               <button
                 onClick={handleButtonClick}
                 id="button"
-                className="cursor-pointer rounded px-10 py-3 bg-gray-200 hover:bg-gray-300 focus:shadow-outline focus:outline-none"
+                className="min-h-11 max-w-full cursor-pointer rounded bg-gray-200 px-4 py-3 hover:bg-gray-300"
               >
                 Upload a file
               </button>
@@ -192,7 +240,9 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
                       alt="Chosen Image Avatar"
                     />
 
-                    <p className="text-sm">{selectedFile?.name}</p>
+                    <p className="text-sm [overflow-wrap:anywhere]">
+                      {selectedFile?.name}
+                    </p>
                   </div>
                 ) : (
                   <div>
@@ -212,12 +262,12 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
             </ul>
           </section>
 
-          <footer className="flex justify-end px-8 pb-8 pt-4">
+          <footer className="flex flex-wrap justify-end gap-2 px-2 pt-4 pb-2 sm:px-6 sm:pb-6">
             <button
               id="submit"
               onClick={handleSubmitFile}
               disabled={selectedFile === null}
-              className={`cursor-pointer rounded px-4 py-1.5 ${
+              className={`min-h-11 cursor-pointer rounded px-4 py-2 ${
                 selectedFile === null
                   ? "opacity-40 cursor-not-allowed"
                   : "opacity-100 hover:bg-brand-green_hover"
@@ -229,7 +279,7 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
               // onClick={() => showToastSuccess()}
               onClick={() => onClose()}
               id="cancel"
-              className="cursor-pointer ml-3 rounded px-4 py-1.5 hover:bg-gray-200 focus:shadow-outline focus:outline-none"
+              className="min-h-11 cursor-pointer rounded px-4 py-2 hover:bg-gray-200"
             >
               Cancel
             </button>
@@ -237,6 +287,6 @@ export const UpdateUserAvatar: React.FC<UpdateUserAvatarProps> = ({
         </article>
       </div>
     </>,
-    target
+    target,
   );
 };
