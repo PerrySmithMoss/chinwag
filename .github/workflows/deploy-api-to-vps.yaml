@@ -63,7 +63,8 @@ jobs:
           cache: yarn
           cache-dependency-path: client/yarn.lock
       - run: yarn install --frozen-lockfile
-      - run: yarn audit --registry https://registry.npmjs.org
+      - run: node --test security/picomatch.test.mjs
+      - run: node security/picomatch.mjs audit yarn .
       - run: yarn lint
       - run: yarn build
 
